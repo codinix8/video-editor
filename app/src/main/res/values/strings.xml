@@ -25,4 +25,7 @@
     <string name="cancel">Abbrechen</string>
     <string name="save">Speichern</string>
     <string name="quality_title">Aufnahmeauflösung</string>
+    <string name="back_to_record">Zurück zur Aufnahme</string>
+    <string name="review_hint">Tippen: Pause/Weiter · Läuft in Schleife</string>
+    <string name="review_position">%1$s / %2$s · %3$d Segmente</string>
 </resources>

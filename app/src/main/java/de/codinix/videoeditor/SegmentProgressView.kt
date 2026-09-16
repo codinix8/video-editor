@@ -25,6 +25,8 @@ class SegmentProgressView @JvmOverloads constructor(
     private var segmentsMs: List<Long> = emptyList()
     private var liveMs: Long = 0
     private var lastArmed = false
+    /** Wiedergabeposition in ms (Review-Modus) oder -1 im Aufnahmemodus. */
+    private var playheadMs = -1L
 
     private val rect = RectF()
 
@@ -32,6 +34,16 @@ class SegmentProgressView @JvmOverloads constructor(
         segmentsMs = segments
         liveMs = live
         lastArmed = armed
+        playheadMs = -1
+        invalidate()
+    }
+
+    /** Review: alle Segmente sichtbar, abgespielter Teil rot. Skala = Gesamtlänge. */
+    fun updatePlayback(segments: List<Long>, positionMs: Long, armed: Boolean) {
+        segmentsMs = segments
+        liveMs = 0
+        lastArmed = armed
+        playheadMs = positionMs.coerceAtLeast(0)
         invalidate()
     }
 
@@ -43,7 +55,7 @@ class SegmentProgressView @JvmOverloads constructor(
         canvas.drawRoundRect(rect, r, r, trackPaint)
 
         val total = segmentsMs.sum() + liveMs
-        val scale = maxOf(MIN_SCALE_MS, total).toFloat()
+        val scale = (if (playheadMs >= 0) maxOf(1L, total) else maxOf(MIN_SCALE_MS, total)).toFloat()
         val gap = h * 0.6f
         var x = 0f
 
@@ -58,6 +70,21 @@ class SegmentProgressView @JvmOverloads constructor(
             val len = liveMs / scale * w
             rect.set(x, 0f, x + len, h)
             canvas.drawRoundRect(rect, r, r, livePaint)
+        }
+        if (playheadMs >= 0 && total > 0) {
+            val px = (playheadMs / scale * w).coerceIn(0f, w)
+            rect.set(0f, 0f, px, h)
+            canvas.save()
+            canvas.clipRect(rect)
+            // Roten Fortschritt nur über den Segmentblöcken zeichnen
+            var sx = 0f
+            segmentsMs.forEach { ms ->
+                val len = ms / scale * w
+                rect.set(sx, 0f, (sx + len - gap).coerceAtLeast(sx + 1f), h)
+                canvas.drawRoundRect(rect, r, r, livePaint)
+                sx += len
+            }
+            canvas.restore()
         }
     }
 

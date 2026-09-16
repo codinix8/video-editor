@@ -102,4 +102,11 @@
         app:layout_constraintStart_toEndOf="@id/recordButton"
         app:layout_constraintTop_toTopOf="@id/recordButton" />
 
+    <include
+        android:id="@+id/review"
+        layout="@layout/view_review"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

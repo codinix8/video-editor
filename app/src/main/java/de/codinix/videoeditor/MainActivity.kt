@@ -28,6 +28,9 @@ import androidx.camera.video.VideoCapture
 import androidx.camera.video.VideoRecordEvent
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
+import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
+import androidx.media3.exoplayer.ExoPlayer
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import de.codinix.videoeditor.databinding.ActivityMainBinding
 import java.io.File
@@ -63,6 +66,15 @@ class MainActivity : AppCompatActivity() {
 
     private var exporter: Exporter? = null
 
+    private var inReview = false
+    private var player: ExoPlayer? = null
+    private val playbackTicker = object : Runnable {
+        override fun run() {
+            updateReviewPosition()
+            main.postDelayed(this, 100)
+        }
+    }
+
     private val segmentDir by lazy { File(cacheDir, "segments").apply { mkdirs() } }
 
     private val requiredPermissions = buildList {
@@ -90,9 +102,14 @@ class MainActivity : AppCompatActivity() {
         binding.qualityButton.setOnClickListener { showQualityDialog() }
         binding.deleteButton.setOnClickListener { onDeletePressed() }
         binding.finishButton.setOnClickListener { onFinishPressed() }
+        binding.review.backButton.setOnClickListener { exitReview() }
+        binding.review.reviewSaveButton.setOnClickListener { showExportDialog() }
+        binding.review.reviewDeleteButton.setOnClickListener { onDeletePressed() }
+        binding.review.playerView.setOnClickListener { togglePlayback() }
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
+                if (inReview) { exitReview(); return }
                 if (segments.isEmpty() && activeRecording == null) {
                     isEnabled = false
                     onBackPressedDispatcher.onBackPressed()
@@ -241,14 +258,25 @@ class MainActivity : AppCompatActivity() {
         }
         if (!deleteArmed) {
             deleteArmed = true
-            binding.statusText.text = getString(R.string.tap_again_delete)
-            binding.segmentBar.update(segments.map { it.durationMs }, 0, true)
+            if (inReview) {
+                binding.review.reviewStatus.text = getString(R.string.tap_again_delete)
+                // Zum letzten Segment springen, damit man sieht, was weg käme.
+                player?.let { it.seekTo(segments.lastIndex, 0); it.play() }
+                binding.review.playIcon.visibility = android.view.View.GONE
+            } else {
+                binding.statusText.text = getString(R.string.tap_again_delete)
+                binding.segmentBar.update(segments.map { it.durationMs }, 0, true)
+            }
             main.postDelayed(disarmRunnable, 3000)
         } else {
             main.removeCallbacks(disarmRunnable)
             deleteArmed = false
             segments.removeAt(segments.lastIndex).file.delete()
             Toast.makeText(this, R.string.segment_deleted, Toast.LENGTH_SHORT).show()
+            if (inReview) {
+                if (segments.isEmpty()) exitReview()
+                else player?.let { it.removeMediaItem(segments.size); it.seekTo(0, 0); it.play() }
+            }
             refreshUi()
         }
     }
@@ -268,7 +296,70 @@ class MainActivity : AppCompatActivity() {
         if (segments.isEmpty()) {
             Toast.makeText(this, R.string.no_segments, Toast.LENGTH_SHORT).show(); return
         }
+        enterReview()
+    }
 
+    // ---------------------------------------------------------------- Review
+
+    private fun enterReview() {
+        inReview = true
+        cameraProvider?.unbindAll()          // Kamera freigeben, spart Akku und Decoder
+        binding.review.root.visibility = android.view.View.VISIBLE
+        binding.previewView.visibility = android.view.View.INVISIBLE
+        binding.review.playIcon.visibility = android.view.View.GONE
+        buildPlayer()
+        main.post(playbackTicker)
+    }
+
+    private fun buildPlayer() {
+        player?.release()
+        val p = ExoPlayer.Builder(this).build()
+        p.setMediaItems(segments.map { MediaItem.fromUri(Uri.fromFile(it.file)) })
+        p.repeatMode = Player.REPEAT_MODE_ALL
+        p.prepare()
+        p.playWhenReady = true
+        binding.review.playerView.player = p
+        player = p
+    }
+
+    private fun exitReview() {
+        inReview = false
+        main.removeCallbacks(playbackTicker)
+        player?.release(); player = null
+        binding.review.playerView.player = null
+        binding.review.root.visibility = android.view.View.GONE
+        binding.previewView.visibility = android.view.View.VISIBLE
+        disarmDelete()
+        bindCamera()
+        refreshUi()
+    }
+
+    private fun togglePlayback() {
+        val p = player ?: return
+        if (p.isPlaying) {
+            p.pause(); binding.review.playIcon.visibility = android.view.View.VISIBLE
+        } else {
+            p.play(); binding.review.playIcon.visibility = android.view.View.GONE
+        }
+    }
+
+    /** Gesamtposition = Dauer aller vorherigen Segmente + Position im aktuellen. */
+    private fun updateReviewPosition() {
+        val p = player ?: return
+        val idx = p.currentMediaItemIndex.coerceIn(0, (segments.size - 1).coerceAtLeast(0))
+        val before = segments.take(idx).sumOf { it.durationMs }
+        val pos = before + p.currentPosition.coerceAtLeast(0)
+        val total = segments.sumOf { it.durationMs }
+        binding.review.reviewBar.updatePlayback(segments.map { it.durationMs }, pos, deleteArmed)
+        if (!deleteArmed) {
+            binding.review.reviewStatus.text = getString(R.string.review_position, fmt(pos), fmt(total), segments.size)
+        }
+    }
+
+    private fun showExportDialog() {
+        if (segments.isEmpty()) return
+        disarmDelete()
+        player?.pause()
         val info = VideoConcat.inspect(segments.first().file)
         val recordedHeight = if (info.rotation == 90 || info.rotation == 270) info.width else info.height
         val options = mutableListOf<Pair<String, Int?>>(getString(R.string.export_original) to null)
@@ -281,7 +372,8 @@ class MainActivity : AppCompatActivity() {
             .setTitle(R.string.export_title)
             .setSingleChoiceItems(options.map { it.first }.toTypedArray(), 0) { _, w -> chosen = w }
             .setPositiveButton(R.string.save) { _, _ -> runExport(options[chosen].second) }
-            .setNegativeButton(R.string.cancel, null)
+            .setNegativeButton(R.string.cancel) { _, _ -> player?.play() }
+            .setOnCancelListener { player?.play() }
             .show()
     }
 
@@ -305,13 +397,14 @@ class MainActivity : AppCompatActivity() {
                 segments.forEach { it.file.delete() }
                 segments.clear()
                 setControlsEnabled(true)
-                refreshUi()
+                if (inReview) exitReview() else refreshUi()
                 Toast.makeText(this@MainActivity, R.string.saved, Toast.LENGTH_LONG).show()
             }
             override fun onError(message: String) {
                 dialog.dismiss()
                 ex.release(); exporter = null
                 setControlsEnabled(true)
+                player?.play()
                 MaterialAlertDialogBuilder(this@MainActivity)
                     .setTitle(getString(R.string.error, ""))
                     .setMessage(message)
@@ -346,6 +439,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun refreshUi() {
+        if (inReview) return
         val recording = activeRecording != null
         binding.recordButton.isSelected = recording
         binding.recordButton.contentDescription = getString(if (recording) R.string.stop else R.string.record)
@@ -382,10 +476,18 @@ class MainActivity : AppCompatActivity() {
         // Laufende Aufnahme beim Verlassen beenden; das Segment bleibt erhalten.
         activeRecording?.stop()
         activeRecording = null
+        player?.pause()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (inReview) { player?.play(); binding.review.playIcon.visibility = android.view.View.GONE }
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        main.removeCallbacks(playbackTicker)
+        player?.release(); player = null
         exporter?.release()
     }
 
