@@ -1,0 +1,52 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code holen
+        uses: actions/checkout@v4
+
+      - name: Java 17 einrichten
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Gradle einrichten (mit Cache)
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Debug-APK bauen
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: APK umbenennen
+        run: |
+          mkdir -p out
+          cp app/build/outputs/apk/debug/app-debug.apk out/VideoEditor-build${{ github.run_number }}.apk
+
+      - name: APK als Artifact hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: VideoEditor-APK
+          path: out/*.apk
+          retention-days: 30
+
+      - name: Release mit APK anlegen (direkt vom Handy ladbar)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Build ${{ github.run_number }}
+          body: |
+            Automatischer Build von Commit ${{ github.sha }}.
+            APK herunterladen und auf dem Handy installieren.
+          files: out/*.apk
