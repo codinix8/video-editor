@@ -11,19 +11,30 @@ android {
         applicationId = "de.codinix.videoeditor"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "0.2-step1"
+        versionCode = 3
+        versionName = "0.2.1-step1"
+    }
+
+    // Fester Signaturschlüssel, damit jeder Build als Update über den vorherigen
+    // installierbar ist. Ein neuer Zufallsschlüssel pro Build würde Android zur
+    // Meldung "Paket in Konflikt mit bestehendem Paket" veranlassen.
+    signingConfigs {
+        create("fixed") {
+            storeFile = rootProject.file("keystore/videoeditor.jks")
+            storePassword = "videoeditor"
+            keyAlias = "videoeditor"
+            keyPassword = "videoeditor"
+        }
     }
 
     buildTypes {
         debug {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("fixed")
         }
         release {
             isMinifyEnabled = false
-            // Für private Nutzung: Release nutzt ebenfalls den Debug-Key,
-            // damit die APK ohne eigenen Keystore installierbar ist.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("fixed")
         }
     }
 
