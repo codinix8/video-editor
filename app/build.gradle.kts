@@ -11,8 +11,8 @@ android {
         applicationId = "de.codinix.videoeditor"
         minSdk = 26
         targetSdk = 35
-        versionCode = 3
-        versionName = "0.2.1-step1"
+        versionCode = 5
+        versionName = "0.4-overlays"
     }
 
     // Fester Signaturschlüssel, damit jeder Build als Update über den vorherigen

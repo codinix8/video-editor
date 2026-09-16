@@ -28,4 +28,7 @@
     <string name="back_to_record">Zurück zur Aufnahme</string>
     <string name="review_hint">Tippen: Pause/Weiter · Läuft in Schleife</string>
     <string name="review_position">%1$s / %2$s · %3$d Segmente</string>
+    <string name="add_image">Bild aus Galerie einfügen</string>
+    <string name="remove_overlay">Overlay entfernen</string>
+    <string name="overlay_hint">Ziehen: verschieben · Zwei Finger: Größe/Drehung</string>
 </resources>

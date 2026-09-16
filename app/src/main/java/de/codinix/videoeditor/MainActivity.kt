@@ -10,13 +10,16 @@ import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.DynamicRange
+import androidx.camera.core.MirrorMode
 import androidx.camera.core.Preview
+import androidx.camera.core.UseCaseGroup
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.FallbackStrategy
 import androidx.camera.video.FileOutputOptions
@@ -33,6 +36,11 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import de.codinix.videoeditor.databinding.ActivityMainBinding
+import de.codinix.videoeditor.gl.CompositorEffect
+import de.codinix.videoeditor.gl.CompositorProcessor
+import de.codinix.videoeditor.overlay.ImageOverlay
+import de.codinix.videoeditor.overlay.OverlayStore
+import android.graphics.BitmapFactory
 import java.io.File
 import java.util.Locale
 
@@ -66,6 +74,15 @@ class MainActivity : AppCompatActivity() {
 
     private var exporter: Exporter? = null
 
+    // Render-Pipeline und Overlays
+    private val overlayStore = OverlayStore()
+    private lateinit var compositor: CompositorProcessor
+    private lateinit var compositorEffect: CompositorEffect
+
+    private val pickImage = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) addImageOverlay(uri)
+    }
+
     private var inReview = false
     private var player: ExoPlayer? = null
     private val playbackTicker = object : Runnable {
@@ -96,6 +113,24 @@ class MainActivity : AppCompatActivity() {
 
         // Alte Segmente aus einer abgestürzten Sitzung wegräumen.
         segmentDir.listFiles()?.forEach { it.delete() }
+
+        compositor = CompositorProcessor(overlayStore)
+        compositorEffect = CompositorEffect(compositor)
+        compositor.onFrameAspectChanged = { aspect -> main.post { binding.gestureView.frameAspect = aspect } }
+
+        binding.gestureView.store = overlayStore
+        binding.gestureView.onSelectionChanged = { sel ->
+            binding.removeOverlayButton.visibility =
+                if (sel != null) android.view.View.VISIBLE else android.view.View.GONE
+        }
+        binding.addImageButton.setOnClickListener {
+            pickImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+        }
+        binding.removeOverlayButton.setOnClickListener {
+            overlayStore.selectedId?.let { overlayStore.remove(it) }
+            binding.removeOverlayButton.visibility = android.view.View.GONE
+            binding.gestureView.invalidate()
+        }
 
         binding.recordButton.setOnClickListener { toggleRecording() }
         binding.flipButton.setOnClickListener { flipCamera() }
@@ -155,12 +190,20 @@ class MainActivity : AppCompatActivity() {
             it.surfaceProvider = binding.previewView.surfaceProvider
         }
         val recorder = Recorder.Builder().setQualitySelector(qualitySelector).build()
-        val capture = VideoCapture.withOutput(recorder)
+        // Frontkamera gespiegelt aufnehmen, damit Aufnahme = Vorschau (Overlays sitzen sonst falsch).
+        val capture = VideoCapture.Builder(recorder)
+            .setMirrorMode(MirrorMode.MIRROR_MODE_ON_FRONT_ONLY)
+            .build()
         videoCapture = capture
 
         try {
             provider.unbindAll()
-            camera = provider.bindToLifecycle(this, selector, preview, capture)
+            val group = UseCaseGroup.Builder()
+                .addUseCase(preview)
+                .addUseCase(capture)
+                .addEffect(compositorEffect)
+            binding.previewView.viewPort?.let { group.setViewPort(it) }
+            camera = provider.bindToLifecycle(this, selector, group.build())
             binding.qualityButton.text = label(wanted)
         } catch (e: Exception) {
             Log.e(TAG, "bind fehlgeschlagen", e)
@@ -299,6 +342,32 @@ class MainActivity : AppCompatActivity() {
         enterReview()
     }
 
+    // ---------------------------------------------------------------- Overlays
+
+    private fun addImageOverlay(uri: Uri) {
+        try {
+            // Größe ermitteln, dann auf max. 1280 px Kante herunterrechnen
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
+            var sample = 1
+            while (maxOf(bounds.outWidth, bounds.outHeight) / sample > 1280) sample *= 2
+            val opts = BitmapFactory.Options().apply {
+                inSampleSize = sample
+                inPreferredConfig = android.graphics.Bitmap.Config.ARGB_8888
+            }
+            val bmp = contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, opts) }
+                ?: throw IllegalStateException("Bild konnte nicht gelesen werden")
+            val overlay = ImageOverlay(ImageOverlay.newId(), bmp, cx = 0.5f, cy = 0.5f, widthFrac = 0.45f)
+            overlayStore.add(overlay)
+            binding.removeOverlayButton.visibility = android.view.View.VISIBLE
+            binding.gestureView.invalidate()
+            Toast.makeText(this, R.string.overlay_hint, Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Log.e(TAG, "Overlay laden fehlgeschlagen", e)
+            Toast.makeText(this, getString(R.string.error, e.message ?: "Bild"), Toast.LENGTH_LONG).show()
+        }
+    }
+
     // ---------------------------------------------------------------- Review
 
     private fun enterReview() {
@@ -306,6 +375,7 @@ class MainActivity : AppCompatActivity() {
         cameraProvider?.unbindAll()          // Kamera freigeben, spart Akku und Decoder
         binding.review.root.visibility = android.view.View.VISIBLE
         binding.previewView.visibility = android.view.View.INVISIBLE
+        binding.gestureView.visibility = android.view.View.GONE
         binding.review.playIcon.visibility = android.view.View.GONE
         buildPlayer()
         main.post(playbackTicker)
@@ -329,6 +399,7 @@ class MainActivity : AppCompatActivity() {
         binding.review.playerView.player = null
         binding.review.root.visibility = android.view.View.GONE
         binding.previewView.visibility = android.view.View.VISIBLE
+        binding.gestureView.visibility = android.view.View.VISIBLE
         disarmDelete()
         bindCamera()
         refreshUi()
@@ -489,6 +560,7 @@ class MainActivity : AppCompatActivity() {
         main.removeCallbacks(playbackTicker)
         player?.release(); player = null
         exporter?.release()
+        compositor.release()
     }
 
     companion object {

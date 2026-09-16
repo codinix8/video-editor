@@ -16,8 +16,9 @@ Auf dem Handy: Datei öffnen → „Aus dieser Quelle installieren" erlauben →
 |---|---|---|
 | 0 | Kamera-Vorschau, Aufnahme, Speichern in Galerie, Build-Kette | ✅ Build 1 |
 | 1 | Segment-Aufnahme (Start/Pause/Weiter), letztes Segment löschen, Export, Auflösungswahl, Kamera-Wechsel | ✅ Build 2 |
-| 1b | Review-Ansicht: Vorschau in Schleife, zurück zur Aufnahme, löschen, speichern | in Test |
-| 2 | Bild-Overlays aus Galerie, Video-Overlays (PiP), verschieben/skalieren | offen |
+| 1b | Review-Ansicht: Vorschau in Schleife, zurück zur Aufnahme, löschen, speichern | ✅ Build 4 |
+| 2a | OpenGL-Render-Pipeline (Vorschau = Aufnahme), Bild-Overlays: einfügen, verschieben, skalieren, drehen, entfernen | in Test |
+| 2b | Video-Overlays (PiP) mit Ton an/aus | offen |
 | 3 | Freistellung (Person vor Video-Hintergrund), Mosaik-Layouts | offen |
 | 4 | Farbfilter, Text- und Emoji-Overlays | offen |
 
