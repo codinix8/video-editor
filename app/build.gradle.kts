@@ -11,8 +11,8 @@ android {
         applicationId = "de.codinix.videoeditor"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1-step0"
+        versionCode = 2
+        versionName = "0.2-step1"
     }
 
     buildTypes {
@@ -53,4 +53,9 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:$camerax")
     implementation("androidx.camera:camera-video:$camerax")
     implementation("androidx.camera:camera-view:$camerax")
+
+    val media3 = "1.5.1"
+    implementation("androidx.media3:media3-transformer:$media3")
+    implementation("androidx.media3:media3-effect:$media3")
+    implementation("androidx.media3:media3-common:$media3")
 }

@@ -1,10 +1,28 @@
 <resources>
     <string name="app_name">VideoEditor</string>
     <string name="record">Aufnahme starten</string>
-    <string name="stop">Aufnahme stoppen</string>
+    <string name="stop">Aufnahme pausieren</string>
+    <string name="flip_camera">Kamera wechseln</string>
+    <string name="delete_last">Letztes Segment löschen</string>
+    <string name="finish">Fertigstellen</string>
+    <string name="quality">Auflösung</string>
     <string name="permission_needed">Kamera- und Mikrofon-Zugriff werden benötigt.</string>
     <string name="saved">Video gespeichert in Galerie</string>
     <string name="error">Fehler: %1$s</string>
-    <string name="ready">Bereit</string>
-    <string name="recording">Aufnahme läuft… %1$s</string>
+    <string name="ready">Bereit – Knopf drücken zum Aufnehmen</string>
+    <string name="recording">Aufnahme… %1$s</string>
+    <string name="paused">Pause · %1$d Segmente · %2$s</string>
+    <string name="tap_again_delete">Nochmal tippen: letztes Segment löschen</string>
+    <string name="segment_deleted">Segment gelöscht</string>
+    <string name="no_segments">Noch nichts aufgenommen</string>
+    <string name="export_title">Video speichern</string>
+    <string name="export_resolution">Exportauflösung</string>
+    <string name="export_original">Original (schnell, ohne Neukodierung)</string>
+    <string name="export_running">Video wird zusammengefügt… %1$d %%</string>
+    <string name="discard_title">Aufnahme verwerfen?</string>
+    <string name="discard_msg">%1$d Segmente gehen verloren.</string>
+    <string name="discard">Verwerfen</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="save">Speichern</string>
+    <string name="quality_title">Aufnahmeauflösung</string>
 </resources>
