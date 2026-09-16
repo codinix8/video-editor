@@ -59,9 +59,18 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
     /** Für Bitmaps: Y gespiegelt, weil Bitmaps oben-links beginnen, GL unten-links. */
     private val texCoordsFlipped = GlUtil.floatBuffer(floatArrayOf(0f, 1f, 1f, 1f, 0f, 0f, 1f, 0f))
 
-    /** Wird auf dem UI-Thread aufgerufen, wenn sich die Frame-Auflösung (nach Rotation) ändert. */
+    /** Wird aufgerufen, wenn sich das sichtbare Seitenverhältnis (Breite/Höhe) ändert. */
     var onFrameAspectChanged: ((widthOverHeight: Float) -> Unit)? = null
     private var lastReportedAspect = 0f
+
+    /**
+     * Drehung, die der Konsument (Display bzw. Encoder) auf einen UNGEDREHTEN Puffer
+     * anwendet, damit er aufrecht erscheint – i.d.R. CameraInfo.getSensorRotationDegrees().
+     * Ob ein Ausgabepuffer ungedreht ist, erkennen wir daran, dass er quer liegt (Breite > Höhe),
+     * denn die App läuft im Hochformat.
+     */
+    @Volatile
+    var sensorRotationDegrees = 90
 
     private var released = false
 
@@ -136,11 +145,20 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
         }
     }
 
+    /** Drehung, die für diesen Puffer noch vom Konsumenten kommt (0 wenn bereits aufrecht). */
+    private fun pendingRotation(size: Size): Int =
+        if (size.width > size.height) sensorRotationDegrees else 0
+
+    /** Sichtbares Seitenverhältnis (Breite/Höhe) nach der Drehung durch den Konsumenten. */
+    private fun displayAspect(size: Size): Float {
+        val rot = pendingRotation(size)
+        return if (rot == 90 || rot == 270) size.height.toFloat() / size.width.toFloat()
+        else size.width.toFloat() / size.height.toFloat()
+    }
+
     private fun reportAspect(out: SurfaceOutput) {
-        // Die Ausgabe-Größe ist bereits „aufrecht“ (CameraX rotiert per Transform-Matrix
-        // in den Texturkoordinaten, die Größe der Ziel-Surface ist die sichtbare Größe).
         if (out.targets and androidx.camera.core.CameraEffect.PREVIEW == 0) return
-        val a = out.size.width.toFloat() / out.size.height.toFloat()
+        val a = displayAspect(out.size)
         if (a != lastReportedAspect) {
             lastReportedAspect = a
             onFrameAspectChanged?.invoke(a)
@@ -217,10 +235,11 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
         GLES20.glVertexAttribPointer(aTex, 2, GLES20.GL_FLOAT, false, 0, texCoordsFlipped)
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
 
-        val frameAspect = size.width.toFloat() / size.height.toFloat()
+        val dispAspect = displayAspect(size)
+        val preRotation = pendingRotation(size)
         for (o in snapshot) {
             val tex = overlayTextures[o.id] ?: continue
-            buildOverlayMatrix(o, frameAspect, mvp)
+            buildOverlayMatrix(o, dispAspect, preRotation, mvp)
             GLES20.glUniformMatrix4fv(uMvp, 1, false, mvp, 0)
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, tex)
             GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
@@ -231,16 +250,20 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
     }
 
     /**
-     * Baut die Modellmatrix: Einheitsquadrat → Overlay-Rechteck in NDC.
-     * Reihenfolge: Skalierung (Breite, Höhe in „Breiten-Einheiten“) → Rotation →
-     * Anpassung des Seitenverhältnisses (y in NDC) → Verschiebung zum Mittelpunkt.
+     * Baut die Modellmatrix: Einheitsquadrat → Overlay-Rechteck im SICHTBAREN Bild (NDC),
+     * anschließend zurück in die Puffer-Orientierung.
+     * Reihenfolge (von innen nach außen): Skalierung (Breite, Höhe in „Breiten-Einheiten“) →
+     * eigene Drehung → Seitenverhältnis (y in NDC) → Verschiebung zum Mittelpunkt →
+     * Vor-Drehung, die die spätere Drehung durch Display/Encoder wieder aufhebt.
      */
-    private fun buildOverlayMatrix(o: OverlaySnapshot, frameAspect: Float, out: FloatArray) {
+    private fun buildOverlayMatrix(o: OverlaySnapshot, dispAspect: Float, preRotation: Int, out: FloatArray) {
         val ndcX = o.cx * 2f - 1f
         val ndcY = 1f - o.cy * 2f
         Matrix.setIdentityM(out, 0)
+        // Konsument dreht den Puffer um preRotation im Uhrzeigersinn → wir drehen vorab gegen
+        if (preRotation != 0) Matrix.rotateM(out, 0, preRotation.toFloat(), 0f, 0f, 1f)
         Matrix.translateM(out, 0, ndcX, ndcY, 0f)
-        Matrix.scaleM(out, 0, 1f, frameAspect, 1f)          // Breiten-Einheiten → NDC-y
+        Matrix.scaleM(out, 0, 1f, dispAspect, 1f)           // Breiten-Einheiten → NDC-y
         Matrix.rotateM(out, 0, -o.rotationDeg, 0f, 0f, 1f)  // Uhrzeigersinn im Bild = negativ in GL
         Matrix.scaleM(out, 0, o.widthFrac, o.widthFrac * o.aspect, 1f)
     }

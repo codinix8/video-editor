@@ -11,8 +11,8 @@ android {
         applicationId = "de.codinix.videoeditor"
         minSdk = 26
         targetSdk = 35
-        versionCode = 5
-        versionName = "0.4-overlays"
+        versionCode = 6
+        versionName = "0.4.1-overlays-fix"
     }
 
     // Fester Signaturschlüssel, damit jeder Build als Update über den vorherigen
@@ -58,6 +58,7 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.2.0")
     implementation("androidx.activity:activity-ktx:1.9.3")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+    implementation("androidx.exifinterface:exifinterface:1.3.7")
 
     implementation("androidx.camera:camera-core:$camerax")
     implementation("androidx.camera:camera-camera2:$camerax")

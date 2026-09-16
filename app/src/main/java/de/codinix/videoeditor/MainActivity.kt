@@ -183,6 +183,9 @@ class MainActivity : AppCompatActivity() {
         }?.filter { it in QUALITY_ORDER }?.sortedBy { QUALITY_ORDER.indexOf(it) }
         supportedQualities = if (fromDevice.isNullOrEmpty()) QUALITY_ORDER else fromDevice
 
+        cameraInfo?.let {
+            compositor.sensorRotationDegrees = it.getSensorRotationDegrees(android.view.Surface.ROTATION_0)
+        }
         val wanted = preferredQuality?.takeIf { it in supportedQualities } ?: supportedQualities.first()
         val qualitySelector = QualitySelector.from(wanted, FallbackStrategy.lowerQualityOrHigherThan(Quality.SD))
 
@@ -346,17 +349,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun addImageOverlay(uri: Uri) {
         try {
-            // Größe ermitteln, dann auf max. 1280 px Kante herunterrechnen
-            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-            contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
-            var sample = 1
-            while (maxOf(bounds.outWidth, bounds.outHeight) / sample > 1280) sample *= 2
-            val opts = BitmapFactory.Options().apply {
-                inSampleSize = sample
-                inPreferredConfig = android.graphics.Bitmap.Config.ARGB_8888
-            }
-            val bmp = contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, opts) }
-                ?: throw IllegalStateException("Bild konnte nicht gelesen werden")
+            val bmp = loadBitmap(uri, 1280)
             val overlay = ImageOverlay(ImageOverlay.newId(), bmp, cx = 0.5f, cy = 0.5f, widthFrac = 0.45f)
             overlayStore.add(overlay)
             binding.removeOverlayButton.visibility = android.view.View.VISIBLE
@@ -366,6 +359,46 @@ class MainActivity : AppCompatActivity() {
             Log.e(TAG, "Overlay laden fehlgeschlagen", e)
             Toast.makeText(this, getString(R.string.error, e.message ?: "Bild"), Toast.LENGTH_LONG).show()
         }
+    }
+
+    /**
+     * Lädt ein Bild mit korrekt angewendeter EXIF-Drehung als Software-Bitmap (für OpenGL nötig),
+     * auf maxEdge Pixel Kantenlänge begrenzt.
+     */
+    private fun loadBitmap(uri: Uri, maxEdge: Int): android.graphics.Bitmap {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val source = android.graphics.ImageDecoder.createSource(contentResolver, uri)
+            return android.graphics.ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
+                var sample = 1
+                while (maxOf(info.size.width, info.size.height) / sample > maxEdge) sample *= 2
+                decoder.setTargetSampleSize(sample)
+                decoder.allocator = android.graphics.ImageDecoder.ALLOCATOR_SOFTWARE
+            }
+        }
+        // Android 8: BitmapFactory + manuelle EXIF-Drehung
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
+        var sample = 1
+        while (maxOf(bounds.outWidth, bounds.outHeight) / sample > maxEdge) sample *= 2
+        val opts = BitmapFactory.Options().apply {
+            inSampleSize = sample
+            inPreferredConfig = android.graphics.Bitmap.Config.ARGB_8888
+        }
+        val raw = contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, opts) }
+            ?: throw IllegalStateException("Bild konnte nicht gelesen werden")
+        val orientation = contentResolver.openInputStream(uri)?.use {
+            androidx.exifinterface.media.ExifInterface(it)
+                .getAttributeInt(androidx.exifinterface.media.ExifInterface.TAG_ORIENTATION,
+                    androidx.exifinterface.media.ExifInterface.ORIENTATION_NORMAL)
+        } ?: androidx.exifinterface.media.ExifInterface.ORIENTATION_NORMAL
+        val m = android.graphics.Matrix()
+        when (orientation) {
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_90 -> m.postRotate(90f)
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_180 -> m.postRotate(180f)
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_270 -> m.postRotate(270f)
+            else -> return raw
+        }
+        return android.graphics.Bitmap.createBitmap(raw, 0, 0, raw.width, raw.height, m, true)
     }
 
     // ---------------------------------------------------------------- Review
