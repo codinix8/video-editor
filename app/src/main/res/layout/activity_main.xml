@@ -83,6 +83,18 @@
         app:layout_constraintTop_toBottomOf="@id/qualityButton" />
 
     <ImageButton
+        android:id="@+id/draftsButton"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_round_button"
+        android:contentDescription="@string/drafts"
+        android:src="@drawable/ic_folder"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/statusText" />
+
+    <ImageButton
         android:id="@+id/removeOverlayButton"
         android:layout_width="44dp"
         android:layout_height="44dp"
@@ -92,8 +104,9 @@
         android:contentDescription="@string/remove_overlay"
         android:src="@drawable/ic_close"
         android:visibility="gone"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/statusText" />
+        app:layout_constraintStart_toStartOf="@id/draftsButton"
+        app:layout_constraintEnd_toEndOf="@id/draftsButton"
+        app:layout_constraintTop_toBottomOf="@id/draftsButton" />
 
     <!-- Untere Leiste -->
     <ImageButton

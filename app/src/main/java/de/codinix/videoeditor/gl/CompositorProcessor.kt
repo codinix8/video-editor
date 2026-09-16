@@ -72,6 +72,10 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
     @Volatile
     var sensorRotationDegrees = 90
 
+    /** Frontkamera aktiv? Dann muss das Endbild horizontal gespiegelt sein. */
+    @Volatile
+    var frontFacing = false
+
     private var released = false
 
     init {
@@ -192,7 +196,10 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
 
                 out.surfaceOutput.updateTransformMatrix(outMatrix, texMatrix)
                 drawCamera(outMatrix)
-                drawOverlays(snapshot, out.size)
+                // Hat CameraX die Spiegelung schon in GL eingebaut (Determinante gekippt)?
+                val glMirrored = (det2(outMatrix) < 0) != (det2(texMatrix) < 0)
+                val consumerMirrors = frontFacing && !glMirrored
+                drawOverlays(snapshot, out.size, consumerMirrors)
 
                 eglCore.setPresentationTime(out.eglSurface, timestamp)
                 eglCore.swapBuffers(out.eglSurface)
@@ -220,7 +227,10 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
         GLES20.glDisableVertexAttribArray(aTex)
     }
 
-    private fun drawOverlays(snapshot: List<OverlaySnapshot>, size: Size) {
+    /** 2D-Determinante des linearen Teils einer column-major 4x4-Matrix. */
+    private fun det2(m: FloatArray) = m[0] * m[5] - m[1] * m[4]
+
+    private fun drawOverlays(snapshot: List<OverlaySnapshot>, size: Size, preMirror: Boolean) {
         if (snapshot.isEmpty()) return
         GLES20.glUseProgram(overlayProgram)
         GLES20.glEnable(GLES20.GL_BLEND)
@@ -239,7 +249,7 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
         val preRotation = pendingRotation(size)
         for (o in snapshot) {
             val tex = overlayTextures[o.id] ?: continue
-            buildOverlayMatrix(o, dispAspect, preRotation, mvp)
+            buildOverlayMatrix(o, dispAspect, preRotation, preMirror, mvp)
             GLES20.glUniformMatrix4fv(uMvp, 1, false, mvp, 0)
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, tex)
             GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
@@ -256,12 +266,16 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
      * eigene Drehung → Seitenverhältnis (y in NDC) → Verschiebung zum Mittelpunkt →
      * Vor-Drehung, die die spätere Drehung durch Display/Encoder wieder aufhebt.
      */
-    private fun buildOverlayMatrix(o: OverlaySnapshot, dispAspect: Float, preRotation: Int, out: FloatArray) {
+    private fun buildOverlayMatrix(
+        o: OverlaySnapshot, dispAspect: Float, preRotation: Int, preMirror: Boolean, out: FloatArray
+    ) {
         val ndcX = o.cx * 2f - 1f
         val ndcY = 1f - o.cy * 2f
         Matrix.setIdentityM(out, 0)
         // Konsument dreht den Puffer um preRotation im Uhrzeigersinn → wir drehen vorab gegen
         if (preRotation != 0) Matrix.rotateM(out, 0, preRotation.toFloat(), 0f, 0f, 1f)
+        // Konsument spiegelt das (aufrechte) Bild horizontal → wir spiegeln vorab
+        if (preMirror) Matrix.scaleM(out, 0, -1f, 1f, 1f)
         Matrix.translateM(out, 0, ndcX, ndcY, 0f)
         Matrix.scaleM(out, 0, 1f, dispAspect, 1f)           // Breiten-Einheiten → NDC-y
         Matrix.rotateM(out, 0, -o.rotationDeg, 0f, 0f, 1f)  // Uhrzeigersinn im Bild = negativ in GL

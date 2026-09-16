@@ -73,6 +73,7 @@ class MainActivity : AppCompatActivity() {
     private var deleteArmed = false
 
     private var exporter: Exporter? = null
+    private val drafts by lazy { DraftStore(this) }
 
     // Render-Pipeline und Overlays
     private val overlayStore = OverlayStore()
@@ -140,6 +141,8 @@ class MainActivity : AppCompatActivity() {
         binding.review.backButton.setOnClickListener { exitReview() }
         binding.review.reviewSaveButton.setOnClickListener { showExportDialog() }
         binding.review.reviewDeleteButton.setOnClickListener { onDeletePressed() }
+        binding.review.saveDraftButton.setOnClickListener { saveDraft() }
+        binding.draftsButton.setOnClickListener { showDrafts() }
         binding.review.playerView.setOnClickListener { togglePlayback() }
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -186,6 +189,7 @@ class MainActivity : AppCompatActivity() {
         cameraInfo?.let {
             compositor.sensorRotationDegrees = it.getSensorRotationDegrees(android.view.Surface.ROTATION_0)
         }
+        compositor.frontFacing = lensFacing == CameraSelector.LENS_FACING_FRONT
         val wanted = preferredQuality?.takeIf { it in supportedQualities } ?: supportedQualities.first()
         val qualitySelector = QualitySelector.from(wanted, FallbackStrategy.lowerQualityOrHigherThan(Quality.SD))
 
@@ -500,6 +504,8 @@ class MainActivity : AppCompatActivity() {
                 ex.release(); exporter = null
                 segments.forEach { it.file.delete() }
                 segments.clear()
+                overlayStore.clear()
+                binding.removeOverlayButton.visibility = android.view.View.GONE
                 setControlsEnabled(true)
                 if (inReview) exitReview() else refreshUi()
                 Toast.makeText(this@MainActivity, R.string.saved, Toast.LENGTH_LONG).show()
@@ -526,10 +532,91 @@ class MainActivity : AppCompatActivity() {
                 activeRecording?.stop(); activeRecording = null
                 segments.forEach { it.file.delete() }
                 segments.clear()
+                overlayStore.clear()
+                binding.removeOverlayButton.visibility = android.view.View.GONE
                 refreshUi()
             }
+            .setNeutralButton(R.string.save_draft) { _, _ -> saveDraft() }
             .setNegativeButton(R.string.cancel, null)
             .show()
+    }
+
+    // ---------------------------------------------------------------- Entwürfe
+
+    private fun saveDraft() {
+        if (activeRecording != null) return
+        if (segments.isEmpty()) {
+            Toast.makeText(this, R.string.no_segments, Toast.LENGTH_SHORT).show(); return
+        }
+        try {
+            drafts.save(
+                segments.map { it.file to it.durationMs },
+                overlayStore.items.toList(),
+                lensFacing,
+                preferredQuality?.let { label(it) }
+            )
+            segments.clear()
+            overlayStore.clear()
+            binding.removeOverlayButton.visibility = android.view.View.GONE
+            Toast.makeText(this, R.string.draft_saved, Toast.LENGTH_SHORT).show()
+            if (inReview) exitReview() else refreshUi()
+        } catch (e: Exception) {
+            Log.e(TAG, "Entwurf speichern fehlgeschlagen", e)
+            Toast.makeText(this, getString(R.string.error, e.message ?: "Entwurf"), Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun showDrafts() {
+        if (activeRecording != null || segments.isNotEmpty()) return
+        val list = drafts.list()
+        if (list.isEmpty()) {
+            Toast.makeText(this, R.string.no_drafts, Toast.LENGTH_SHORT).show(); return
+        }
+        val fmtDate = java.text.SimpleDateFormat("dd.MM. HH:mm", Locale.GERMANY)
+        val labels = list.map {
+            getString(R.string.draft_item, fmtDate.format(it.createdAt), it.segmentCount, fmt(it.durationMs))
+        }.toTypedArray()
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.drafts)
+            .setItems(labels) { _, which -> askDraftAction(list[which]) }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun askDraftAction(info: DraftStore.Info) {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.drafts)
+            .setMessage(getString(R.string.draft_item,
+                java.text.SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.GERMANY).format(info.createdAt),
+                info.segmentCount, fmt(info.durationMs)))
+            .setPositiveButton(R.string.open) { _, _ -> loadDraft(info) }
+            .setNeutralButton(R.string.delete) { _, _ -> drafts.delete(info) }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun loadDraft(info: DraftStore.Info) {
+        try {
+            val loaded = drafts.load(info, segmentDir)
+            segments.clear()
+            loaded.segments.forEach { (f, d) -> segments.add(Segment(f, d)) }
+            overlayStore.clear()
+            loaded.overlays.forEach { overlayStore.add(it) }
+            overlayStore.selectedId = null
+            binding.removeOverlayButton.visibility = android.view.View.GONE
+
+            // Kameraeinstellungen wiederherstellen, damit neue Segmente zu den alten passen
+            lensFacing = loaded.lensFacing
+            preferredQuality = QUALITY_ORDER.firstOrNull { label(it) == loaded.qualityLabel }
+            bindCamera()
+
+            binding.gestureView.invalidate()
+            refreshUi()
+            Toast.makeText(this, R.string.draft_loaded, Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Log.e(TAG, "Entwurf laden fehlgeschlagen", e)
+            Toast.makeText(this, getString(R.string.error, e.message ?: "Entwurf"), Toast.LENGTH_LONG).show()
+        }
     }
 
     // ---------------------------------------------------------------- UI
@@ -555,6 +642,9 @@ class MainActivity : AppCompatActivity() {
             else -> getString(R.string.paused, segments.size, fmt(total))
         }
         binding.segmentBar.update(segments.map { it.durationMs }, liveDurationMs, deleteArmed)
+
+        binding.draftsButton.visibility =
+            if (segments.isEmpty() && !recording) android.view.View.VISIBLE else android.view.View.GONE
 
         // Während der Aufnahme sind Auflösung, Löschen und Fertig gesperrt (Kamera-Wechsel nicht).
         listOf(binding.qualityButton, binding.deleteButton, binding.finishButton).forEach {

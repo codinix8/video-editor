@@ -48,6 +48,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/reviewBar" />
 
+    <ImageButton
+        android:id="@+id/saveDraftButton"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_marginEnd="12dp"
+        android:background="@drawable/bg_round_button"
+        android:contentDescription="@string/save_draft"
+        android:src="@drawable/ic_save"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/backButton" />
+
     <TextView
         android:id="@+id/reviewStatus"
         android:layout_width="wrap_content"

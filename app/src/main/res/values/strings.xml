@@ -31,4 +31,12 @@
     <string name="add_image">Bild aus Galerie einfügen</string>
     <string name="remove_overlay">Overlay entfernen</string>
     <string name="overlay_hint">Ziehen: verschieben · Zwei Finger: Größe/Drehung</string>
+    <string name="drafts">Entwürfe</string>
+    <string name="save_draft">Als Entwurf speichern</string>
+    <string name="draft_saved">Entwurf gespeichert</string>
+    <string name="draft_loaded">Entwurf geladen</string>
+    <string name="no_drafts">Keine Entwürfe vorhanden</string>
+    <string name="draft_item">%1$s · %2$d Segmente · %3$s</string>
+    <string name="open">Öffnen</string>
+    <string name="delete">Löschen</string>
 </resources>
