@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">VideoEditor</string>
+    <string name="record">Aufnahme starten</string>
+    <string name="stop">Aufnahme stoppen</string>
+    <string name="permission_needed">Kamera- und Mikrofon-Zugriff werden benötigt.</string>
+    <string name="saved">Video gespeichert in Galerie</string>
+    <string name="error">Fehler: %1$s</string>
+    <string name="ready">Bereit</string>
+    <string name="recording">Aufnahme läuft… %1$s</string>
+</resources>
