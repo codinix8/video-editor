@@ -196,9 +196,11 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
 
                 out.surfaceOutput.updateTransformMatrix(outMatrix, texMatrix)
                 drawCamera(outMatrix)
-                // Hat CameraX die Spiegelung schon in GL eingebaut (Determinante gekippt)?
-                val glMirrored = (det2(outMatrix) < 0) != (det2(texMatrix) < 0)
-                val consumerMirrors = frontFacing && !glMirrored
+                // Frontkamera: Der Vorschau-Puffer bleibt ungespiegelt und wird erst vom Display
+                // gespiegelt (zusammen mit der Drehung). Der Aufnahme-Puffer muss dagegen schon in
+                // GL gespiegelt sein, ein Encoder kann das nicht – dort bleiben Overlays unverändert.
+                val isPreview = out.surfaceOutput.targets and androidx.camera.core.CameraEffect.PREVIEW != 0
+                val consumerMirrors = frontFacing && isPreview && pendingRotation(out.size) != 0
                 drawOverlays(snapshot, out.size, consumerMirrors)
 
                 eglCore.setPresentationTime(out.eglSurface, timestamp)
@@ -226,9 +228,6 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
         GLES20.glDisableVertexAttribArray(aPos)
         GLES20.glDisableVertexAttribArray(aTex)
     }
-
-    /** 2D-Determinante des linearen Teils einer column-major 4x4-Matrix. */
-    private fun det2(m: FloatArray) = m[0] * m[5] - m[1] * m[4]
 
     private fun drawOverlays(snapshot: List<OverlaySnapshot>, size: Size, preMirror: Boolean) {
         if (snapshot.isEmpty()) return
