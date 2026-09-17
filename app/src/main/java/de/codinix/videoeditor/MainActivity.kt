@@ -352,7 +352,7 @@ class MainActivity : AppCompatActivity() {
             main.removeCallbacks(disarmRunnable)
             deleteArmed = false
             segments.removeAt(segments.lastIndex).file.delete()
-            syncOverlayPlayer()
+            syncOverlayPlayer(afterDelete = true)
             Toast.makeText(this, R.string.segment_deleted, Toast.LENGTH_SHORT).show()
             if (inReview) {
                 if (segments.isEmpty()) exitReview()
@@ -583,12 +583,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     /** Position des Overlay-Videos an die Gesamtlänge der Aufnahme angleichen. */
-    private fun syncOverlayPlayer() {
+    /**
+     * @param afterDelete true, wenn gerade ein Segment gelöscht wurde: liegt der Einfügezeitpunkt
+     * jetzt hinter dem Ende der Aufnahme, wird er auf das Ende gezogen. In allen anderen Fällen
+     * bleibt der Einfügezeitpunkt unangetastet.
+     */
+    private fun syncOverlayPlayer(afterDelete: Boolean = false) {
         val o = overlayStore.videoOverlay() ?: return
         val p = overlayPlayer ?: return
-        val total = segments.sumOf { it.durationMs }
-        if (total < o.startOffsetMs) o.startOffsetMs = total
-        var pos = total - o.startOffsetMs
+        val total = segments.sumOf { it.durationMs } + liveDurationMs
+        if (afterDelete && total < o.startOffsetMs) o.startOffsetMs = total
+        var pos = (total - o.startOffsetMs).coerceAtLeast(0)
         if (o.durationMs > 0) pos %= o.durationMs
         p.seekTo(pos)
     }
