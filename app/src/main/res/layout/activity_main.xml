@@ -83,6 +83,30 @@
         app:layout_constraintTop_toBottomOf="@id/qualityButton" />
 
     <ImageButton
+        android:id="@+id/addVideoButton"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_round_button"
+        android:contentDescription="@string/add_video"
+        android:src="@drawable/ic_add_video"
+        app:layout_constraintEnd_toEndOf="@id/flipButton"
+        app:layout_constraintTop_toBottomOf="@id/addImageButton" />
+
+    <ImageButton
+        android:id="@+id/soundButton"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_round_button"
+        android:contentDescription="@string/sound_on"
+        android:src="@drawable/ic_volume_on"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/removeOverlayButton" />
+
+    <ImageButton
         android:id="@+id/draftsButton"
         android:layout_width="52dp"
         android:layout_height="52dp"

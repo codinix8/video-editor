@@ -1,29 +1,27 @@
 package de.codinix.videoeditor.overlay
 
 import android.graphics.Bitmap
+import java.io.File
 import java.util.concurrent.atomic.AtomicLong
 
 /**
- * Ein Bild-Overlay im Frame. Alle Koordinaten sind auf den Ausgabe-Frame normiert:
+ * Gemeinsame Geometrie aller Overlays. Koordinaten sind auf den sichtbaren Frame normiert:
  *  - cx, cy: Mittelpunkt, 0..1 der Frame-Breite bzw. -Höhe (0,0 = oben links)
  *  - widthFrac: Breite als Anteil der Frame-Breite
  *  - rotationDeg: Drehung im Uhrzeigersinn
- *
- * Auf diese Weise sitzt das Overlay in Vorschau und Aufnahme an derselben Stelle,
- * auch wenn beide Ausgaben unterschiedliche Pixelgrößen haben.
+ * So sitzt ein Overlay in Vorschau und Aufnahme an derselben Stelle, auch wenn beide
+ * Ausgaben unterschiedliche Pixelgrößen haben.
  */
-class ImageOverlay(
-    val id: Long,
-    val bitmap: Bitmap,
-    var cx: Float = 0.5f,
-    var cy: Float = 0.5f,
-    var widthFrac: Float = 0.4f,
-    var rotationDeg: Float = 0f
-) {
-    /** Höhe/Breite des Bildes. */
-    val aspect: Float get() = bitmap.height.toFloat() / bitmap.width.toFloat()
+sealed class Overlay {
+    abstract val id: Long
+    abstract var cx: Float
+    abstract var cy: Float
+    abstract var widthFrac: Float
+    abstract var rotationDeg: Float
+    /** Höhe/Breite des Inhalts. */
+    abstract val aspect: Float
 
-    fun snapshot() = OverlaySnapshot(id, bitmap, cx, cy, widthFrac, rotationDeg, aspect)
+    abstract fun snapshot(): OverlaySnapshot
 
     companion object {
         private val nextId = AtomicLong(1)
@@ -31,15 +29,51 @@ class ImageOverlay(
     }
 }
 
+class ImageOverlay(
+    override val id: Long,
+    val bitmap: Bitmap,
+    override var cx: Float = 0.5f,
+    override var cy: Float = 0.5f,
+    override var widthFrac: Float = 0.4f,
+    override var rotationDeg: Float = 0f
+) : Overlay() {
+    override val aspect: Float get() = bitmap.height.toFloat() / bitmap.width.toFloat()
+    override fun snapshot() = OverlaySnapshot(id, cx, cy, widthFrac, rotationDeg, aspect, bitmap = bitmap)
+}
+
+/**
+ * Ein Video als Bild-im-Bild. Die Wiedergabe läuft nur während der Aufnahme
+ * (siehe MainActivity), damit das Video im Ergebnis durchgehend ist.
+ *  - startOffsetMs: Position in der Gesamtaufnahme, an der das Video eingefügt wurde
+ *  - soundOn: Ton beim Export unter den Mikrofon-Ton mischen
+ */
+class VideoOverlay(
+    override val id: Long,
+    val file: File,
+    override var cx: Float = 0.5f,
+    override var cy: Float = 0.5f,
+    override var widthFrac: Float = 0.5f,
+    override var rotationDeg: Float = 0f,
+    var soundOn: Boolean = true,
+    var startOffsetMs: Long = 0L
+) : Overlay() {
+    /** Wird gesetzt, sobald der Player die Videogröße kennt. */
+    var videoAspect: Float = 16f / 9f
+    var durationMs: Long = 0L
+    override val aspect: Float get() = videoAspect
+    override fun snapshot() = OverlaySnapshot(id, cx, cy, widthFrac, rotationDeg, aspect, isVideo = true)
+}
+
 /** Unveränderliche Kopie für den Render-Thread. */
 data class OverlaySnapshot(
     val id: Long,
-    val bitmap: Bitmap,
     val cx: Float,
     val cy: Float,
     val widthFrac: Float,
     val rotationDeg: Float,
-    val aspect: Float
+    val aspect: Float,
+    val bitmap: Bitmap? = null,
+    val isVideo: Boolean = false
 )
 
 /**
@@ -47,7 +81,7 @@ data class OverlaySnapshot(
  * Momentaufnahme bereit. Jede Änderung ruft [publish] auf.
  */
 class OverlayStore {
-    val items = mutableListOf<ImageOverlay>()
+    val items = mutableListOf<Overlay>()
 
     @Volatile
     var snapshot: List<OverlaySnapshot> = emptyList()
@@ -55,7 +89,7 @@ class OverlayStore {
 
     var selectedId: Long? = null
 
-    fun add(overlay: ImageOverlay) {
+    fun add(overlay: Overlay) {
         items.add(overlay)
         selectedId = overlay.id
         publish()
@@ -73,7 +107,9 @@ class OverlayStore {
         publish()
     }
 
-    fun selected(): ImageOverlay? = items.firstOrNull { it.id == selectedId }
+    fun selected(): Overlay? = items.firstOrNull { it.id == selectedId }
+
+    fun videoOverlay(): VideoOverlay? = items.filterIsInstance<VideoOverlay>().firstOrNull()
 
     fun bringToFront(id: Long) {
         val idx = items.indexOfFirst { it.id == id }

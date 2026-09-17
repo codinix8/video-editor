@@ -39,7 +39,10 @@ import de.codinix.videoeditor.databinding.ActivityMainBinding
 import de.codinix.videoeditor.gl.CompositorEffect
 import de.codinix.videoeditor.gl.CompositorProcessor
 import de.codinix.videoeditor.overlay.ImageOverlay
+import de.codinix.videoeditor.overlay.Overlay
 import de.codinix.videoeditor.overlay.OverlayStore
+import de.codinix.videoeditor.overlay.VideoOverlay
+import androidx.media3.common.VideoSize
 import android.graphics.BitmapFactory
 import java.io.File
 import java.util.Locale
@@ -83,6 +86,13 @@ class MainActivity : AppCompatActivity() {
     private val pickImage = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) addImageOverlay(uri)
     }
+    private val pickVideo = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) addVideoOverlay(uri)
+    }
+
+    /** Player für das Video-Overlay; läuft nur während der Aufnahme, immer stumm. */
+    private var overlayPlayer: ExoPlayer? = null
+    private val bgExecutor = java.util.concurrent.Executors.newSingleThreadExecutor()
 
     private var inReview = false
     private var player: ExoPlayer? = null
@@ -114,22 +124,31 @@ class MainActivity : AppCompatActivity() {
 
         // Alte Segmente aus einer abgestürzten Sitzung wegräumen.
         segmentDir.listFiles()?.forEach { it.delete() }
+        cacheDir.listFiles()?.filter { it.name.startsWith("overlay_video_") || it.name.startsWith("export_") }
+            ?.forEach { it.delete() }
 
         compositor = CompositorProcessor(overlayStore)
         compositorEffect = CompositorEffect(compositor)
         compositor.onFrameAspectChanged = { aspect -> main.post { binding.gestureView.frameAspect = aspect } }
 
         binding.gestureView.store = overlayStore
-        binding.gestureView.onSelectionChanged = { sel ->
-            binding.removeOverlayButton.visibility =
-                if (sel != null) android.view.View.VISIBLE else android.view.View.GONE
+        binding.gestureView.onSelectionChanged = { sel -> updateOverlayButtons(sel) }
+        binding.addVideoButton.setOnClickListener {
+            pickVideo.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
+        }
+        binding.soundButton.setOnClickListener {
+            (overlayStore.selected() as? VideoOverlay)?.let {
+                it.soundOn = !it.soundOn
+                updateOverlayButtons(it)
+                Toast.makeText(this, if (it.soundOn) R.string.sound_on else R.string.sound_off, Toast.LENGTH_SHORT).show()
+            }
         }
         binding.addImageButton.setOnClickListener {
             pickImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         }
         binding.removeOverlayButton.setOnClickListener {
-            overlayStore.selectedId?.let { overlayStore.remove(it) }
-            binding.removeOverlayButton.visibility = android.view.View.GONE
+            overlayStore.selectedId?.let { removeOverlay(it) }
+            updateOverlayButtons(null)
             binding.gestureView.invalidate()
         }
 
@@ -270,6 +289,7 @@ class MainActivity : AppCompatActivity() {
             when (event) {
                 is VideoRecordEvent.Start -> {
                     liveDurationMs = 0
+                    overlayPlayer?.play()
                     refreshUi()
                 }
                 is VideoRecordEvent.Status -> {
@@ -283,6 +303,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun onSegmentFinalized(event: VideoRecordEvent.Finalize, file: File) {
         activeRecording = null
+        overlayPlayer?.pause()
         val durationMs = event.recordingStats.recordedDurationNanos / 1_000_000
         // Auch bei manchen "Fehlern" (z.B. App in den Hintergrund) ist die Datei brauchbar.
         val usable = file.exists() && file.length() > 0 && durationMs > 200
@@ -296,6 +317,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         liveDurationMs = 0
+        syncOverlayPlayer()
         refreshUi()
     }
 
@@ -322,6 +344,7 @@ class MainActivity : AppCompatActivity() {
             main.removeCallbacks(disarmRunnable)
             deleteArmed = false
             segments.removeAt(segments.lastIndex).file.delete()
+            syncOverlayPlayer()
             Toast.makeText(this, R.string.segment_deleted, Toast.LENGTH_SHORT).show()
             if (inReview) {
                 if (segments.isEmpty()) exitReview()
@@ -354,15 +377,110 @@ class MainActivity : AppCompatActivity() {
     private fun addImageOverlay(uri: Uri) {
         try {
             val bmp = loadBitmap(uri, 1280)
-            val overlay = ImageOverlay(ImageOverlay.newId(), bmp, cx = 0.5f, cy = 0.5f, widthFrac = 0.45f)
+            val overlay = ImageOverlay(Overlay.newId(), bmp, cx = 0.5f, cy = 0.5f, widthFrac = 0.45f)
             overlayStore.add(overlay)
-            binding.removeOverlayButton.visibility = android.view.View.VISIBLE
+            updateOverlayButtons(overlay)
             binding.gestureView.invalidate()
             Toast.makeText(this, R.string.overlay_hint, Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             Log.e(TAG, "Overlay laden fehlgeschlagen", e)
             Toast.makeText(this, getString(R.string.error, e.message ?: "Bild"), Toast.LENGTH_LONG).show()
         }
+    }
+
+    private fun updateOverlayButtons(sel: Overlay?) {
+        binding.removeOverlayButton.visibility = if (sel != null) android.view.View.VISIBLE else android.view.View.GONE
+        val video = sel as? VideoOverlay
+        binding.soundButton.visibility = if (video != null) android.view.View.VISIBLE else android.view.View.GONE
+        video?.let {
+            binding.soundButton.setImageResource(if (it.soundOn) R.drawable.ic_volume_on else R.drawable.ic_volume_off)
+            binding.soundButton.contentDescription = getString(if (it.soundOn) R.string.sound_on else R.string.sound_off)
+        }
+    }
+
+    private fun removeOverlay(id: Long) {
+        val o = overlayStore.items.firstOrNull { it.id == id }
+        overlayStore.remove(id)
+        if (o is VideoOverlay) {
+            overlayPlayer?.release(); overlayPlayer = null
+            compositor.releaseVideoLayer(o.id)
+            o.file.delete()
+        }
+    }
+
+    private fun clearOverlays() {
+        overlayStore.items.map { it.id }.forEach { removeOverlay(it) }
+        overlayStore.clear()
+        updateOverlayButtons(null)
+    }
+
+    private fun addVideoOverlay(uri: Uri) {
+        if (overlayStore.videoOverlay() != null) {
+            Toast.makeText(this, R.string.only_one_video, Toast.LENGTH_LONG).show(); return
+        }
+        Toast.makeText(this, R.string.video_copying, Toast.LENGTH_SHORT).show()
+        val dest = File(cacheDir, "overlay_video_${System.currentTimeMillis()}.mp4")
+        bgExecutor.execute {
+            try {
+                contentResolver.openInputStream(uri)?.use { input -> dest.outputStream().use { input.copyTo(it) } }
+                    ?: throw IllegalStateException("Video konnte nicht gelesen werden")
+                main.post {
+                    val total = segments.sumOf { it.durationMs }
+                    val overlay = VideoOverlay(Overlay.newId(), dest, startOffsetMs = total)
+                    overlayStore.add(overlay)
+                    attachVideoOverlay(overlay)
+                    updateOverlayButtons(overlay)
+                    binding.gestureView.invalidate()
+                    Toast.makeText(this, R.string.overlay_hint, Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Video-Overlay fehlgeschlagen", e)
+                dest.delete()
+                main.post { Toast.makeText(this, getString(R.string.error, e.message ?: "Video"), Toast.LENGTH_LONG).show() }
+            }
+        }
+    }
+
+    /** Player anlegen und in die GL-Textur des Overlays rendern lassen. */
+    private fun attachVideoOverlay(overlay: VideoOverlay) {
+        overlayPlayer?.release()
+        val p = ExoPlayer.Builder(this).build()
+        p.setMediaItem(MediaItem.fromUri(Uri.fromFile(overlay.file)))
+        p.repeatMode = Player.REPEAT_MODE_ALL
+        p.volume = 0f                    // Ton kommt erst beim Export dazu (kein Mikrofon-Übersprechen)
+        p.addListener(object : Player.Listener {
+            override fun onVideoSizeChanged(videoSize: VideoSize) {
+                if (videoSize.width > 0 && videoSize.height > 0) {
+                    val rot = videoSize.unappliedRotationDegrees
+                    val w = if (rot == 90 || rot == 270) videoSize.height else videoSize.width
+                    val h = if (rot == 90 || rot == 270) videoSize.width else videoSize.height
+                    overlay.videoAspect = h.toFloat() / w.toFloat()
+                    overlayStore.publish()
+                    binding.gestureView.invalidate()
+                }
+            }
+            override fun onPlaybackStateChanged(state: Int) {
+                if (state == Player.STATE_READY && overlay.durationMs <= 0) {
+                    overlay.durationMs = p.duration.coerceAtLeast(0)
+                    syncOverlayPlayer()
+                }
+            }
+        })
+        p.prepare()
+        p.playWhenReady = activeRecording != null
+        overlayPlayer = p
+        compositor.createVideoLayer(overlay.id) { surface -> main.post { overlayPlayer?.setVideoSurface(surface) } }
+    }
+
+    /** Position des Overlay-Videos an die Gesamtlänge der Aufnahme angleichen. */
+    private fun syncOverlayPlayer() {
+        val o = overlayStore.videoOverlay() ?: return
+        val p = overlayPlayer ?: return
+        val total = segments.sumOf { it.durationMs }
+        if (total < o.startOffsetMs) o.startOffsetMs = total
+        var pos = total - o.startOffsetMs
+        if (o.durationMs > 0) pos %= o.durationMs
+        p.seekTo(pos)
     }
 
     /**
@@ -495,20 +613,29 @@ class MainActivity : AppCompatActivity() {
 
         val ex = Exporter(this)
         exporter = ex
+        val audioMix = overlayStore.videoOverlay()
+            ?.takeIf { it.soundOn && it.durationMs > 0 }
+            ?.let { listOf(Exporter.AudioMix(it.file, it.startOffsetMs, it.durationMs)) }
+            ?: emptyList()
+        val progressRes = if (audioMix.isEmpty()) R.string.export_running else R.string.export_running_mix
         ex.export(segments.map { it.file }, targetHeight, object : Exporter.Listener {
             override fun onProgress(percent: Int) {
-                dialog.setMessage(getString(R.string.export_running, percent))
+                dialog.setMessage(getString(progressRes, percent))
             }
             override fun onDone(uri: Uri) {
                 dialog.dismiss()
                 ex.release(); exporter = null
                 segments.forEach { it.file.delete() }
                 segments.clear()
-                overlayStore.clear()
-                binding.removeOverlayButton.visibility = android.view.View.GONE
+                clearOverlays()
                 setControlsEnabled(true)
                 if (inReview) exitReview() else refreshUi()
-                Toast.makeText(this@MainActivity, R.string.saved, Toast.LENGTH_LONG).show()
+                MaterialAlertDialogBuilder(this@MainActivity)
+                    .setTitle(R.string.saved_title)
+                    .setMessage(R.string.saved_msg)
+                    .setPositiveButton(R.string.share) { _, _ -> shareVideo(uri) }
+                    .setNegativeButton("OK", null)
+                    .show()
             }
             override fun onError(message: String) {
                 dialog.dismiss()
@@ -521,7 +648,16 @@ class MainActivity : AppCompatActivity() {
                     .setPositiveButton("OK", null)
                     .show()
             }
-        })
+        }, audioMix)
+    }
+
+    private fun shareVideo(uri: Uri) {
+        val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+            type = "video/mp4"
+            putExtra(android.content.Intent.EXTRA_STREAM, uri)
+            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        startActivity(android.content.Intent.createChooser(intent, getString(R.string.share)))
     }
 
     private fun confirmDiscard() {
@@ -532,8 +668,7 @@ class MainActivity : AppCompatActivity() {
                 activeRecording?.stop(); activeRecording = null
                 segments.forEach { it.file.delete() }
                 segments.clear()
-                overlayStore.clear()
-                binding.removeOverlayButton.visibility = android.view.View.GONE
+                clearOverlays()
                 refreshUi()
             }
             .setNeutralButton(R.string.save_draft) { _, _ -> saveDraft() }
@@ -556,8 +691,13 @@ class MainActivity : AppCompatActivity() {
                 preferredQuality?.let { label(it) }
             )
             segments.clear()
+            // Dateien der Video-Overlays wurden in den Entwurf verschoben – nur Player/Textur freigeben
+            overlayStore.items.filterIsInstance<VideoOverlay>().forEach {
+                overlayPlayer?.release(); overlayPlayer = null
+                compositor.releaseVideoLayer(it.id)
+            }
             overlayStore.clear()
-            binding.removeOverlayButton.visibility = android.view.View.GONE
+            updateOverlayButtons(null)
             Toast.makeText(this, R.string.draft_saved, Toast.LENGTH_SHORT).show()
             if (inReview) exitReview() else refreshUi()
         } catch (e: Exception) {
@@ -600,10 +740,11 @@ class MainActivity : AppCompatActivity() {
             val loaded = drafts.load(info, segmentDir)
             segments.clear()
             loaded.segments.forEach { (f, d) -> segments.add(Segment(f, d)) }
-            overlayStore.clear()
+            clearOverlays()
             loaded.overlays.forEach { overlayStore.add(it) }
             overlayStore.selectedId = null
-            binding.removeOverlayButton.visibility = android.view.View.GONE
+            overlayStore.videoOverlay()?.let { attachVideoOverlay(it) }
+            updateOverlayButtons(null)
 
             // Kameraeinstellungen wiederherstellen, damit neue Segmente zu den alten passen
             lensFacing = loaded.lensFacing
@@ -683,7 +824,9 @@ class MainActivity : AppCompatActivity() {
         main.removeCallbacks(playbackTicker)
         player?.release(); player = null
         exporter?.release()
+        overlayPlayer?.release(); overlayPlayer = null
         compositor.release()
+        bgExecutor.shutdown()
     }
 
     companion object {

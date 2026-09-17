@@ -31,7 +31,7 @@ class OverlayGestureView @JvmOverloads constructor(
 
     lateinit var store: OverlayStore
     var onChanged: (() -> Unit)? = null
-    var onSelectionChanged: ((ImageOverlay?) -> Unit)? = null
+    var onSelectionChanged: ((Overlay?) -> Unit)? = null
 
     /** Breite/Höhe des Frames. Wird vom Compositor gemeldet. */
     var frameAspect = 9f / 16f
@@ -47,7 +47,7 @@ class OverlayGestureView @JvmOverloads constructor(
     private val frameRect = RectF()
 
     // Gestenzustand
-    private var active: ImageOverlay? = null
+    private var active: Overlay? = null
     private var moved = false
     private var lastX = 0f
     private var lastY = 0f
@@ -78,7 +78,7 @@ class OverlayGestureView @JvmOverloads constructor(
     private fun toPxX(fx: Float) = frameRect.left + fx * frameRect.width()
     private fun toPxY(fy: Float) = frameRect.top + fy * frameRect.height()
 
-    private fun hitTest(px: Float, py: Float): ImageOverlay? {
+    private fun hitTest(px: Float, py: Float): Overlay? {
         // Oberstes zuerst
         for (o in store.items.asReversed()) {
             val cx = toPxX(o.cx); val cy = toPxY(o.cy)

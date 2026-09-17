@@ -49,6 +49,14 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
     /** GL-Texturen für Overlay-Bitmaps, per Overlay-ID. */
     private val overlayTextures = HashMap<Long, Int>()
 
+    /** Video-Overlays: externe Textur + SurfaceTexture, die der Player befüllt. */
+    private inner class VideoLayer(val texId: Int, val surfaceTexture: SurfaceTexture, val surface: Surface) {
+        @Volatile var frameAvailable = false
+        val matrix = FloatArray(16).also { Matrix.setIdentityM(it, 0) }
+        var hasFrame = false
+    }
+    private val videoLayers = HashMap<Long, VideoLayer>()
+
     private val texMatrix = FloatArray(16)
     private val outMatrix = FloatArray(16)
     private val mvp = FloatArray(16)
@@ -91,6 +99,37 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
         } catch (e: Exception) {
             Log.e(TAG, "GL-Initialisierung fehlgeschlagen", e)
         }
+    }
+
+    // ------------------------------------------------------------------ Video-Overlays
+
+    /**
+     * Legt auf dem GL-Thread eine Textur für ein Video-Overlay an und liefert die Surface,
+     * in die der Player rendern soll (Callback auf dem GL-Thread – Aufrufer postet weiter).
+     */
+    fun createVideoLayer(overlayId: Long, onReady: (Surface) -> Unit) {
+        handler.post {
+            if (released || egl == null) return@post
+            videoLayers[overlayId]?.let { onReady(it.surface); return@post }
+            val tex = GlUtil.createExternalTexture()
+            val st = SurfaceTexture(tex)
+            val surface = Surface(st)
+            val layer = VideoLayer(tex, st, surface)
+            st.setOnFrameAvailableListener({ layer.frameAvailable = true })
+            videoLayers[overlayId] = layer
+            onReady(surface)
+        }
+    }
+
+    fun releaseVideoLayer(overlayId: Long) {
+        handler.post { videoLayers.remove(overlayId)?.let { destroyVideoLayer(it) } }
+    }
+
+    private fun destroyVideoLayer(l: VideoLayer) {
+        l.surfaceTexture.setOnFrameAvailableListener(null)
+        l.surface.release()
+        l.surfaceTexture.release()
+        GlUtil.deleteTexture(l.texId)
     }
 
     // ------------------------------------------------------------------ CameraX-Callbacks
@@ -186,6 +225,16 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
         val timestamp = st.timestamp
         val snapshot = overlays.snapshot
         syncOverlayTextures(snapshot)
+        for (l in videoLayers.values) {
+            if (l.frameAvailable) {
+                l.frameAvailable = false
+                try {
+                    l.surfaceTexture.updateTexImage()
+                    l.surfaceTexture.getTransformMatrix(l.matrix)
+                    l.hasFrame = true
+                } catch (e: Exception) { Log.w(TAG, "Video-Textur", e) }
+            }
+        }
 
         for (out in outputs) {
             try {
@@ -211,19 +260,28 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
         }
     }
 
+    private val identity = FloatArray(16).also { Matrix.setIdentityM(it, 0) }
+
     private fun drawCamera(transform: FloatArray) {
-        GLES20.glUseProgram(cameraProgram)
         GLES20.glDisable(GLES20.GL_BLEND)
+        drawExternal(cameraTexId, transform, identity)
+    }
+
+    /** Zeichnet eine externe (OES-)Textur mit Textur-Transform und Modellmatrix. */
+    private fun drawExternal(texId: Int, texTransform: FloatArray, modelMatrix: FloatArray) {
+        GLES20.glUseProgram(cameraProgram)
         val aPos = GLES20.glGetAttribLocation(cameraProgram, "aPosition")
         val aTex = GLES20.glGetAttribLocation(cameraProgram, "aTexCoord")
         val uMat = GLES20.glGetUniformLocation(cameraProgram, "uTexMatrix")
+        val uMvp = GLES20.glGetUniformLocation(cameraProgram, "uMvp")
         GLES20.glEnableVertexAttribArray(aPos)
         GLES20.glVertexAttribPointer(aPos, 2, GLES20.GL_FLOAT, false, 0, fullQuad)
         GLES20.glEnableVertexAttribArray(aTex)
         GLES20.glVertexAttribPointer(aTex, 2, GLES20.GL_FLOAT, false, 0, texCoords)
-        GLES20.glUniformMatrix4fv(uMat, 1, false, transform, 0)
+        GLES20.glUniformMatrix4fv(uMat, 1, false, texTransform, 0)
+        GLES20.glUniformMatrix4fv(uMvp, 1, false, modelMatrix, 0)
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
-        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, cameraTexId)
+        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, texId)
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
         GLES20.glDisableVertexAttribArray(aPos)
         GLES20.glDisableVertexAttribArray(aTex)
@@ -247,6 +305,23 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
         val dispAspect = displayAspect(size)
         val preRotation = pendingRotation(size)
         for (o in snapshot) {
+            if (o.isVideo) {
+                val layer = videoLayers[o.id] ?: continue
+                if (!layer.hasFrame) continue
+                buildOverlayMatrix(o, dispAspect, preRotation, preMirror, mvp)
+                GLES20.glDisable(GLES20.GL_BLEND)
+                drawExternal(layer.texId, layer.matrix, mvp)
+                // Zurück zum 2D-Programm für nachfolgende Bilder
+                GLES20.glUseProgram(overlayProgram)
+                GLES20.glEnable(GLES20.GL_BLEND)
+                GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
+                GLES20.glEnableVertexAttribArray(aPos)
+                GLES20.glVertexAttribPointer(aPos, 2, GLES20.GL_FLOAT, false, 0, fullQuad)
+                GLES20.glEnableVertexAttribArray(aTex)
+                GLES20.glVertexAttribPointer(aTex, 2, GLES20.GL_FLOAT, false, 0, texCoordsFlipped)
+                GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
+                continue
+            }
             val tex = overlayTextures[o.id] ?: continue
             buildOverlayMatrix(o, dispAspect, preRotation, preMirror, mvp)
             GLES20.glUniformMatrix4fv(uMvp, 1, false, mvp, 0)
@@ -290,8 +365,9 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
             if (e.key !in liveIds) { GlUtil.deleteTexture(e.value); it.remove() }
         }
         for (o in snapshot) {
-            if (o.id !in overlayTextures && !o.bitmap.isRecycled) {
-                overlayTextures[o.id] = GlUtil.createTextureFromBitmap(o.bitmap)
+            val bmp = o.bitmap ?: continue
+            if (o.id !in overlayTextures && !bmp.isRecycled) {
+                overlayTextures[o.id] = GlUtil.createTextureFromBitmap(bmp)
             }
         }
     }
@@ -304,6 +380,8 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
             outputs.clear()
             overlayTextures.values.forEach { GlUtil.deleteTexture(it) }
             overlayTextures.clear()
+            videoLayers.values.forEach { destroyVideoLayer(it) }
+            videoLayers.clear()
             inputSurface?.release(); inputTexture?.release()
             egl?.release(); egl = null
             thread.quitSafely()
@@ -317,9 +395,10 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
             attribute vec4 aPosition;
             attribute vec4 aTexCoord;
             uniform mat4 uTexMatrix;
+            uniform mat4 uMvp;
             varying vec2 vTexCoord;
             void main() {
-                gl_Position = aPosition;
+                gl_Position = uMvp * aPosition;
                 vTexCoord = (uTexMatrix * aTexCoord).xy;
             }
         """

@@ -39,4 +39,13 @@
     <string name="draft_item">%1$s · %2$d Segmente · %3$s</string>
     <string name="open">Öffnen</string>
     <string name="delete">Löschen</string>
+    <string name="add_video">Video aus Galerie einfügen</string>
+    <string name="video_copying">Video wird vorbereitet…</string>
+    <string name="only_one_video">Nur ein Video-Overlay gleichzeitig – erst das vorhandene entfernen</string>
+    <string name="sound_on">Overlay-Ton: an</string>
+    <string name="sound_off">Overlay-Ton: aus</string>
+    <string name="share">Teilen</string>
+    <string name="saved_title">Video gespeichert</string>
+    <string name="saved_msg">Das Video liegt in der Galerie unter Movies/VideoEditor.</string>
+    <string name="export_running_mix">Video wird gerendert (mit Overlay-Ton)… %1$d %%</string>
 </resources>

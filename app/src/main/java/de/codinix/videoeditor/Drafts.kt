@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import de.codinix.videoeditor.overlay.ImageOverlay
+import de.codinix.videoeditor.overlay.Overlay
+import de.codinix.videoeditor.overlay.VideoOverlay
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
@@ -27,7 +29,7 @@ class DraftStore(context: Context) {
 
     class Loaded(
         val segments: List<Pair<File, Long>>,
-        val overlays: List<ImageOverlay>,
+        val overlays: List<Overlay>,
         val lensFacing: Int,
         val qualityLabel: String?
     )
@@ -46,7 +48,7 @@ class DraftStore(context: Context) {
 
     fun save(
         segments: List<Pair<File, Long>>,
-        overlays: List<ImageOverlay>,
+        overlays: List<Overlay>,
         lensFacing: Int,
         qualityLabel: String?
     ): Info {
@@ -62,13 +64,25 @@ class DraftStore(context: Context) {
 
         val ovArr = JSONArray()
         overlays.forEachIndexed { i, o ->
-            val png = File(dir, "overlay_$i.png")
-            png.outputStream().use { o.bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-            ovArr.put(JSONObject()
-                .put("file", png.name)
+            val j = JSONObject()
                 .put("cx", o.cx.toDouble()).put("cy", o.cy.toDouble())
                 .put("widthFrac", o.widthFrac.toDouble())
-                .put("rotationDeg", o.rotationDeg.toDouble()))
+                .put("rotationDeg", o.rotationDeg.toDouble())
+            when (o) {
+                is ImageOverlay -> {
+                    val png = File(dir, "overlay_$i.png")
+                    png.outputStream().use { o.bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+                    j.put("type", "image").put("file", png.name)
+                }
+                is VideoOverlay -> {
+                    val dest = File(dir, "overlay_$i.mp4")
+                    if (!o.file.renameTo(dest)) { o.file.copyTo(dest, overwrite = true); o.file.delete() }
+                    j.put("type", "video").put("file", dest.name)
+                        .put("soundOn", o.soundOn)
+                        .put("startOffsetMs", o.startOffsetMs)
+                }
+            }
+            ovArr.put(j)
         }
 
         val meta = JSONObject()
@@ -96,16 +110,22 @@ class DraftStore(context: Context) {
             segments.add(dest to o.getLong("durationMs"))
         }
         val ovs = j.getJSONArray("overlays")
-        val overlays = ArrayList<ImageOverlay>()
+        val overlays = ArrayList<Overlay>()
         for (i in 0 until ovs.length()) {
             val o = ovs.getJSONObject(i)
-            val bmp = BitmapFactory.decodeFile(File(info.dir, o.getString("file")).absolutePath) ?: continue
-            overlays.add(ImageOverlay(
-                ImageOverlay.newId(), bmp,
-                cx = o.getDouble("cx").toFloat(), cy = o.getDouble("cy").toFloat(),
-                widthFrac = o.getDouble("widthFrac").toFloat(),
-                rotationDeg = o.getDouble("rotationDeg").toFloat()
-            ))
+            val src = File(info.dir, o.getString("file"))
+            val cx = o.getDouble("cx").toFloat(); val cy = o.getDouble("cy").toFloat()
+            val w = o.getDouble("widthFrac").toFloat(); val rot = o.getDouble("rotationDeg").toFloat()
+            if (o.optString("type", "image") == "video") {
+                val dest = File(targetDir.parentFile ?: targetDir, "overlay_video_${System.currentTimeMillis()}_$i.mp4")
+                if (!src.renameTo(dest)) src.copyTo(dest, overwrite = true)
+                overlays.add(VideoOverlay(Overlay.newId(), dest, cx, cy, w, rot,
+                    soundOn = o.optBoolean("soundOn", true),
+                    startOffsetMs = o.optLong("startOffsetMs", 0L)))
+            } else {
+                val bmp = BitmapFactory.decodeFile(src.absolutePath) ?: continue
+                overlays.add(ImageOverlay(Overlay.newId(), bmp, cx, cy, w, rot))
+            }
         }
         val quality = if (j.isNull("quality")) null else j.getString("quality")
         val loaded = Loaded(segments, overlays, j.getInt("lensFacing"), quality)

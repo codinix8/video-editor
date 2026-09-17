@@ -40,6 +40,13 @@ import java.util.concurrent.Executors
 @OptIn(UnstableApi::class)
 class Exporter(private val context: Context) {
 
+    /**
+     * Ton eines Video-Overlays, der unter die Aufnahme gemischt wird.
+     * Das Overlay-Video begann bei [startOffsetMs] der Gesamtaufnahme und läuft
+     * (ggf. in Schleife) bis zum Ende.
+     */
+    data class AudioMix(val file: File, val startOffsetMs: Long, val videoDurationMs: Long)
+
     interface Listener {
         fun onProgress(percent: Int)
         fun onDone(uri: Uri)
@@ -53,7 +60,10 @@ class Exporter(private val context: Context) {
     /**
      * @param targetHeight gewünschte Ausgabehöhe in Pixeln oder null für Original.
      */
-    fun export(segments: List<File>, targetHeight: Int?, listener: Listener) {
+    fun export(
+        segments: List<File>, targetHeight: Int?, listener: Listener,
+        audioMix: List<AudioMix> = emptyList()
+    ) {
         if (segments.isEmpty()) { listener.onError("Keine Segmente"); return }
         val outFile = File(context.cacheDir, "export_${System.currentTimeMillis()}.mp4")
 
@@ -62,6 +72,11 @@ class Exporter(private val context: Context) {
         val visibleHeight = if (info.rotation == 90 || info.rotation == 270) info.width else info.height
         val needsScale = targetHeight != null && targetHeight < visibleHeight
 
+        if (audioMix.isNotEmpty()) {
+            // Ton mischen geht nur über Media3 (Neukodierung)
+            transform(segments, targetHeight, outFile, listener, audioMix)
+            return
+        }
         if (!needsScale && VideoConcat.canFastConcat(segments)) {
             worker.execute {
                 try {
@@ -79,7 +94,10 @@ class Exporter(private val context: Context) {
         }
     }
 
-    private fun transform(segments: List<File>, targetHeight: Int?, outFile: File, listener: Listener) {
+    private fun transform(
+        segments: List<File>, targetHeight: Int?, outFile: File, listener: Listener,
+        audioMix: List<AudioMix> = emptyList()
+    ) {
         val videoEffects = buildList {
             if (targetHeight != null) add(Presentation.createForHeight(targetHeight))
         }
@@ -88,7 +106,17 @@ class Exporter(private val context: Context) {
                 .setEffects(Effects(emptyList(), videoEffects))
                 .build()
         }
-        val composition = Composition.Builder(EditedMediaItemSequence(items)).build()
+        val sequences = mutableListOf(EditedMediaItemSequence(items))
+
+        val totalMs = segments.sumOf { VideoConcat.durationUs(it) } / 1000
+        for (mix in audioMix) {
+            try {
+                buildAudioSequence(mix, totalMs)?.let { sequences.add(it) }
+            } catch (e: Exception) {
+                Log.w(TAG, "Overlay-Ton konnte nicht vorbereitet werden", e)
+            }
+        }
+        val composition = Composition.Builder(sequences).build()
 
         val t = Transformer.Builder(context)
             .addListener(object : Transformer.Listener {
@@ -125,6 +153,61 @@ class Exporter(private val context: Context) {
             }
         }
         main.postDelayed(poll, 400)
+    }
+
+    /**
+     * Baut die Tonspur eines Overlay-Videos: Stille bis zum Einfügezeitpunkt, dann das
+     * Video (nur Ton) so oft wiederholt, bis die Gesamtlänge erreicht ist.
+     */
+    private fun buildAudioSequence(mix: AudioMix, totalMs: Long): EditedMediaItemSequence? {
+        val audioFmt = VideoConcat.inspect(mix.file).audioFormat ?: return null
+        val remaining = totalMs - mix.startOffsetMs
+        if (remaining <= 0 || mix.videoDurationMs <= 0) return null
+
+        val items = mutableListOf<EditedMediaItem>()
+        if (mix.startOffsetMs > 200) {
+            val sampleRate = audioFmt.getInteger(android.media.MediaFormat.KEY_SAMPLE_RATE)
+            val channels = audioFmt.getInteger(android.media.MediaFormat.KEY_CHANNEL_COUNT)
+            val silence = writeSilenceWav(mix.startOffsetMs, sampleRate, channels)
+            items.add(EditedMediaItem.Builder(MediaItem.fromUri(Uri.fromFile(silence))).build())
+        }
+        var left = remaining
+        while (left > 0) {
+            val clipMs = minOf(left, mix.videoDurationMs)
+            val media = MediaItem.Builder()
+                .setUri(Uri.fromFile(mix.file))
+                .setClippingConfiguration(
+                    MediaItem.ClippingConfiguration.Builder().setEndPositionMs(clipMs).build()
+                )
+                .build()
+            items.add(EditedMediaItem.Builder(media).setRemoveVideo(true).build())
+            left -= clipMs
+            if (items.size > 200) break
+        }
+        return EditedMediaItemSequence(items)
+    }
+
+    /** Erzeugt eine WAV-Datei mit Stille (16 Bit PCM) in Sample-Rate und Kanalzahl des Overlay-Tons. */
+    private fun writeSilenceWav(durationMs: Long, sampleRate: Int, channels: Int): File {
+        val file = File(context.cacheDir, "silence_${durationMs}_${sampleRate}_$channels.wav")
+        if (file.exists()) return file
+        val frames = (sampleRate * durationMs / 1000).toInt()
+        val dataBytes = frames * channels * 2
+        java.io.DataOutputStream(java.io.BufferedOutputStream(file.outputStream())).use { out ->
+            fun le32(v: Int) { out.writeByte(v and 0xFF); out.writeByte((v shr 8) and 0xFF); out.writeByte((v shr 16) and 0xFF); out.writeByte((v shr 24) and 0xFF) }
+            fun le16(v: Int) { out.writeByte(v and 0xFF); out.writeByte((v shr 8) and 0xFF) }
+            out.writeBytes("RIFF"); le32(36 + dataBytes); out.writeBytes("WAVE")
+            out.writeBytes("fmt "); le32(16); le16(1); le16(channels)
+            le32(sampleRate); le32(sampleRate * channels * 2); le16(channels * 2); le16(16)
+            out.writeBytes("data"); le32(dataBytes)
+            val zeros = ByteArray(64 * 1024)
+            var written = 0
+            while (written < dataBytes) {
+                val n = minOf(zeros.size, dataBytes - written)
+                out.write(zeros, 0, n); written += n
+            }
+        }
+        return file
     }
 
     private fun saveToGallery(file: File): Uri {
