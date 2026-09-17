@@ -433,7 +433,8 @@ class MainActivity : AppCompatActivity() {
                 contentResolver.openInputStream(uri)?.use { input -> dest.outputStream().use { input.copyTo(it) } }
                     ?: throw IllegalStateException("Video konnte nicht gelesen werden")
                 main.post {
-                    val total = segments.sumOf { it.durationMs }
+                    // Einfügezeitpunkt = fertige Segmente + bereits laufende Aufnahme
+                    val total = segments.sumOf { it.durationMs } + liveDurationMs
                     val overlay = VideoOverlay(Overlay.newId(), dest, startOffsetMs = total)
                     overlayStore.add(overlay)
                     attachVideoOverlay(overlay)
