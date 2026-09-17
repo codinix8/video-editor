@@ -42,11 +42,11 @@ jobs:
           retention-days: 30
 
       - name: Release mit APK anlegen (direkt vom Handy ladbar)
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: build-${{ github.run_number }}
-          name: Build ${{ github.run_number }}
-          body: |
-            Automatischer Build von Commit ${{ github.sha }}.
-            APK herunterladen und auf dem Handy installieren.
-          files: out/*.apk
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="build-${{ github.run_number }}"
+          gh release delete "$TAG" --yes --cleanup-tag 2>/dev/null || true
+          gh release create "$TAG" out/*.apk \
+            --title "Build ${{ github.run_number }}" \
+            --notes "Automatischer Build von Commit ${{ github.sha }}. APK herunterladen und auf dem Handy installieren."
