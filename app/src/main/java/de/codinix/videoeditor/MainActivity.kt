@@ -96,6 +96,8 @@ class MainActivity : AppCompatActivity() {
 
     private val audioManager by lazy { getSystemService(android.media.AudioManager::class.java) }
     private var headphonesConnected = false
+    /** Mikrofon-Verstärkung für den Export (1.0 = unverändert). */
+    private var micGain = 1f
     private val audioDeviceCallback = object : android.media.AudioDeviceCallback() {
         override fun onAudioDevicesAdded(added: Array<out android.media.AudioDeviceInfo>) { updateHeadphones(true) }
         override fun onAudioDevicesRemoved(removed: Array<out android.media.AudioDeviceInfo>) { updateHeadphones(false) }
@@ -146,6 +148,7 @@ class MainActivity : AppCompatActivity() {
         binding.soundButton.setOnClickListener {
             (overlayStore.selected() as? VideoOverlay)?.let { showVolumeDialog(it) }
         }
+        binding.micButton.setOnClickListener { showMicDialog() }
         audioManager.registerAudioDeviceCallback(audioDeviceCallback, main)
         updateHeadphones(false)
         binding.addImageButton.setOnClickListener {
@@ -398,7 +401,7 @@ class MainActivity : AppCompatActivity() {
         val video = sel as? VideoOverlay
         binding.soundButton.visibility = if (video != null) android.view.View.VISIBLE else android.view.View.GONE
         video?.let {
-            binding.soundButton.setImageResource(if (it.soundOn) R.drawable.ic_volume_on else R.drawable.ic_volume_off)
+            binding.soundButton.setImageResource(if (it.soundOn) R.drawable.ic_overlay_volume else R.drawable.ic_overlay_volume_off)
             binding.soundButton.contentDescription = getString(if (it.soundOn) R.string.sound_on else R.string.sound_off)
         }
     }
@@ -495,6 +498,49 @@ class MainActivity : AppCompatActivity() {
         headphonesConnected = now
         overlayStore.videoOverlay()?.let { o -> overlayPlayer?.volume = previewVolume(o) }
         if (changed && now && announce) Toast.makeText(this, R.string.headphones_on, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun showMicDialog() {
+        showSliderDialog(R.string.mic_volume_title, R.string.mic_hint, (micGain * 100).toInt()) { v ->
+            micGain = v / 100f
+        }
+    }
+
+    /** Einfacher Prozent-Regler 0–200 in einem Dialog. */
+    private fun showSliderDialog(titleRes: Int, hintRes: Int, initial: Int, onChange: (Int) -> Unit) {
+        val pad = (16 * resources.displayMetrics.density).toInt()
+        val label = android.widget.TextView(this).apply {
+            textSize = 18f
+            text = getString(R.string.volume_percent, initial)
+            gravity = android.view.Gravity.CENTER
+        }
+        val seek = android.widget.SeekBar(this).apply {
+            max = 200
+            progress = initial
+            setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(sb: android.widget.SeekBar, value: Int, fromUser: Boolean) {
+                    label.text = getString(R.string.volume_percent, value)
+                    onChange(value)
+                }
+                override fun onStartTrackingTouch(sb: android.widget.SeekBar) {}
+                override fun onStopTrackingTouch(sb: android.widget.SeekBar) {}
+            })
+        }
+        val hint = android.widget.TextView(this).apply {
+            textSize = 13f
+            text = getString(hintRes)
+            setPadding(0, pad / 2, 0, 0)
+        }
+        val box = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(pad, pad, pad, 0)
+            addView(label); addView(seek); addView(hint)
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(titleRes)
+            .setView(box)
+            .setPositiveButton(R.string.ok, null)
+            .show()
     }
 
     private fun showVolumeDialog(o: VideoOverlay) {
@@ -662,14 +708,15 @@ class MainActivity : AppCompatActivity() {
             radios.addView(android.widget.RadioButton(this).apply { id = 1000 + i; text = name; isChecked = i == 0 })
         }
         val micLabel = android.widget.TextView(this).apply {
-            text = getString(R.string.mic_volume) + ": " + getString(R.string.volume_percent, 100)
+            text = getString(R.string.mic_volume) + ": " + getString(R.string.volume_percent, (micGain * 100).toInt())
             setPadding(0, pad, 0, 0)
         }
         val micSeek = android.widget.SeekBar(this).apply {
-            max = 200; progress = 100
+            max = 200; progress = (micGain * 100).toInt()
             setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(sb: android.widget.SeekBar, v: Int, fromUser: Boolean) {
                     micLabel.text = getString(R.string.mic_volume) + ": " + getString(R.string.volume_percent, v)
+                    micGain = v / 100f
                 }
                 override fun onStartTrackingTouch(sb: android.widget.SeekBar) {}
                 override fun onStopTrackingTouch(sb: android.widget.SeekBar) {}

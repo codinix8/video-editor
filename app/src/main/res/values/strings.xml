@@ -54,4 +54,6 @@
     <string name="saved_msg">Das Video liegt in der Galerie unter Movies/VideoEditor.</string>
     <string name="export_running_mix">Video wird gerendert (mit Overlay-Ton)… %1$d %%</string>
     <string name="ok">OK</string>
+    <string name="mic_volume_title">Mikrofon-Lautstärke</string>
+    <string name="mic_hint">Wirkt beim Export auf deine Aufnahme. 100 % = unverändert.</string>
 </resources>
