@@ -11,8 +11,8 @@ android {
         applicationId = "de.codinix.videoeditor"
         minSdk = 26
         targetSdk = 35
-        versionCode = 14
-        versionName = "0.8-review-audio"
+        versionCode = 15
+        versionName = "0.8.1-review-audio-fix"
     }
 
     // Fester Signaturschlüssel, damit jeder Build als Update über den vorherigen

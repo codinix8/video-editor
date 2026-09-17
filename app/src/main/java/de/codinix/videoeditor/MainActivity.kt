@@ -675,11 +675,17 @@ class MainActivity : AppCompatActivity() {
         p.setMediaItem(MediaItem.fromUri(Uri.fromFile(o.file)))
         p.repeatMode = Player.REPEAT_MODE_ALL
         p.volume = o.volume.coerceIn(0f, 1f)
-        p.setVideoSurface(null)   // nur Ton
+        // Nur Ton: Videospur abschalten, sonst dekodiert der Player unnötig (bei 4K spürbar)
+        p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
+            .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
+            .build()
         p.prepare()
         p.playWhenReady = false
         reviewOverlayPlayer = p
+        lastOverlaySeekAt = 0L
     }
+
+    private var lastOverlaySeekAt = 0L
 
     /**
      * Hält den Overlay-Ton in der Review am Abspielstand: vor dem Einfügezeitpunkt still,
@@ -689,15 +695,28 @@ class MainActivity : AppCompatActivity() {
     private fun syncReviewOverlayAudio(reviewPosMs: Long, mainPlaying: Boolean) {
         val p = reviewOverlayPlayer ?: return
         val o = overlayStore.videoOverlay() ?: return
+        p.volume = o.volume.coerceIn(0f, 1f)
         val rel = reviewPosMs - o.startOffsetMs
         if (rel < 0 || !mainPlaying) {
-            if (p.isPlaying) p.pause()
-            if (rel < 0 && p.currentPosition > 100) p.seekTo(0)
+            if (p.playWhenReady) p.pause()
+            if (rel < 0 && p.currentPosition > 100) { p.seekTo(0); lastOverlaySeekAt = System.currentTimeMillis() }
             return
         }
         val target = if (o.durationMs > 0) rel % o.durationMs else rel
-        if (kotlin.math.abs(p.currentPosition - target) > 250) p.seekTo(target)
-        if (!p.isPlaying) p.play()
+        val now = System.currentTimeMillis()
+        val drift = kotlin.math.abs(p.currentPosition - target)
+        // Nur nachziehen, wenn die Abweichung groß ist und der letzte Sprung lange genug her ist –
+        // sonst entsteht eine Rückkopplung aus Springen und Anlaufen.
+        val wasPlaying = p.playWhenReady
+        if (drift > 700 && now - lastOverlaySeekAt > 1500 && (p.playbackState == Player.STATE_READY || !wasPlaying)) {
+            p.seekTo(target)
+            lastOverlaySeekAt = now
+        }
+        if (!wasPlaying) {
+            // Beim (Wieder-)Start exakt positionieren
+            if (drift > 150) { p.seekTo(target); lastOverlaySeekAt = now }
+            p.play()
+        }
     }
 
     private fun exitReview() {
