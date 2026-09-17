@@ -103,6 +103,9 @@ class MainActivity : AppCompatActivity() {
         override fun onAudioDevicesRemoved(removed: Array<out android.media.AudioDeviceInfo>) { updateHeadphones(false) }
     }
 
+    /** Zweiter Player in der Review: nur der Ton des Overlay-Videos, synchron zur Aufnahme. */
+    private var reviewOverlayPlayer: ExoPlayer? = null
+
     private var inReview = false
     private var player: ExoPlayer? = null
     private val playbackTicker = object : Runnable {
@@ -356,7 +359,7 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, R.string.segment_deleted, Toast.LENGTH_SHORT).show()
             if (inReview) {
                 if (segments.isEmpty()) exitReview()
-                else player?.let { it.removeMediaItem(segments.size); it.seekTo(0, 0); it.play() }
+                else { player?.let { it.removeMediaItem(segments.size); it.seekTo(0, 0); it.play() }; buildReviewOverlayPlayer() }
             }
             refreshUi()
         }
@@ -659,13 +662,49 @@ class MainActivity : AppCompatActivity() {
         p.prepare()
         p.playWhenReady = true
         binding.review.playerView.player = p
+        // Mikrofon-Regler in der Review hörbar machen (Anhebung über 100 % kann ein Player nicht)
+        p.volume = micGain.coerceIn(0f, 1f)
         player = p
+        buildReviewOverlayPlayer()
+    }
+
+    private fun buildReviewOverlayPlayer() {
+        reviewOverlayPlayer?.release(); reviewOverlayPlayer = null
+        val o = overlayStore.videoOverlay()?.takeIf { it.soundOn && it.durationMs > 0 } ?: return
+        val p = ExoPlayer.Builder(this).build()
+        p.setMediaItem(MediaItem.fromUri(Uri.fromFile(o.file)))
+        p.repeatMode = Player.REPEAT_MODE_ALL
+        p.volume = o.volume.coerceIn(0f, 1f)
+        p.setVideoSurface(null)   // nur Ton
+        p.prepare()
+        p.playWhenReady = false
+        reviewOverlayPlayer = p
+    }
+
+    /**
+     * Hält den Overlay-Ton in der Review am Abspielstand: vor dem Einfügezeitpunkt still,
+     * danach an der passenden Stelle (Schleife eingerechnet). Weicht der Player mehr als
+     * eine Viertelsekunde ab, wird nachgezogen.
+     */
+    private fun syncReviewOverlayAudio(reviewPosMs: Long, mainPlaying: Boolean) {
+        val p = reviewOverlayPlayer ?: return
+        val o = overlayStore.videoOverlay() ?: return
+        val rel = reviewPosMs - o.startOffsetMs
+        if (rel < 0 || !mainPlaying) {
+            if (p.isPlaying) p.pause()
+            if (rel < 0 && p.currentPosition > 100) p.seekTo(0)
+            return
+        }
+        val target = if (o.durationMs > 0) rel % o.durationMs else rel
+        if (kotlin.math.abs(p.currentPosition - target) > 250) p.seekTo(target)
+        if (!p.isPlaying) p.play()
     }
 
     private fun exitReview() {
         inReview = false
         main.removeCallbacks(playbackTicker)
         player?.release(); player = null
+        reviewOverlayPlayer?.release(); reviewOverlayPlayer = null
         binding.review.playerView.player = null
         binding.review.root.visibility = android.view.View.GONE
         binding.previewView.visibility = android.view.View.VISIBLE
@@ -678,7 +717,8 @@ class MainActivity : AppCompatActivity() {
     private fun togglePlayback() {
         val p = player ?: return
         if (p.isPlaying) {
-            p.pause(); binding.review.playIcon.visibility = android.view.View.VISIBLE
+            p.pause(); reviewOverlayPlayer?.pause()
+            binding.review.playIcon.visibility = android.view.View.VISIBLE
         } else {
             p.play(); binding.review.playIcon.visibility = android.view.View.GONE
         }
@@ -691,6 +731,7 @@ class MainActivity : AppCompatActivity() {
         val before = segments.take(idx).sumOf { it.durationMs }
         val pos = before + p.currentPosition.coerceAtLeast(0)
         val total = segments.sumOf { it.durationMs }
+        syncReviewOverlayAudio(pos, p.isPlaying)
         binding.review.reviewBar.updatePlayback(segments.map { it.durationMs }, pos, deleteArmed)
         if (!deleteArmed) {
             binding.review.reviewStatus.text = getString(R.string.review_position, fmt(pos), fmt(total), segments.size)
@@ -955,6 +996,7 @@ class MainActivity : AppCompatActivity() {
         activeRecording?.stop()
         activeRecording = null
         player?.pause()
+        reviewOverlayPlayer?.pause()
     }
 
     override fun onStart() {
@@ -966,6 +1008,7 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         main.removeCallbacks(playbackTicker)
         player?.release(); player = null
+        reviewOverlayPlayer?.release(); reviewOverlayPlayer = null
         exporter?.release()
         audioManager.unregisterAudioDeviceCallback(audioDeviceCallback)
         overlayPlayer?.release(); overlayPlayer = null
