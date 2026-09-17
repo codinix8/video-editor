@@ -45,7 +45,7 @@ class ImageOverlay(
  * Ein Video als Bild-im-Bild. Die Wiedergabe läuft nur während der Aufnahme
  * (siehe MainActivity), damit das Video im Ergebnis durchgehend ist.
  *  - startOffsetMs: Position in der Gesamtaufnahme, an der das Video eingefügt wurde
- *  - soundOn: Ton beim Export unter den Mikrofon-Ton mischen
+ *  - volume: Lautstärke des Overlay-Tons beim Export, 0 = stumm, 1 = original, bis 2 = doppelt
  */
 class VideoOverlay(
     override val id: Long,
@@ -54,13 +54,14 @@ class VideoOverlay(
     override var cy: Float = 0.5f,
     override var widthFrac: Float = 0.5f,
     override var rotationDeg: Float = 0f,
-    var soundOn: Boolean = true,
+    var volume: Float = 1f,
     var startOffsetMs: Long = 0L
 ) : Overlay() {
     /** Wird gesetzt, sobald der Player die Videogröße kennt. */
     var videoAspect: Float = 16f / 9f
     var durationMs: Long = 0L
     override val aspect: Float get() = videoAspect
+    val soundOn: Boolean get() = volume > 0.005f
     override fun snapshot() = OverlaySnapshot(id, cx, cy, widthFrac, rotationDeg, aspect, isVideo = true)
 }
 

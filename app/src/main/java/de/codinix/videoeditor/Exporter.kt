@@ -45,7 +45,7 @@ class Exporter(private val context: Context) {
      * Das Overlay-Video begann bei [startOffsetMs] der Gesamtaufnahme und läuft
      * (ggf. in Schleife) bis zum Ende.
      */
-    data class AudioMix(val file: File, val startOffsetMs: Long, val videoDurationMs: Long)
+    data class AudioMix(val file: File, val startOffsetMs: Long, val videoDurationMs: Long, val gain: Float = 1f)
 
     interface Listener {
         fun onProgress(percent: Int)
@@ -62,7 +62,8 @@ class Exporter(private val context: Context) {
      */
     fun export(
         segments: List<File>, targetHeight: Int?, listener: Listener,
-        audioMix: List<AudioMix> = emptyList()
+        audioMix: List<AudioMix> = emptyList(),
+        micGain: Float = 1f
     ) {
         if (segments.isEmpty()) { listener.onError("Keine Segmente"); return }
         val outFile = File(context.cacheDir, "export_${System.currentTimeMillis()}.mp4")
@@ -72,9 +73,9 @@ class Exporter(private val context: Context) {
         val visibleHeight = if (info.rotation == 90 || info.rotation == 270) info.width else info.height
         val needsScale = targetHeight != null && targetHeight < visibleHeight
 
-        if (audioMix.isNotEmpty()) {
-            // Ton mischen geht nur über Media3 (Neukodierung)
-            transform(segments, targetHeight, outFile, listener, audioMix)
+        if (audioMix.isNotEmpty() || !isUnity(micGain)) {
+            // Ton mischen oder verstärken geht nur über Media3 (Neukodierung)
+            transform(segments, targetHeight, outFile, listener, audioMix, micGain)
             return
         }
         if (!needsScale && VideoConcat.canFastConcat(segments)) {
@@ -96,14 +97,16 @@ class Exporter(private val context: Context) {
 
     private fun transform(
         segments: List<File>, targetHeight: Int?, outFile: File, listener: Listener,
-        audioMix: List<AudioMix> = emptyList()
+        audioMix: List<AudioMix> = emptyList(),
+        micGain: Float = 1f
     ) {
         val videoEffects = buildList {
             if (targetHeight != null) add(Presentation.createForHeight(targetHeight))
         }
+        val micProcessors = gainProcessors(micGain)
         val items = segments.map { f ->
             EditedMediaItem.Builder(MediaItem.fromUri(Uri.fromFile(f)))
-                .setEffects(Effects(emptyList(), videoEffects))
+                .setEffects(Effects(micProcessors, videoEffects))
                 .build()
         }
         val sequences = mutableListOf(EditedMediaItemSequence(items))
@@ -169,7 +172,8 @@ class Exporter(private val context: Context) {
             val sampleRate = audioFmt.getInteger(android.media.MediaFormat.KEY_SAMPLE_RATE)
             val channels = audioFmt.getInteger(android.media.MediaFormat.KEY_CHANNEL_COUNT)
             val silence = writeSilenceWav(mix.startOffsetMs, sampleRate, channels)
-            items.add(EditedMediaItem.Builder(MediaItem.fromUri(Uri.fromFile(silence))).build())
+            items.add(EditedMediaItem.Builder(MediaItem.fromUri(Uri.fromFile(silence)))
+                .setEffects(Effects(gainProcessors(mix.gain), emptyList())).build())
         }
         var left = remaining
         while (left > 0) {
@@ -180,11 +184,30 @@ class Exporter(private val context: Context) {
                     MediaItem.ClippingConfiguration.Builder().setEndPositionMs(clipMs).build()
                 )
                 .build()
-            items.add(EditedMediaItem.Builder(media).setRemoveVideo(true).build())
+            items.add(EditedMediaItem.Builder(media).setRemoveVideo(true)
+                .setEffects(Effects(gainProcessors(mix.gain), emptyList())).build())
             left -= clipMs
             if (items.size > 200) break
         }
         return EditedMediaItemSequence(items)
+    }
+
+    private fun isUnity(gain: Float) = kotlin.math.abs(gain - 1f) < 0.01f
+
+    /**
+     * Lautstärke-Anpassung als Audio-Prozessor: eine Kanal-Mischmatrix, die jeden Kanal
+     * mit [gain] skaliert (Mono und Stereo). Bei 1.0 wird nichts eingehängt.
+     */
+    private fun gainProcessors(gain: Float): List<androidx.media3.common.audio.AudioProcessor> {
+        if (isUnity(gain)) return emptyList()
+        val g = gain.coerceIn(0f, 2f)
+        val proc = androidx.media3.common.audio.ChannelMixingAudioProcessor()
+        for (ch in 1..2) {
+            proc.putChannelMixingMatrix(
+                androidx.media3.common.audio.ChannelMixingMatrix.create(ch, ch).scaleBy(g)
+            )
+        }
+        return listOf(proc)
     }
 
     /** Erzeugt eine WAV-Datei mit Stille (16 Bit PCM) in Sample-Rate und Kanalzahl des Overlay-Tons. */

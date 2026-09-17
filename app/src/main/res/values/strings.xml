@@ -44,8 +44,14 @@
     <string name="only_one_video">Nur ein Video-Overlay gleichzeitig – erst das vorhandene entfernen</string>
     <string name="sound_on">Overlay-Ton: an</string>
     <string name="sound_off">Overlay-Ton: aus</string>
+    <string name="overlay_volume_title">Lautstärke Overlay-Video</string>
+    <string name="volume_percent">%1$d %%</string>
+    <string name="volume_hint">Wirkt beim Export. In der Vorschau hörbar, sobald Kopfhörer angeschlossen sind.</string>
+    <string name="mic_volume">Mikrofon-Lautstärke</string>
+    <string name="headphones_on">Kopfhörer erkannt – Overlay-Ton in der Vorschau an</string>
     <string name="share">Teilen</string>
     <string name="saved_title">Video gespeichert</string>
     <string name="saved_msg">Das Video liegt in der Galerie unter Movies/VideoEditor.</string>
     <string name="export_running_mix">Video wird gerendert (mit Overlay-Ton)… %1$d %%</string>
+    <string name="ok">OK</string>
 </resources>

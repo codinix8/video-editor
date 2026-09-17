@@ -78,7 +78,7 @@ class DraftStore(context: Context) {
                     val dest = File(dir, "overlay_$i.mp4")
                     if (!o.file.renameTo(dest)) { o.file.copyTo(dest, overwrite = true); o.file.delete() }
                     j.put("type", "video").put("file", dest.name)
-                        .put("soundOn", o.soundOn)
+                        .put("volume", o.volume.toDouble())
                         .put("startOffsetMs", o.startOffsetMs)
                 }
             }
@@ -120,7 +120,7 @@ class DraftStore(context: Context) {
                 val dest = File(targetDir.parentFile ?: targetDir, "overlay_video_${System.currentTimeMillis()}_$i.mp4")
                 if (!src.renameTo(dest)) src.copyTo(dest, overwrite = true)
                 overlays.add(VideoOverlay(Overlay.newId(), dest, cx, cy, w, rot,
-                    soundOn = o.optBoolean("soundOn", true),
+                    volume = if (o.has("volume")) o.getDouble("volume").toFloat() else (if (o.optBoolean("soundOn", true)) 1f else 0f),
                     startOffsetMs = o.optLong("startOffsetMs", 0L)))
             } else {
                 val bmp = BitmapFactory.decodeFile(src.absolutePath) ?: continue

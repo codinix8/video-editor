@@ -94,6 +94,13 @@ class MainActivity : AppCompatActivity() {
     private var overlayPlayer: ExoPlayer? = null
     private val bgExecutor = java.util.concurrent.Executors.newSingleThreadExecutor()
 
+    private val audioManager by lazy { getSystemService(android.media.AudioManager::class.java) }
+    private var headphonesConnected = false
+    private val audioDeviceCallback = object : android.media.AudioDeviceCallback() {
+        override fun onAudioDevicesAdded(added: Array<out android.media.AudioDeviceInfo>) { updateHeadphones(true) }
+        override fun onAudioDevicesRemoved(removed: Array<out android.media.AudioDeviceInfo>) { updateHeadphones(false) }
+    }
+
     private var inReview = false
     private var player: ExoPlayer? = null
     private val playbackTicker = object : Runnable {
@@ -137,12 +144,10 @@ class MainActivity : AppCompatActivity() {
             pickVideo.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
         }
         binding.soundButton.setOnClickListener {
-            (overlayStore.selected() as? VideoOverlay)?.let {
-                it.soundOn = !it.soundOn
-                updateOverlayButtons(it)
-                Toast.makeText(this, if (it.soundOn) R.string.sound_on else R.string.sound_off, Toast.LENGTH_SHORT).show()
-            }
+            (overlayStore.selected() as? VideoOverlay)?.let { showVolumeDialog(it) }
         }
+        audioManager.registerAudioDeviceCallback(audioDeviceCallback, main)
+        updateHeadphones(false)
         binding.addImageButton.setOnClickListener {
             pickImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         }
@@ -447,7 +452,7 @@ class MainActivity : AppCompatActivity() {
         val p = ExoPlayer.Builder(this).build()
         p.setMediaItem(MediaItem.fromUri(Uri.fromFile(overlay.file)))
         p.repeatMode = Player.REPEAT_MODE_ALL
-        p.volume = 0f                    // Ton kommt erst beim Export dazu (kein Mikrofon-Übersprechen)
+        p.volume = previewVolume(overlay)  // Nur mit Kopfhörern hörbar, sonst Mikrofon-Übersprechen
         p.addListener(object : Player.Listener {
             override fun onVideoSizeChanged(videoSize: VideoSize) {
                 if (videoSize.width > 0 && videoSize.height > 0) {
@@ -470,6 +475,64 @@ class MainActivity : AppCompatActivity() {
         p.playWhenReady = activeRecording != null
         overlayPlayer = p
         compositor.createVideoLayer(overlay.id) { surface -> main.post { overlayPlayer?.setVideoSurface(surface) } }
+    }
+
+    /** Vorschau-Lautstärke: nur über Kopfhörer, sonst würde das Mikrofon den Lautsprecher aufnehmen. */
+    private fun previewVolume(o: VideoOverlay): Float =
+        if (headphonesConnected) o.volume.coerceIn(0f, 1f) else 0f
+
+    private fun updateHeadphones(announce: Boolean) {
+        val devices = audioManager.getDevices(android.media.AudioManager.GET_DEVICES_OUTPUTS)
+        val types = setOf(
+            android.media.AudioDeviceInfo.TYPE_WIRED_HEADSET,
+            android.media.AudioDeviceInfo.TYPE_WIRED_HEADPHONES,
+            android.media.AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,
+            android.media.AudioDeviceInfo.TYPE_USB_HEADSET,
+            26 /* TYPE_BLE_HEADSET */, 30 /* TYPE_BLE_BROADCAST */
+        )
+        val now = devices.any { it.type in types }
+        val changed = now != headphonesConnected
+        headphonesConnected = now
+        overlayStore.videoOverlay()?.let { o -> overlayPlayer?.volume = previewVolume(o) }
+        if (changed && now && announce) Toast.makeText(this, R.string.headphones_on, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun showVolumeDialog(o: VideoOverlay) {
+        val pad = (16 * resources.displayMetrics.density).toInt()
+        val label = android.widget.TextView(this).apply {
+            textSize = 18f
+            text = getString(R.string.volume_percent, (o.volume * 100).toInt())
+            gravity = android.view.Gravity.CENTER
+        }
+        val seek = android.widget.SeekBar(this).apply {
+            max = 200
+            progress = (o.volume * 100).toInt()
+            setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(sb: android.widget.SeekBar, value: Int, fromUser: Boolean) {
+                    o.volume = value / 100f
+                    label.text = getString(R.string.volume_percent, value)
+                    overlayPlayer?.volume = previewVolume(o)
+                    updateOverlayButtons(o)
+                }
+                override fun onStartTrackingTouch(sb: android.widget.SeekBar) {}
+                override fun onStopTrackingTouch(sb: android.widget.SeekBar) {}
+            })
+        }
+        val hint = android.widget.TextView(this).apply {
+            textSize = 13f
+            text = getString(R.string.volume_hint)
+            setPadding(0, pad / 2, 0, 0)
+        }
+        val box = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(pad, pad, pad, 0)
+            addView(label); addView(seek); addView(hint)
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.overlay_volume_title)
+            .setView(box)
+            .setPositiveButton(R.string.ok, null)
+            .show()
     }
 
     /** Position des Overlay-Videos an die Gesamtlänge der Aufnahme angleichen. */
@@ -593,17 +656,43 @@ class MainActivity : AppCompatActivity() {
             .filter { it.first < recordedHeight }
             .forEach { options.add(it.second to it.first) }
 
-        var chosen = 0
+        val pad = (20 * resources.displayMetrics.density).toInt()
+        val radios = android.widget.RadioGroup(this)
+        options.forEachIndexed { i, (name, _) ->
+            radios.addView(android.widget.RadioButton(this).apply { id = 1000 + i; text = name; isChecked = i == 0 })
+        }
+        val micLabel = android.widget.TextView(this).apply {
+            text = getString(R.string.mic_volume) + ": " + getString(R.string.volume_percent, 100)
+            setPadding(0, pad, 0, 0)
+        }
+        val micSeek = android.widget.SeekBar(this).apply {
+            max = 200; progress = 100
+            setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(sb: android.widget.SeekBar, v: Int, fromUser: Boolean) {
+                    micLabel.text = getString(R.string.mic_volume) + ": " + getString(R.string.volume_percent, v)
+                }
+                override fun onStartTrackingTouch(sb: android.widget.SeekBar) {}
+                override fun onStopTrackingTouch(sb: android.widget.SeekBar) {}
+            })
+        }
+        val box = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(pad, pad / 2, pad, 0)
+            addView(radios); addView(micLabel); addView(micSeek)
+        }
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.export_title)
-            .setSingleChoiceItems(options.map { it.first }.toTypedArray(), 0) { _, w -> chosen = w }
-            .setPositiveButton(R.string.save) { _, _ -> runExport(options[chosen].second) }
+            .setView(android.widget.ScrollView(this).apply { addView(box) })
+            .setPositiveButton(R.string.save) { _, _ ->
+                val idx = (radios.checkedRadioButtonId - 1000).coerceIn(0, options.lastIndex)
+                runExport(options[idx].second, micSeek.progress / 100f)
+            }
             .setNegativeButton(R.string.cancel) { _, _ -> player?.play() }
             .setOnCancelListener { player?.play() }
             .show()
     }
 
-    private fun runExport(targetHeight: Int?) {
+    private fun runExport(targetHeight: Int?, micGain: Float = 1f) {
         val dialog: AlertDialog = MaterialAlertDialogBuilder(this)
             .setTitle(R.string.export_title)
             .setMessage(getString(R.string.export_running, 0))
@@ -615,9 +704,10 @@ class MainActivity : AppCompatActivity() {
         exporter = ex
         val audioMix = overlayStore.videoOverlay()
             ?.takeIf { it.soundOn && it.durationMs > 0 }
-            ?.let { listOf(Exporter.AudioMix(it.file, it.startOffsetMs, it.durationMs)) }
+            ?.let { listOf(Exporter.AudioMix(it.file, it.startOffsetMs, it.durationMs, it.volume)) }
             ?: emptyList()
-        val progressRes = if (audioMix.isEmpty()) R.string.export_running else R.string.export_running_mix
+        val progressRes = if (audioMix.isEmpty() && kotlin.math.abs(micGain - 1f) < 0.01f)
+            R.string.export_running else R.string.export_running_mix
         ex.export(segments.map { it.file }, targetHeight, object : Exporter.Listener {
             override fun onProgress(percent: Int) {
                 dialog.setMessage(getString(progressRes, percent))
@@ -648,7 +738,7 @@ class MainActivity : AppCompatActivity() {
                     .setPositiveButton("OK", null)
                     .show()
             }
-        }, audioMix)
+        }, audioMix, micGain)
     }
 
     private fun shareVideo(uri: Uri) {
@@ -824,6 +914,7 @@ class MainActivity : AppCompatActivity() {
         main.removeCallbacks(playbackTicker)
         player?.release(); player = null
         exporter?.release()
+        audioManager.unregisterAudioDeviceCallback(audioDeviceCallback)
         overlayPlayer?.release(); overlayPlayer = null
         compositor.release()
         bgExecutor.shutdown()
