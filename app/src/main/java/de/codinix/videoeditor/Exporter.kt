@@ -45,7 +45,17 @@ class Exporter(private val context: Context) {
      * Das Overlay-Video begann bei [startOffsetMs] der Gesamtaufnahme und läuft
      * (ggf. in Schleife) bis zum Ende.
      */
-    data class AudioMix(val file: File, val startOffsetMs: Long, val videoDurationMs: Long, val gain: Float = 1f)
+    /**
+     * Ton eines Overlay-Videos. [timeline] beschreibt Abschnitte (ab wann, welche Lautstärke,
+     * läuft/pausiert); ohne Angabe: ab [startOffsetMs] durchgehend mit [gain].
+     */
+    data class AudioMix(
+        val file: File, val startOffsetMs: Long, val videoDurationMs: Long, val gain: Float = 1f,
+        val timeline: List<OverlayAudioRenderer.Segment>? = null
+    ) {
+        fun effectiveTimeline(): List<OverlayAudioRenderer.Segment> =
+            timeline ?: listOf(OverlayAudioRenderer.Segment(startOffsetMs, gain, true))
+    }
 
     interface Listener {
         fun onProgress(percent: Int)
@@ -73,9 +83,29 @@ class Exporter(private val context: Context) {
         val visibleHeight = if (info.rotation == 90 || info.rotation == 270) info.width else info.height
         val needsScale = targetHeight != null && targetHeight < visibleHeight
 
-        if (audioMix.isNotEmpty() || !isUnity(micGain)) {
-            // Ton mischen oder verstärken geht nur über Media3 (Neukodierung)
-            transform(segments, targetHeight, outFile, listener, audioMix, micGain)
+        if (audioMix.isNotEmpty()) {
+            // Overlay-Ton zuerst selbst zu fertigen WAV-Spuren rendern, dann mit Media3 mischen
+            listener.onProgress(0)
+            worker.execute {
+                try {
+                    val totalMs = segments.sumOf { VideoConcat.durationUs(it) } / 1000
+                    val wavs = audioMix.mapNotNull { mix ->
+                        val decoded = OverlayAudioRenderer.decode(mix.file, context.cacheDir) ?: return@mapNotNull null
+                        val wav = File(context.cacheDir, "ovl_mix_${System.currentTimeMillis()}.wav")
+                        OverlayAudioRenderer.render(decoded, mix.effectiveTimeline(), totalMs, wav)
+                        decoded.pcm.delete()
+                        wav
+                    }
+                    main.post { transform(segments, targetHeight, outFile, listener, wavs, micGain) }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Overlay-Ton rendern fehlgeschlagen", e)
+                    main.post { listener.onError("Overlay-Ton: ${e.message}") }
+                }
+            }
+            return
+        }
+        if (!isUnity(micGain)) {
+            transform(segments, targetHeight, outFile, listener, emptyList(), micGain)
             return
         }
         if (!needsScale && VideoConcat.canFastConcat(segments)) {
@@ -97,7 +127,7 @@ class Exporter(private val context: Context) {
 
     private fun transform(
         segments: List<File>, targetHeight: Int?, outFile: File, listener: Listener,
-        audioMix: List<AudioMix> = emptyList(),
+        audioWavs: List<File> = emptyList(),
         micGain: Float = 1f
     ) {
         val videoEffects = buildList {
@@ -110,14 +140,11 @@ class Exporter(private val context: Context) {
                 .build()
         }
         val sequences = mutableListOf(EditedMediaItemSequence(items))
-
-        val totalMs = segments.sumOf { VideoConcat.durationUs(it) } / 1000
-        for (mix in audioMix) {
-            try {
-                buildAudioSequence(mix, totalMs)?.let { sequences.add(it) }
-            } catch (e: Exception) {
-                Log.w(TAG, "Overlay-Ton konnte nicht vorbereitet werden", e)
-            }
+        // Fertig gerenderte Overlay-Tonspuren (eine Datei = eine Sequenz, exakt so lang wie das Video)
+        for (wav in audioWavs) {
+            sequences.add(EditedMediaItemSequence(listOf(
+                EditedMediaItem.Builder(MediaItem.fromUri(Uri.fromFile(wav))).build()
+            )))
         }
         val composition = Composition.Builder(sequences).build()
 
@@ -156,40 +183,6 @@ class Exporter(private val context: Context) {
             }
         }
         main.postDelayed(poll, 400)
-    }
-
-    /**
-     * Baut die Tonspur eines Overlay-Videos: Stille bis zum Einfügezeitpunkt, dann das
-     * Video (nur Ton) so oft wiederholt, bis die Gesamtlänge erreicht ist.
-     */
-    private fun buildAudioSequence(mix: AudioMix, totalMs: Long): EditedMediaItemSequence? {
-        val audioFmt = VideoConcat.inspect(mix.file).audioFormat ?: return null
-        val remaining = totalMs - mix.startOffsetMs
-        if (remaining <= 0 || mix.videoDurationMs <= 0) return null
-
-        val items = mutableListOf<EditedMediaItem>()
-        if (mix.startOffsetMs > 200) {
-            val sampleRate = audioFmt.getInteger(android.media.MediaFormat.KEY_SAMPLE_RATE)
-            val channels = audioFmt.getInteger(android.media.MediaFormat.KEY_CHANNEL_COUNT)
-            val silence = writeSilenceWav(mix.startOffsetMs, sampleRate, channels)
-            items.add(EditedMediaItem.Builder(MediaItem.fromUri(Uri.fromFile(silence)))
-                .setEffects(Effects(gainProcessors(mix.gain), emptyList())).build())
-        }
-        var left = remaining
-        while (left > 0) {
-            val clipMs = minOf(left, mix.videoDurationMs)
-            val media = MediaItem.Builder()
-                .setUri(Uri.fromFile(mix.file))
-                .setClippingConfiguration(
-                    MediaItem.ClippingConfiguration.Builder().setEndPositionMs(clipMs).build()
-                )
-                .build()
-            items.add(EditedMediaItem.Builder(media).setRemoveVideo(true)
-                .setEffects(Effects(gainProcessors(mix.gain), emptyList())).build())
-            left -= clipMs
-            if (items.size > 200) break
-        }
-        return EditedMediaItemSequence(items)
     }
 
     private fun isUnity(gain: Float) = kotlin.math.abs(gain - 1f) < 0.01f

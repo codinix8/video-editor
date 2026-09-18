@@ -134,8 +134,9 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Alte Segmente aus einer abgestürzten Sitzung wegräumen.
-        segmentDir.listFiles()?.forEach { it.delete() }
+        CrashLog.install(applicationContext)
+        showCrashReportIfAny()
+        recoverSessionIfAny()
         cacheDir.listFiles()?.filter { it.name.startsWith("overlay_video_") || it.name.startsWith("export_") }
             ?.forEach { it.delete() }
 
@@ -315,6 +316,7 @@ class MainActivity : AppCompatActivity() {
     private fun onSegmentFinalized(event: VideoRecordEvent.Finalize, file: File) {
         activeRecording = null
         overlayPlayer?.pause()
+        main.post { persistSession() }
         val durationMs = event.recordingStats.recordedDurationNanos / 1_000_000
         // Auch bei manchen "Fehlern" (z.B. App in den Hintergrund) ist die Datei brauchbar.
         val usable = file.exists() && file.length() > 0 && durationMs > 200
@@ -355,6 +357,7 @@ class MainActivity : AppCompatActivity() {
             main.removeCallbacks(disarmRunnable)
             deleteArmed = false
             segments.removeAt(segments.lastIndex).file.delete()
+            persistSession()
             syncOverlayPlayer(afterDelete = true)
             Toast.makeText(this, R.string.segment_deleted, Toast.LENGTH_SHORT).show()
             if (inReview) {
@@ -393,6 +396,7 @@ class MainActivity : AppCompatActivity() {
             updateOverlayButtons(overlay)
             binding.gestureView.invalidate()
             Toast.makeText(this, R.string.overlay_hint, Toast.LENGTH_SHORT).show()
+            persistSession()
         } catch (e: Exception) {
             Log.e(TAG, "Overlay laden fehlgeschlagen", e)
             Toast.makeText(this, getString(R.string.error, e.message ?: "Bild"), Toast.LENGTH_LONG).show()
@@ -412,6 +416,7 @@ class MainActivity : AppCompatActivity() {
     private fun removeOverlay(id: Long) {
         val o = overlayStore.items.firstOrNull { it.id == id }
         overlayStore.remove(id)
+        persistSession()
         if (o is VideoOverlay) {
             overlayPlayer?.release(); overlayPlayer = null
             compositor.releaseVideoLayer(o.id)
@@ -444,6 +449,7 @@ class MainActivity : AppCompatActivity() {
                     updateOverlayButtons(overlay)
                     binding.gestureView.invalidate()
                     Toast.makeText(this, R.string.overlay_hint, Toast.LENGTH_SHORT).show()
+                    persistSession()
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Video-Overlay fehlgeschlagen", e)
@@ -581,7 +587,8 @@ class MainActivity : AppCompatActivity() {
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.overlay_volume_title)
             .setView(box)
-            .setPositiveButton(R.string.ok, null)
+            .setPositiveButton(R.string.ok) { _, _ -> persistSession() }
+            .setOnDismissListener { persistSession() }
             .show()
     }
 
@@ -821,6 +828,9 @@ class MainActivity : AppCompatActivity() {
             ?: emptyList()
         val progressRes = if (audioMix.isEmpty() && kotlin.math.abs(micGain - 1f) < 0.01f)
             R.string.export_running else R.string.export_running_mix
+        audioMix.firstOrNull()?.let {
+            Toast.makeText(this, "Export: Overlay ${(it.gain * 100).toInt()} %, Mikrofon ${(micGain * 100).toInt()} %", Toast.LENGTH_LONG).show()
+        }
         ex.export(segments.map { it.file }, targetHeight, object : Exporter.Listener {
             override fun onProgress(percent: Int) {
                 dialog.setMessage(getString(progressRes, percent))
@@ -871,11 +881,91 @@ class MainActivity : AppCompatActivity() {
                 activeRecording?.stop(); activeRecording = null
                 segments.forEach { it.file.delete() }
                 segments.clear()
+                clearSession()
                 clearOverlays()
                 refreshUi()
             }
             .setNeutralButton(R.string.save_draft) { _, _ -> saveDraft() }
             .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    // ---------------------------------------------------------------- Absturzschutz
+
+    private val sessionFile by lazy { File(cacheDir, "session.json") }
+    private val sessionImgDir by lazy { File(cacheDir, "session_img").apply { mkdirs() } }
+
+    /**
+     * Schreibt den Arbeitsstand (Segmente, Overlays, Kameraeinstellung) in eine Datei.
+     * Nach einem Absturz wird daraus beim nächsten Start ein Entwurf.
+     */
+    private fun persistSession() {
+        try {
+            if (segments.isEmpty()) { sessionFile.delete(); return }
+            val segs = org.json.JSONArray()
+            segments.forEach { segs.put(org.json.JSONObject().put("path", it.file.absolutePath).put("durationMs", it.durationMs)) }
+            val ovs = org.json.JSONArray()
+            overlayStore.items.forEach { o ->
+                val j = org.json.JSONObject()
+                    .put("cx", o.cx.toDouble()).put("cy", o.cy.toDouble())
+                    .put("widthFrac", o.widthFrac.toDouble()).put("rotationDeg", o.rotationDeg.toDouble())
+                when (o) {
+                    is ImageOverlay -> {
+                        val png = File(sessionImgDir, "img_${o.id}.png")
+                        if (!png.exists()) png.outputStream().use { o.bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+                        j.put("type", "image").put("path", png.absolutePath)
+                    }
+                    is VideoOverlay -> j.put("type", "video").put("path", o.file.absolutePath)
+                        .put("volume", o.volume.toDouble()).put("startOffsetMs", o.startOffsetMs)
+                }
+                ovs.put(j)
+            }
+            val root = org.json.JSONObject()
+                .put("segments", segs).put("overlays", ovs)
+                .put("lensFacing", lensFacing)
+                .put("quality", preferredQuality?.let { label(it) } ?: org.json.JSONObject.NULL)
+            sessionFile.writeText(root.toString())
+        } catch (e: Exception) { Log.w(TAG, "Sitzung sichern fehlgeschlagen", e) }
+    }
+
+    private fun clearSession() {
+        sessionFile.delete()
+        sessionImgDir.listFiles()?.forEach { it.delete() }
+    }
+
+    private fun recoverSessionIfAny() {
+        try {
+            if (sessionFile.exists()) {
+                val info = drafts.recoverFromSession(org.json.JSONObject(sessionFile.readText()))
+                if (info != null) Toast.makeText(this, R.string.recovered, Toast.LENGTH_LONG).show()
+            }
+        } catch (e: Exception) { Log.w(TAG, "Wiederherstellung fehlgeschlagen", e) }
+        clearSession()
+        // Was jetzt noch herumliegt, gehört niemandem mehr
+        segmentDir.listFiles()?.forEach { it.delete() }
+    }
+
+    private fun showCrashReportIfAny() {
+        val report = CrashLog.takeLast(this) ?: return
+        val view = android.widget.ScrollView(this).apply {
+            val pad = (16 * resources.displayMetrics.density).toInt()
+            setPadding(pad, 0, pad, 0)
+            addView(android.widget.TextView(this@MainActivity).apply {
+                text = report; textSize = 11f
+                typeface = android.graphics.Typeface.MONOSPACE
+                setTextIsSelectable(true)
+            })
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.crash_title)
+            .setMessage(R.string.crash_msg)
+            .setView(view)
+            .setPositiveButton(R.string.copy) { _, _ ->
+                getSystemService(android.content.ClipboardManager::class.java)
+                    .setPrimaryClip(android.content.ClipData.newPlainText("crash", report))
+                Toast.makeText(this, R.string.copied, Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton(R.string.ok, null)
             .show()
     }
 
@@ -901,6 +991,7 @@ class MainActivity : AppCompatActivity() {
             }
             overlayStore.clear()
             updateOverlayButtons(null)
+            clearSession()
             Toast.makeText(this, R.string.draft_saved, Toast.LENGTH_SHORT).show()
             if (inReview) exitReview() else refreshUi()
         } catch (e: Exception) {
@@ -956,6 +1047,7 @@ class MainActivity : AppCompatActivity() {
 
             binding.gestureView.invalidate()
             refreshUi()
+            persistSession()
             Toast.makeText(this, R.string.draft_loaded, Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             Log.e(TAG, "Entwurf laden fehlgeschlagen", e)

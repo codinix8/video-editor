@@ -97,6 +97,50 @@ class DraftStore(context: Context) {
         return Info(id, dir, id.toLong(), segments.size, dur)
     }
 
+    /**
+     * Stellt aus einer Sitzungsdatei (absolute Pfade, geschrieben während der Arbeit) einen
+     * Entwurf her – nach einem Absturz. Segment- und Overlay-Dateien werden verschoben.
+     */
+    fun recoverFromSession(session: JSONObject): Info? {
+        val segs = session.optJSONArray("segments") ?: return null
+        if (segs.length() == 0) return null
+        val id = System.currentTimeMillis().toString()
+        val dir = File(root, id).apply { mkdirs() }
+        val segArr = JSONArray()
+        for (i in 0 until segs.length()) {
+            val o = segs.getJSONObject(i)
+            val src = File(o.getString("path"))
+            if (!src.exists()) continue
+            val dest = File(dir, "seg_$i.mp4")
+            if (!src.renameTo(dest)) { src.copyTo(dest, overwrite = true); src.delete() }
+            segArr.put(JSONObject().put("file", dest.name).put("durationMs", o.getLong("durationMs")))
+        }
+        if (segArr.length() == 0) { dir.deleteRecursively(); return null }
+        val ovArr = JSONArray()
+        val ovs = session.optJSONArray("overlays") ?: JSONArray()
+        for (i in 0 until ovs.length()) {
+            val o = ovs.getJSONObject(i)
+            val src = File(o.getString("path"))
+            if (!src.exists()) continue
+            val ext = if (o.getString("type") == "video") "mp4" else "png"
+            val dest = File(dir, "overlay_$i.$ext")
+            if (!src.renameTo(dest)) { src.copyTo(dest, overwrite = true); src.delete() }
+            val j = JSONObject(o.toString())
+            j.remove("path"); j.put("file", dest.name)
+            ovArr.put(j)
+        }
+        val meta = JSONObject()
+            .put("createdAt", id.toLong())
+            .put("lensFacing", session.optInt("lensFacing", 1))
+            .put("quality", session.opt("quality") ?: JSONObject.NULL)
+            .put("segments", segArr)
+            .put("overlays", ovArr)
+        File(dir, "meta.json").writeText(meta.toString())
+        var dur = 0L
+        for (i in 0 until segArr.length()) dur += segArr.getJSONObject(i).getLong("durationMs")
+        return Info(id, dir, id.toLong(), segArr.length(), dur)
+    }
+
     /** Verschiebt die Segmente nach [targetDir] und löscht den Entwurf anschließend. */
     fun load(info: Info, targetDir: File): Loaded {
         val j = JSONObject(File(info.dir, "meta.json").readText())

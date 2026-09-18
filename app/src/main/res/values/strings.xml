@@ -56,4 +56,9 @@
     <string name="ok">OK</string>
     <string name="mic_volume_title">Mikrofon-Lautstärke</string>
     <string name="mic_hint">Wirkt beim Export auf deine Aufnahme. 100 % = unverändert.</string>
+    <string name="crash_title">Die App ist zuvor abgestürzt</string>
+    <string name="crash_msg">Bitte den Bericht kopieren und an Claude schicken.</string>
+    <string name="copy">Kopieren</string>
+    <string name="copied">In die Zwischenablage kopiert</string>
+    <string name="recovered">Aufnahme nach Absturz als Entwurf wiederhergestellt</string>
 </resources>
