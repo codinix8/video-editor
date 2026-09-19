@@ -64,4 +64,5 @@
     <string name="preview_sound">Overlay-Ton in der Vorschau (nur mit Kopfhörern!)</string>
     <string name="preview_sound_on">Vorschau-Ton AN – nur mit Kopfhörern nutzen, sonst nimmt das Mikrofon ihn mit auf</string>
     <string name="preview_sound_off">Vorschau-Ton aus</string>
+    <string name="preparing_audio">Ton wird vorbereitet…</string>
 </resources>

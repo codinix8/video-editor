@@ -30,8 +30,29 @@ object OverlayAudioRenderer {
         val durationMs get() = frames * 1000 / sampleRate
     }
 
-    /** Dekodiert den Audio-Track einer Datei in rohes 16-Bit-PCM (interleaved). */
+    /**
+     * Dekodiert den Audio-Track einer Datei in rohes 16-Bit-PCM (interleaved).
+     * Ergebnis wird im Cache abgelegt und beim nächsten Aufruf wiederverwendet.
+     */
     fun decode(src: File, cacheDir: File): Decoded? {
+        val key = "${src.name}_${src.length()}"
+        val cachedPcm = File(cacheDir, "pcm_$key.raw")
+        val cachedMeta = File(cacheDir, "pcm_$key.meta")
+        if (cachedPcm.exists() && cachedMeta.exists() && cachedPcm.length() > 0) {
+            try {
+                val (sr, ch) = cachedMeta.readText().split(",").map { it.trim().toInt() }
+                return Decoded(cachedPcm, sr, ch)
+            } catch (_: Exception) { }
+        }
+        val fresh = decodeFresh(src, cacheDir) ?: return null
+        return try {
+            if (!fresh.pcm.renameTo(cachedPcm)) { fresh.pcm.copyTo(cachedPcm, overwrite = true); fresh.pcm.delete() }
+            cachedMeta.writeText("${fresh.sampleRate},${fresh.channels}")
+            Decoded(cachedPcm, fresh.sampleRate, fresh.channels)
+        } catch (e: Exception) { fresh }
+    }
+
+    private fun decodeFresh(src: File, cacheDir: File): Decoded? {
         val extractor = MediaExtractor()
         extractor.setDataSource(src.absolutePath)
         var track = -1

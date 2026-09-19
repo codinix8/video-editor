@@ -93,7 +93,6 @@ class Exporter(private val context: Context) {
                         val decoded = OverlayAudioRenderer.decode(mix.file, context.cacheDir) ?: return@mapNotNull null
                         val wav = File(context.cacheDir, "ovl_mix_${System.currentTimeMillis()}.wav")
                         OverlayAudioRenderer.render(decoded, mix.effectiveTimeline(), totalMs, wav)
-                        decoded.pcm.delete()
                         wav
                     }
                     main.post { transform(segments, targetHeight, outFile, listener, wavs, micGain) }

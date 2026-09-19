@@ -696,7 +696,6 @@ class MainActivity : AppCompatActivity() {
                 val decoded = OverlayAudioRenderer.decode(o.file, cacheDir) ?: return@execute
                 val wav = File(cacheDir, "review_ovl_$gen.wav")
                 OverlayAudioRenderer.render(decoded, mix.effectiveTimeline(), totalMs, wav)
-                decoded.pcm.delete()
                 main.post {
                     if (gen != reviewWavGeneration || !inReview) { wav.delete(); return@post }
                     val p = newLeanPlayer()
@@ -705,12 +704,23 @@ class MainActivity : AppCompatActivity() {
                     p.playWhenReady = false
                     reviewOverlayPlayer = p
                     lastOverlaySeekAt = 0L
+                    reviewWaitingForAudio = false
+                    // Jetzt gemeinsam von vorn starten
+                    player?.let { it.seekTo(0, 0); it.play() }
+                    binding.review.playIcon.visibility = android.view.View.GONE
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Review-Tonspur fehlgeschlagen", e)
+                main.post { reviewWaitingForAudio = false; player?.play() }
             }
         }
+        // Bild anhalten, bis der Ton bereit ist – sonst ist der Anfang stumm
+        reviewWaitingForAudio = true
+        player?.pause()
+        binding.review.reviewStatus.text = getString(R.string.preparing_audio)
     }
+
+    private var reviewWaitingForAudio = false
 
     private var lastOverlaySeekAt = 0L
 
@@ -760,6 +770,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun togglePlayback() {
+        if (reviewWaitingForAudio) return
         val p = player ?: return
         if (p.isPlaying) {
             p.pause(); reviewOverlayPlayer?.pause()
@@ -778,7 +789,7 @@ class MainActivity : AppCompatActivity() {
         val total = segments.sumOf { it.durationMs }
         syncReviewOverlayAudio(pos, p.isPlaying)
         binding.review.reviewBar.updatePlayback(segments.map { it.durationMs }, pos, deleteArmed)
-        if (!deleteArmed) {
+        if (!deleteArmed && !reviewWaitingForAudio) {
             val vol = overlayStore.videoOverlay()?.let { " · Overlay ${(it.volume * 100).toInt()} %" } ?: ""
             binding.review.reviewStatus.text = getString(R.string.review_position, fmt(pos), fmt(total), segments.size) + vol
         }
