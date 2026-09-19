@@ -677,21 +677,39 @@ class MainActivity : AppCompatActivity() {
         buildReviewOverlayPlayer()
     }
 
+    private var reviewWavGeneration = 0
+
+    /**
+     * Rendert die Overlay-Tonspur genau so, wie sie der Export mischen wird (Stille bis zum
+     * Einfügezeitpunkt, Schleife, Lautstärke eingerechnet) und spielt DIESE Datei in der Review.
+     * Damit ist die Review per Konstruktion identisch mit dem Ergebnis.
+     */
     private fun buildReviewOverlayPlayer() {
         reviewOverlayPlayer?.release(); reviewOverlayPlayer = null
         val o = overlayStore.videoOverlay()?.takeIf { it.soundOn && it.durationMs > 0 } ?: return
-        val p = newLeanPlayer()
-        p.setMediaItem(MediaItem.fromUri(Uri.fromFile(o.file)))
-        p.repeatMode = Player.REPEAT_MODE_ALL
-        p.volume = o.volume.coerceIn(0f, 1f)
-        // Nur Ton: Videospur abschalten, sonst dekodiert der Player unnötig (bei 4K spürbar)
-        p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
-            .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
-            .build()
-        p.prepare()
-        p.playWhenReady = false
-        reviewOverlayPlayer = p
-        lastOverlaySeekAt = 0L
+        val totalMs = segments.sumOf { it.durationMs }
+        if (totalMs <= 0) return
+        val gen = ++reviewWavGeneration
+        val mix = Exporter.AudioMix(o.file, o.startOffsetMs, o.durationMs, o.volume)
+        bgExecutor.execute {
+            try {
+                val decoded = OverlayAudioRenderer.decode(o.file, cacheDir) ?: return@execute
+                val wav = File(cacheDir, "review_ovl_$gen.wav")
+                OverlayAudioRenderer.render(decoded, mix.effectiveTimeline(), totalMs, wav)
+                decoded.pcm.delete()
+                main.post {
+                    if (gen != reviewWavGeneration || !inReview) { wav.delete(); return@post }
+                    val p = newLeanPlayer()
+                    p.setMediaItem(MediaItem.fromUri(Uri.fromFile(wav)))
+                    p.prepare()
+                    p.playWhenReady = false
+                    reviewOverlayPlayer = p
+                    lastOverlaySeekAt = 0L
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Review-Tonspur fehlgeschlagen", e)
+            }
+        }
     }
 
     private var lastOverlaySeekAt = 0L
@@ -703,15 +721,12 @@ class MainActivity : AppCompatActivity() {
      */
     private fun syncReviewOverlayAudio(reviewPosMs: Long, mainPlaying: Boolean) {
         val p = reviewOverlayPlayer ?: return
-        val o = overlayStore.videoOverlay() ?: return
-        p.volume = o.volume.coerceIn(0f, 1f)
-        val rel = reviewPosMs - o.startOffsetMs
-        if (rel < 0 || !mainPlaying) {
+        if (!mainPlaying) {
             if (p.playWhenReady) p.pause()
-            if (rel < 0 && p.currentPosition > 100) { p.seekTo(0); lastOverlaySeekAt = System.currentTimeMillis() }
             return
         }
-        val target = if (o.durationMs > 0) rel % o.durationMs else rel
+        // Die Review-Tonspur ist bereits die fertige Mischung: Position = Videoposition
+        val target = reviewPosMs
         val now = System.currentTimeMillis()
         val drift = kotlin.math.abs(p.currentPosition - target)
         // Nur nachziehen, wenn die Abweichung groß ist und der letzte Sprung lange genug her ist –
