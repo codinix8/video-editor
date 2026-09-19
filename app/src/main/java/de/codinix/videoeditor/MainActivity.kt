@@ -985,22 +985,67 @@ class MainActivity : AppCompatActivity() {
                 captionLanguages.map { it.second })
             setSelection(captionLanguages.indexOfFirst { it.first == savedLang }.coerceAtLeast(0))
         }
-        val templateSpinner = android.widget.Spinner(this).apply {
-            adapter = android.widget.ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
-                de.codinix.videoeditor.whisper.CaptionStyle.TEMPLATE_NAMES)
-            setSelection(captionSettings.template)
-            onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(p: android.widget.AdapterView<*>?, v: android.view.View?, pos: Int, id: Long) {
-                    if (captionSettings.template != pos) {
-                        captionSettings.template = pos
+        // Vorschaukarten der Vorlagen (echter Renderer, Beispieltext)
+        val dp = resources.displayMetrics.density
+        val cardW = (150 * dp).toInt(); val cardH = (84 * dp).toInt()
+        val cardRow = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.HORIZONTAL }
+        val cards = ArrayList<android.view.View>()
+        fun renderCards() {
+            cardRow.removeAllViews(); cards.clear()
+            de.codinix.videoeditor.whisper.CaptionStyle.TEMPLATE_NAMES.forEachIndexed { idx, name ->
+                val img = android.widget.ImageView(this).apply {
+                    scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+                    setPadding(pad / 2, pad / 2, pad / 2, pad / 2)
+                    setImageBitmap(de.codinix.videoeditor.whisper.CaptionStyle.preview(idx, captionSettings.accentColor, 720, 720))
+                }
+                val label = android.widget.TextView(this).apply { text = name; textSize = 11f; gravity = android.view.Gravity.CENTER }
+                val card = android.widget.LinearLayout(this).apply {
+                    orientation = android.widget.LinearLayout.VERTICAL
+                    layoutParams = android.widget.LinearLayout.LayoutParams(cardW, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT).apply { setMargins(pad / 4, 0, pad / 4, 0) }
+                    background = android.graphics.drawable.GradientDrawable().apply {
+                        cornerRadius = 10 * dp
+                        setColor(0xFF2A2A34.toInt())
+                        setStroke((2.5f * dp).toInt(), if (idx == captionSettings.template) captionSettings.accentColor else 0x00000000)
+                    }
+                    addView(img, android.widget.LinearLayout.LayoutParams(cardW, cardH))
+                    addView(label)
+                    setOnClickListener {
+                        captionSettings.template = idx
                         binding.review.captionView.settings = captionSettings
-                        prefs.edit().putInt("captions_template", pos).apply()
+                        prefs.edit().putInt("captions_template", idx).apply()
                         persistSession()
+                        renderCards()
                     }
                 }
-                override fun onNothingSelected(p: android.widget.AdapterView<*>?) {}
+                cards.add(card); cardRow.addView(card)
             }
         }
+        renderCards()
+        val cardScroll = android.widget.HorizontalScrollView(this).apply { addView(cardRow); isHorizontalScrollBarEnabled = false }
+
+        // Akzentfarbe
+        val accentRow = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.HORIZONTAL; gravity = android.view.Gravity.CENTER; setPadding(0, pad / 2, 0, 0) }
+        de.codinix.videoeditor.whisper.CaptionStyle.ACCENT_COLORS.forEach { c ->
+            val size = (30 * dp).toInt()
+            accentRow.addView(android.view.View(this).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(size, size).apply { setMargins(pad / 4, 0, pad / 4, 0) }
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    shape = android.graphics.drawable.GradientDrawable.OVAL; setColor(c)
+                    setStroke((if (c == captionSettings.accentColor) 4 else 1) * dp.toInt().coerceAtLeast(1), 0xFFFFFFFF.toInt())
+                }
+                setOnClickListener {
+                    captionSettings.accentColor = c
+                    binding.review.captionView.settings = captionSettings
+                    prefs.edit().putInt("captions_accent", c).apply()
+                    persistSession(); renderCards()
+                    for (i in 0 until accentRow.childCount) {
+                        (accentRow.getChildAt(i).background as android.graphics.drawable.GradientDrawable)
+                            .setStroke((if (de.codinix.videoeditor.whisper.CaptionStyle.ACCENT_COLORS[i] == c) 4 else 1) * dp.toInt().coerceAtLeast(1), 0xFFFFFFFF.toInt())
+                    }
+                }
+            })
+        }
+
         val models = de.codinix.videoeditor.whisper.ModelManager.Model.values()
         val modelSpinner = android.widget.Spinner(this).apply {
             adapter = android.widget.ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
@@ -1018,7 +1063,8 @@ class MainActivity : AppCompatActivity() {
             orientation = android.widget.LinearLayout.VERTICAL
             setPadding(pad, pad / 2, pad, 0)
             addView(android.widget.TextView(this@MainActivity).apply { text = getString(R.string.captions_template) })
-            addView(templateSpinner)
+            addView(cardScroll)
+            addView(accentRow)
             addView(android.widget.TextView(this@MainActivity).apply { text = getString(R.string.captions_language); setPadding(0, pad / 2, 0, 0) })
             addView(spinner)
             addView(android.widget.TextView(this@MainActivity).apply { text = getString(R.string.captions_model); setPadding(0, pad / 2, 0, 0) })
@@ -1109,6 +1155,7 @@ class MainActivity : AppCompatActivity() {
         binding.gestureView.visibility = android.view.View.GONE
         binding.review.playIcon.visibility = android.view.View.GONE
         captionSettings.template = prefs.getInt("captions_template", captionSettings.template)
+        captionSettings.accentColor = prefs.getInt("captions_accent", captionSettings.accentColor)
         binding.review.captionView.settings = captionSettings
         binding.review.captionView.captions = captions
         binding.review.captionView.onSettingsChanged = { persistSession() }

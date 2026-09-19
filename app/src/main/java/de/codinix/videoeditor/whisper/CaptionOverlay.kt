@@ -25,6 +25,7 @@ class CaptionOverlay(
     private var lastKey = Long.MIN_VALUE
     private var last: Bitmap = empty
     private var lastPop = 1f
+    private val anchorX = 2f * settings.cxFrac - 1f
     private val anchorY = 1f - 2f * settings.cyFrac
 
     override fun getBitmap(presentationTimeUs: Long): Bitmap {
@@ -43,8 +44,9 @@ class CaptionOverlay(
 
     override fun getOverlaySettings(presentationTimeUs: Long): OverlaySettings =
         OverlaySettings.Builder()
-            .setBackgroundFrameAnchor(0f, anchorY)
+            .setBackgroundFrameAnchor(anchorX, anchorY)
             .setOverlayFrameAnchor(0f, 0f)
             .setScale(lastPop, lastPop)
+            .setRotationDegrees(-settings.rotationDeg)   // Media3: gegen den Uhrzeigersinn positiv
             .build()
 }

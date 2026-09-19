@@ -105,5 +105,5 @@
     <string name="captions_model">Modell</string>
     <string name="captions_prefetch">Sprachmodell wird im Hintergrund geladen (einmalig, ca. %1$d MB)</string>
     <string name="captions_prefetch_done">Sprachmodell bereit</string>
-    <string name="captions_hint">Untertitel: Ziehen zum Verschieben, zwei Finger für Größe</string>
+    <string name="captions_hint">Untertitel: Ziehen zum Verschieben, zwei Finger für Größe und Drehung</string>
 </resources>
