@@ -11,8 +11,9 @@ android {
         applicationId = "de.codinix.videoeditor"
         minSdk = 26
         targetSdk = 35
-        versionCode = 25
-        versionName = "1.2-greenscreen"
+        versionCode = 26
+        versionName = "1.2.1-mask-fix"
+        ndk { abiFilters += listOf("arm64-v8a") }
     }
 
     // Fester Signaturschlüssel, damit jeder Build als Update über den vorherigen

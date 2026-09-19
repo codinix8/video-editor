@@ -41,12 +41,12 @@ class PersonSegmenter(private val compositor: CompositorProcessor) : ImageAnalys
             .addOnSuccessListener { mask ->
                 val mw = mask.width
                 val mh = mask.height
-                val fb = mask.buffer
+                // ML Kit liefert einen ByteBuffer mit Float-Werten (4 Bytes pro Pixel)
+                val fb = mask.buffer.also { it.rewind() }.asFloatBuffer()
                 val n = mw * mh
                 if (buffer.size != n) buffer = ByteArray(n)
-                fb.rewind()
                 for (i in 0 until n) {
-                    val v = fb.get()
+                    val v = fb.get(i)
                     buffer[i] = (v * 255f).toInt().coerceIn(0, 255).toByte()
                 }
                 compositor.updateMask(
