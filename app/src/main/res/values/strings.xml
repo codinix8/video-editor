@@ -76,4 +76,10 @@
     <string name="text_opacity">Text-Deckkraft</string>
     <string name="bg_color">Hintergrundfarbe</string>
     <string name="bg_opacity">Hintergrund-Deckkraft</string>
+    <string name="greenscreen">Freistellung: Hintergrundvideo</string>
+    <string name="greenscreen_on">Freistellung aktiv – Person vor Hintergrundvideo</string>
+    <string name="greenscreen_remove_title">Freistellung beenden?</string>
+    <string name="greenscreen_remove_msg">Das Hintergrundvideo wird entfernt; sein Ton bleibt bis hierher erhalten.</string>
+    <string name="remove">Entfernen</string>
+    <string name="greenscreen_conflict">Erst das Bild-im-Bild-Video entfernen – es kann nur ein Video gleichzeitig laufen.</string>
 </resources>

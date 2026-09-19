@@ -11,8 +11,8 @@ android {
         applicationId = "de.codinix.videoeditor"
         minSdk = 26
         targetSdk = 35
-        versionCode = 24
-        versionName = "1.1.1-text-style"
+        versionCode = 25
+        versionName = "1.2-greenscreen"
     }
 
     // Fester Signaturschlüssel, damit jeder Build als Update über den vorherigen
@@ -60,6 +60,7 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.9.3")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.exifinterface:exifinterface:1.3.7")
+    implementation("com.google.mlkit:segmentation-selfie:16.0.0-beta6")
 
     implementation("androidx.camera:camera-core:$camerax")
     implementation("androidx.camera:camera-camera2:$camerax")

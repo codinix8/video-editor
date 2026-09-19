@@ -83,7 +83,9 @@ class VideoOverlay(
     override var widthFrac: Float = 0.5f,
     override var rotationDeg: Float = 0f,
     var volume: Float = 1f,
-    var startOffsetMs: Long = 0L
+    var startOffsetMs: Long = 0L,
+    /** Vollbild-Hintergrund für die Freistellung statt Bild-im-Bild. */
+    var isBackground: Boolean = false
 ) : Overlay() {
     /** Wird gesetzt, sobald der Player die Videogröße kennt. */
     var videoAspect: Float = 16f / 9f

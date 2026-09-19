@@ -106,6 +106,7 @@ class DraftStore(context: Context) {
                     j.put("type", "video").put("file", dest.name)
                         .put("volume", o.volume.toDouble())
                         .put("startOffsetMs", o.startOffsetMs)
+                        .put("isBackground", o.isBackground)
                         .put("events", eventsToJson(o.events))
                 }
             }
@@ -223,6 +224,7 @@ class DraftStore(context: Context) {
                 val vo = VideoOverlay(Overlay.newId(), dest, cx, cy, w, rot,
                     volume = if (o.has("volume")) o.getDouble("volume").toFloat() else (if (o.optBoolean("soundOn", true)) 1f else 0f),
                     startOffsetMs = o.optLong("startOffsetMs", 0L))
+                vo.isBackground = o.optBoolean("isBackground", false)
                 vo.events.addAll(eventsFromJson(o.optJSONArray("events")))
                 overlays.add(vo)
             } else {

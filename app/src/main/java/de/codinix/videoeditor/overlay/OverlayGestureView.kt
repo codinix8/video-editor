@@ -81,6 +81,7 @@ class OverlayGestureView @JvmOverloads constructor(
     private fun hitTest(px: Float, py: Float): Overlay? {
         // Oberstes zuerst
         for (o in store.items.asReversed()) {
+            if (o is VideoOverlay && o.isBackground) continue
             val cx = toPxX(o.cx); val cy = toPxY(o.cy)
             val halfW = o.widthFrac * frameRect.width() / 2f
             val halfH = halfW * o.aspect

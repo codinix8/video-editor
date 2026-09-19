@@ -46,6 +46,78 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
     }
     private val outputs = mutableListOf<Output>()
 
+    // ---- Freistellung (Personenmaske) ----
+    private class MaskData(val bytes: ByteArray, val w: Int, val h: Int, val matrix: FloatArray)
+    @Volatile private var pendingMask: MaskData? = null
+    private var maskTexId = 0
+    private var maskTexW = 0
+    private var maskTexH = 0
+    private var hasMask = false
+    private val maskMatrix = floatArrayOf(1f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 1f)
+    private var maskedCameraProgram = 0
+    /** ID des Video-Overlays, das als Vollbild-Hintergrund dient (0 = keins). */
+    @Volatile var backgroundOverlayId: Long = 0L
+    /** Freistellung aktiv? Ohne Maske wird die Kamera normal gezeichnet. */
+    @Volatile var segmentationEnabled = false
+
+    /**
+     * Neue Maske vom Analyse-Thread. [rotation] = Drehung, die ML Kit angewendet hat;
+     * crop* = Zuschnitt des Analysebilds (normiert), der dem Kamerabild entspricht.
+     * Baut die 3x3-Abbildung Sensor-Koordinate (0..1, oben links) → Masken-Koordinate.
+     */
+    fun updateMask(bytes: ByteArray, w: Int, h: Int, rotation: Int,
+                   cropX: Float, cropY: Float, cropW: Float, cropH: Float) {
+        // 1) Sensor-Koordinate des Kamerabilds → Koordinate im vollen Analysebild
+        // 2) Drehung um rotation (im Uhrzeigersinn) → Koordinate in der aufrechten Maske
+        val m = FloatArray(9)
+        // Schritt 1 als affine Abbildung: x' = cropX + x*cropW, y' = cropY + y*cropH
+        // Schritt 2: (x,y) -> je nach Drehung
+        fun compose(a: FloatArray, b: FloatArray): FloatArray { // a*b (3x3, zeilenweise)
+            val r = FloatArray(9)
+            for (i in 0..2) for (j in 0..2) r[i*3+j] = a[i*3]*b[j] + a[i*3+1]*b[3+j] + a[i*3+2]*b[6+j]
+            return r
+        }
+        val crop = floatArrayOf(cropW, 0f, cropX,  0f, cropH, cropY,  0f, 0f, 1f)
+        val rot = when (rotation) {
+            90  -> floatArrayOf(0f, -1f, 1f,   1f, 0f, 0f,   0f, 0f, 1f)   // (x,y) -> (1-y, x)
+            180 -> floatArrayOf(-1f, 0f, 1f,   0f, -1f, 1f,  0f, 0f, 1f)   // (1-x, 1-y)
+            270 -> floatArrayOf(0f, 1f, 0f,    -1f, 0f, 1f,  0f, 0f, 1f)   // (y, 1-x)
+            else -> floatArrayOf(1f, 0f, 0f,   0f, 1f, 0f,   0f, 0f, 1f)
+        }
+        val full = compose(rot, crop)
+        // GL erwartet column-major
+        val cm = floatArrayOf(full[0], full[3], full[6], full[1], full[4], full[7], full[2], full[5], full[8])
+        System.arraycopy(cm, 0, m, 0, 9)
+        pendingMask = MaskData(bytes.copyOf(), w, h, m)
+    }
+
+    private fun uploadPendingMask() {
+        val md = pendingMask ?: return
+        pendingMask = null
+        if (maskTexId == 0) {
+            val ids = IntArray(1); GLES20.glGenTextures(1, ids, 0); maskTexId = ids[0]
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, maskTexId)
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR)
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR)
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE)
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE)
+        }
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, maskTexId)
+        val buf = java.nio.ByteBuffer.wrap(md.bytes)
+        GLES20.glPixelStorei(GLES20.GL_UNPACK_ALIGNMENT, 1)
+        if (md.w != maskTexW || md.h != maskTexH) {
+            GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_LUMINANCE, md.w, md.h, 0,
+                GLES20.GL_LUMINANCE, GLES20.GL_UNSIGNED_BYTE, buf)
+            maskTexW = md.w; maskTexH = md.h
+        } else {
+            GLES20.glTexSubImage2D(GLES20.GL_TEXTURE_2D, 0, 0, 0, md.w, md.h,
+                GLES20.GL_LUMINANCE, GLES20.GL_UNSIGNED_BYTE, buf)
+        }
+        GLES20.glPixelStorei(GLES20.GL_UNPACK_ALIGNMENT, 4)
+        System.arraycopy(md.matrix, 0, maskMatrix, 0, 9)
+        hasMask = true
+    }
+
     /** GL-Texturen für Overlay-Bitmaps, per Overlay-ID. */
     private val overlayTextures = HashMap<Long, Int>()
     /** Welches Bitmap-Objekt liegt in der Textur? Ändert es sich (Text neu gerendert), neu hochladen. */
@@ -97,6 +169,7 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
             egl = EglCore()
             cameraProgram = GlUtil.createProgram(VERTEX_CAMERA, FRAGMENT_CAMERA)
             overlayProgram = GlUtil.createProgram(VERTEX_OVERLAY, FRAGMENT_OVERLAY)
+            maskedCameraProgram = GlUtil.createProgram(VERTEX_CAMERA, FRAGMENT_CAMERA_MASKED)
             cameraTexId = GlUtil.createExternalTexture()
         } catch (e: Exception) {
             Log.e(TAG, "GL-Initialisierung fehlgeschlagen", e)
@@ -227,6 +300,7 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
         val timestamp = st.timestamp
         val snapshot = overlays.snapshot
         syncOverlayTextures(snapshot)
+        if (segmentationEnabled) uploadPendingMask()
         for (l in videoLayers.values) {
             if (l.frameAvailable) {
                 l.frameAvailable = false
@@ -246,12 +320,19 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
                 GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
 
                 out.surfaceOutput.updateTransformMatrix(outMatrix, texMatrix)
-                drawCamera(outMatrix)
                 // Frontkamera: Der Vorschau-Puffer bleibt ungespiegelt und wird erst vom Display
                 // gespiegelt (zusammen mit der Drehung). Der Aufnahme-Puffer muss dagegen schon in
                 // GL gespiegelt sein, ein Encoder kann das nicht – dort bleiben Overlays unverändert.
                 val isPreview = out.surfaceOutput.targets and androidx.camera.core.CameraEffect.PREVIEW != 0
                 val consumerMirrors = frontFacing && isPreview && pendingRotation(out.size) != 0
+
+                val useMask = segmentationEnabled && hasMask
+                if (useMask) {
+                    drawBackground(snapshot, out.size, consumerMirrors)
+                    drawCameraMasked(outMatrix)
+                } else {
+                    drawCamera(outMatrix)
+                }
                 drawOverlays(snapshot, out.size, consumerMirrors)
 
                 eglCore.setPresentationTime(out.eglSurface, timestamp)
@@ -267,6 +348,47 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
     private fun drawCamera(transform: FloatArray) {
         GLES20.glDisable(GLES20.GL_BLEND)
         drawExternal(cameraTexId, transform, identity)
+    }
+
+    /** Hintergrundvideo formatfüllend hinter die freigestellte Person. */
+    private fun drawBackground(snapshot: List<OverlaySnapshot>, size: Size, preMirror: Boolean) {
+        val bg = snapshot.firstOrNull { it.isVideo && it.id == backgroundOverlayId } ?: return
+        val layer = videoLayers[bg.id] ?: return
+        if (!layer.hasFrame) return
+        val dispAspect = displayAspect(size)
+        // Breite so wählen, dass Breite UND Höhe gefüllt sind (Aspect-Fill)
+        val w = maxOf(1f, 1f / (bg.aspect * dispAspect))
+        val fill = OverlaySnapshot(bg.id, 0.5f, 0.5f, w, 0f, bg.aspect, null, true)
+        buildOverlayMatrix(fill, dispAspect, pendingRotation(size), preMirror, mvp)
+        GLES20.glDisable(GLES20.GL_BLEND)
+        drawExternal(layer.texId, layer.matrix, mvp)
+    }
+
+    /** Kamerabild mit Personenmaske als Alpha über den Hintergrund legen. */
+    private fun drawCameraMasked(transform: FloatArray) {
+        GLES20.glUseProgram(maskedCameraProgram)
+        val aPos = GLES20.glGetAttribLocation(maskedCameraProgram, "aPosition")
+        val aTex = GLES20.glGetAttribLocation(maskedCameraProgram, "aTexCoord")
+        GLES20.glEnableVertexAttribArray(aPos)
+        GLES20.glVertexAttribPointer(aPos, 2, GLES20.GL_FLOAT, false, 0, fullQuad)
+        GLES20.glEnableVertexAttribArray(aTex)
+        GLES20.glVertexAttribPointer(aTex, 2, GLES20.GL_FLOAT, false, 0, texCoords)
+        GLES20.glUniformMatrix4fv(GLES20.glGetUniformLocation(maskedCameraProgram, "uTexMatrix"), 1, false, transform, 0)
+        GLES20.glUniformMatrix4fv(GLES20.glGetUniformLocation(maskedCameraProgram, "uMvp"), 1, false, identity, 0)
+        GLES20.glUniformMatrix3fv(GLES20.glGetUniformLocation(maskedCameraProgram, "uMaskMatrix"), 1, false, maskMatrix, 0)
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
+        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, cameraTexId)
+        GLES20.glUniform1i(GLES20.glGetUniformLocation(maskedCameraProgram, "sTexture"), 0)
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE1)
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, maskTexId)
+        GLES20.glUniform1i(GLES20.glGetUniformLocation(maskedCameraProgram, "sMask"), 1)
+        GLES20.glEnable(GLES20.GL_BLEND)
+        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
+        GLES20.glDisableVertexAttribArray(aPos)
+        GLES20.glDisableVertexAttribArray(aTex)
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
+        GLES20.glDisable(GLES20.GL_BLEND)
     }
 
     /** Zeichnet eine externe (OES-)Textur mit Textur-Transform und Modellmatrix. */
@@ -307,6 +429,7 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
         val dispAspect = displayAspect(size)
         val preRotation = pendingRotation(size)
         for (o in snapshot) {
+            if (o.isVideo && o.id == backgroundOverlayId && segmentationEnabled) continue
             if (o.isVideo) {
                 val layer = videoLayers[o.id] ?: continue
                 if (!layer.hasFrame) continue
@@ -389,6 +512,7 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
             overlayTextures.values.forEach { GlUtil.deleteTexture(it) }
             overlayTextures.clear()
             overlayBitmaps.clear()
+            if (maskTexId != 0) { GlUtil.deleteTexture(maskTexId); maskTexId = 0 }
             videoLayers.values.forEach { destroyVideoLayer(it) }
             videoLayers.clear()
             inputSurface?.release(); inputTexture?.release()
@@ -418,6 +542,26 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
             uniform samplerExternalOES sTexture;
             void main() {
                 gl_FragColor = texture2D(sTexture, vTexCoord);
+            }
+        """
+        /**
+         * Kamera mit Personenmaske: vTexCoord ist die Koordinate im Kamerapuffer (GL, v=0 unten).
+         * Sensor-Koordinate oben-links = (u, 1-v); über uMaskMatrix in die aufrechte Maske.
+         */
+        private const val FRAGMENT_CAMERA_MASKED = """
+            #extension GL_OES_EGL_image_external : require
+            precision mediump float;
+            varying vec2 vTexCoord;
+            uniform samplerExternalOES sTexture;
+            uniform sampler2D sMask;
+            uniform mat3 uMaskMatrix;
+            void main() {
+                vec3 sensor = vec3(vTexCoord.x, 1.0 - vTexCoord.y, 1.0);
+                vec3 m = uMaskMatrix * sensor;
+                float a = texture2D(sMask, m.xy).r;
+                a = smoothstep(0.35, 0.65, a);
+                vec4 c = texture2D(sTexture, vTexCoord);
+                gl_FragColor = vec4(c.rgb, a);
             }
         """
         private const val VERTEX_OVERLAY = """

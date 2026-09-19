@@ -136,6 +136,14 @@ class MainActivity : AppCompatActivity() {
     private fun isFileReferenced(f: File): Boolean =
         audioHistory.any { it.file == f } || (overlayStore.videoOverlay()?.file == f)
 
+    // ---- Freistellung ----
+    private var segmenter: de.codinix.videoeditor.gl.PersonSegmenter? = null
+    private val analysisExecutor = java.util.concurrent.Executors.newSingleThreadExecutor()
+    private val greenscreenActive: Boolean get() = overlayStore.videoOverlay()?.isBackground == true
+    private val pickBackground = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) addVideoOverlay(uri, asBackground = true)
+    }
+
     /** Overlay-Ton in der Vorschau hörbar? Bewusster Schalter, standardmäßig aus. */
     private var previewSoundOn = false
     /** Mikrofon-Verstärkung für den Export (1.0 = unverändert). */
@@ -188,10 +196,12 @@ class MainActivity : AppCompatActivity() {
             pickVideo.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
         }
         binding.soundButton.setOnClickListener {
-            (overlayStore.selected() as? VideoOverlay)?.let { showVolumeDialog(it) }
+            ((overlayStore.selected() as? VideoOverlay) ?: overlayStore.videoOverlay()?.takeIf { it.isBackground })
+                ?.let { showVolumeDialog(it) }
         }
         binding.micButton.setOnClickListener { showMicDialog() }
         binding.addTextButton.setOnClickListener { showTextDialog(null) }
+        binding.greenscreenButton.setOnClickListener { onGreenscreenPressed() }
         binding.editTextButton.setOnClickListener {
             (overlayStore.selected() as? TextOverlay)?.let { showTextDialog(it) }
         }
@@ -289,6 +299,23 @@ class MainActivity : AppCompatActivity() {
                 .addUseCase(preview)
                 .addUseCase(capture)
                 .addEffect(compositorEffect)
+            if (greenscreenActive) {
+                // Analyse-Stream für die Personenerkennung (klein, nur neueste Frames)
+                val analysis = androidx.camera.core.ImageAnalysis.Builder()
+                    .setBackpressureStrategy(androidx.camera.core.ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                    .setResolutionSelector(
+                        androidx.camera.core.resolutionselector.ResolutionSelector.Builder()
+                            .setResolutionStrategy(androidx.camera.core.resolutionselector.ResolutionStrategy(
+                                android.util.Size(640, 480),
+                                androidx.camera.core.resolutionselector.ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER))
+                            .build())
+                    .build()
+                if (segmenter == null) segmenter = de.codinix.videoeditor.gl.PersonSegmenter(compositor)
+                analysis.setAnalyzer(analysisExecutor, segmenter!!)
+                group.addUseCase(analysis)
+            }
+            compositor.segmentationEnabled = greenscreenActive
+            compositor.backgroundOverlayId = overlayStore.videoOverlay()?.takeIf { it.isBackground }?.id ?: 0L
             binding.previewView.viewPort?.let { group.setViewPort(it) }
             camera = provider.bindToLifecycle(this, selector, group.build())
             binding.qualityButton.text = label(wanted)
@@ -587,10 +614,38 @@ class MainActivity : AppCompatActivity() {
         input.requestFocus()
     }
 
+    private fun onGreenscreenPressed() {
+        if (activeRecording != null) return
+        val bg = overlayStore.videoOverlay()?.takeIf { it.isBackground }
+        if (bg == null) {
+            pickBackground.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
+        } else {
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.greenscreen_remove_title)
+                .setMessage(R.string.greenscreen_remove_msg)
+                .setPositiveButton(R.string.remove) { _, _ ->
+                    removeOverlay(bg.id)
+                    updateOverlayButtons(null)
+                    applyGreenscreenState()
+                }
+                .setNegativeButton(R.string.cancel, null)
+                .show()
+        }
+    }
+
+    /** Kamera neu binden (mit/ohne Analyse-Stream) und Knopf einfärben. */
+    private fun applyGreenscreenState() {
+        val on = greenscreenActive
+        binding.greenscreenButton.setBackgroundResource(if (on) R.drawable.bg_round_button_accent else R.drawable.bg_round_button)
+        if (!inReview) bindCamera()
+        if (!on) { compositor.segmentationEnabled = false; compositor.backgroundOverlayId = 0L }
+    }
+
     private fun updateOverlayButtons(sel: Overlay?) {
         binding.removeOverlayButton.visibility = if (sel != null) android.view.View.VISIBLE else android.view.View.GONE
         binding.editTextButton.visibility = if (sel is TextOverlay) android.view.View.VISIBLE else android.view.View.GONE
-        val video = sel as? VideoOverlay
+        // Hintergrundvideo ist nicht anwählbar – sein Lautstärke-Knopf ist immer sichtbar
+        val video = (sel as? VideoOverlay) ?: overlayStore.videoOverlay()?.takeIf { it.isBackground }
         binding.soundButton.visibility = if (video != null) android.view.View.VISIBLE else android.view.View.GONE
         video?.let {
             binding.soundButton.setImageResource(if (it.soundOn) R.drawable.ic_overlay_volume else R.drawable.ic_overlay_volume_off)
@@ -616,14 +671,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun clearOverlays() {
+        val hadBg = greenscreenActive
         overlayStore.items.map { it.id }.forEach { removeOverlay(it) }
         overlayStore.clear()
+        if (hadBg) { compositor.segmentationEnabled = false; compositor.backgroundOverlayId = 0L
+            binding.greenscreenButton.setBackgroundResource(R.drawable.bg_round_button) }
         updateOverlayButtons(null)
     }
 
-    private fun addVideoOverlay(uri: Uri) {
+    private fun addVideoOverlay(uri: Uri, asBackground: Boolean = false) {
         if (overlayStore.videoOverlay() != null) {
-            Toast.makeText(this, R.string.only_one_video, Toast.LENGTH_LONG).show(); return
+            Toast.makeText(this, if (asBackground) R.string.greenscreen_conflict else R.string.only_one_video, Toast.LENGTH_LONG).show(); return
         }
         Toast.makeText(this, R.string.video_copying, Toast.LENGTH_SHORT).show()
         val dest = File(cacheDir, "overlay_video_${System.currentTimeMillis()}.mp4")
@@ -635,12 +693,20 @@ class MainActivity : AppCompatActivity() {
                     // Einfügezeitpunkt = fertige Segmente + bereits laufende Aufnahme
                     val total = segments.sumOf { it.durationMs } + liveDurationMs
                     val overlay = VideoOverlay(Overlay.newId(), dest, startOffsetMs = total)
+                    overlay.isBackground = asBackground
                     overlay.addEvent(total, 1f, true)
                     overlayStore.add(overlay)
                     attachVideoOverlay(overlay)
-                    updateOverlayButtons(overlay)
+                    if (asBackground) {
+                        overlayStore.selectedId = null
+                        updateOverlayButtons(null)
+                        applyGreenscreenState()
+                        Toast.makeText(this, R.string.greenscreen_on, Toast.LENGTH_LONG).show()
+                    } else {
+                        updateOverlayButtons(overlay)
+                        Toast.makeText(this, R.string.overlay_hint, Toast.LENGTH_SHORT).show()
+                    }
                     binding.gestureView.invalidate()
-                    Toast.makeText(this, R.string.overlay_hint, Toast.LENGTH_SHORT).show()
                     persistSession()
                 }
             } catch (e: Exception) {
@@ -1172,6 +1238,7 @@ class MainActivity : AppCompatActivity() {
                         .put("bgColor", o.bgColorArgb ?: org.json.JSONObject.NULL)
                     is VideoOverlay -> j.put("type", "video").put("path", o.file.absolutePath)
                         .put("volume", o.volume.toDouble()).put("startOffsetMs", o.startOffsetMs)
+                        .put("isBackground", o.isBackground)
                         .put("events", eventsJson(o.events))
                 }
                 ovs.put(j)
@@ -1313,6 +1380,7 @@ class MainActivity : AppCompatActivity() {
                 it.events.map { e -> OverlayAudioRenderer.Segment(e.atMs, e.gain, e.playing) })) }
             overlayStore.selectedId = null
             overlayStore.videoOverlay()?.let { attachVideoOverlay(it) }
+            applyGreenscreenState()
             updateOverlayButtons(null)
 
             // Kameraeinstellungen wiederherstellen, damit neue Segmente zu den alten passen
@@ -1408,6 +1476,8 @@ class MainActivity : AppCompatActivity() {
         exporter?.release()
         overlayPlayer?.release(); overlayPlayer = null
         compositor.release()
+        segmenter?.close()
+        analysisExecutor.shutdown()
         bgExecutor.shutdown()
     }
 
