@@ -11,8 +11,8 @@ android {
         applicationId = "de.codinix.videoeditor"
         minSdk = 26
         targetSdk = 35
-        versionCode = 16
-        versionName = "0.9-own-audio-crashlog"
+        versionCode = 17
+        versionName = "0.9.1-memory"
     }
 
     // Fester Signaturschlüssel, damit jeder Build als Update über den vorherigen

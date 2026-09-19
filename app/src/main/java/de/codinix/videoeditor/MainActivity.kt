@@ -459,10 +459,24 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Player mit kleinem Puffer. Der Standard puffert bis zu 50 s Material im Speicher –
+     * bei 4K über 100 MB pro Player. Mit mehreren Playern und dem Export daneben
+     * führt das zu OutOfMemory. Lokale Dateien brauchen keinen großen Puffer.
+     */
+    private fun newLeanPlayer(): ExoPlayer {
+        val loadControl = androidx.media3.exoplayer.DefaultLoadControl.Builder()
+            .setBufferDurationsMs(1500, 4000, 500, 1000)
+            .setTargetBufferBytes(6 * 1024 * 1024)
+            .setPrioritizeTimeOverSizeThresholds(false)
+            .build()
+        return ExoPlayer.Builder(this).setLoadControl(loadControl).build()
+    }
+
     /** Player anlegen und in die GL-Textur des Overlays rendern lassen. */
     private fun attachVideoOverlay(overlay: VideoOverlay) {
         overlayPlayer?.release()
-        val p = ExoPlayer.Builder(this).build()
+        val p = newLeanPlayer()
         p.setMediaItem(MediaItem.fromUri(Uri.fromFile(overlay.file)))
         p.repeatMode = Player.REPEAT_MODE_ALL
         p.volume = previewVolume(overlay)  // Nur mit Kopfhörern hörbar, sonst Mikrofon-Übersprechen
@@ -653,6 +667,7 @@ class MainActivity : AppCompatActivity() {
     private fun enterReview() {
         inReview = true
         cameraProvider?.unbindAll()          // Kamera freigeben, spart Akku und Decoder
+        overlayPlayer?.stop()                // Puffer des Vorschau-Overlay-Players freigeben
         binding.review.root.visibility = android.view.View.VISIBLE
         binding.previewView.visibility = android.view.View.INVISIBLE
         binding.gestureView.visibility = android.view.View.GONE
@@ -663,7 +678,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun buildPlayer() {
         player?.release()
-        val p = ExoPlayer.Builder(this).build()
+        val p = newLeanPlayer()
         p.setMediaItems(segments.map { MediaItem.fromUri(Uri.fromFile(it.file)) })
         p.repeatMode = Player.REPEAT_MODE_ALL
         p.prepare()
@@ -678,7 +693,7 @@ class MainActivity : AppCompatActivity() {
     private fun buildReviewOverlayPlayer() {
         reviewOverlayPlayer?.release(); reviewOverlayPlayer = null
         val o = overlayStore.videoOverlay()?.takeIf { it.soundOn && it.durationMs > 0 } ?: return
-        val p = ExoPlayer.Builder(this).build()
+        val p = newLeanPlayer()
         p.setMediaItem(MediaItem.fromUri(Uri.fromFile(o.file)))
         p.repeatMode = Player.REPEAT_MODE_ALL
         p.volume = o.volume.coerceIn(0f, 1f)
@@ -737,6 +752,8 @@ class MainActivity : AppCompatActivity() {
         binding.gestureView.visibility = android.view.View.VISIBLE
         disarmDelete()
         bindCamera()
+        // Vorschau-Overlay-Player wieder vorbereiten (in der Review gestoppt)
+        overlayPlayer?.let { if (it.playbackState == Player.STATE_IDLE) { it.prepare(); syncOverlayPlayer() } }
         refreshUi()
     }
 
@@ -760,7 +777,8 @@ class MainActivity : AppCompatActivity() {
         syncReviewOverlayAudio(pos, p.isPlaying)
         binding.review.reviewBar.updatePlayback(segments.map { it.durationMs }, pos, deleteArmed)
         if (!deleteArmed) {
-            binding.review.reviewStatus.text = getString(R.string.review_position, fmt(pos), fmt(total), segments.size)
+            val vol = overlayStore.videoOverlay()?.let { " · Overlay ${(it.volume * 100).toInt()} %" } ?: ""
+            binding.review.reviewStatus.text = getString(R.string.review_position, fmt(pos), fmt(total), segments.size) + vol
         }
     }
 
@@ -819,6 +837,11 @@ class MainActivity : AppCompatActivity() {
             .setCancelable(false)
             .show()
         setControlsEnabled(false)
+        // Speicher für den Export freimachen: Player der Review komplett freigeben
+        main.removeCallbacks(playbackTicker)
+        player?.release(); player = null
+        reviewOverlayPlayer?.release(); reviewOverlayPlayer = null
+        binding.review.playerView.player = null
 
         val ex = Exporter(this)
         exporter = ex
@@ -854,7 +877,7 @@ class MainActivity : AppCompatActivity() {
                 dialog.dismiss()
                 ex.release(); exporter = null
                 setControlsEnabled(true)
-                player?.play()
+                if (inReview) { buildPlayer(); main.post(playbackTicker) }
                 MaterialAlertDialogBuilder(this@MainActivity)
                     .setTitle(getString(R.string.error, ""))
                     .setMessage(message)
