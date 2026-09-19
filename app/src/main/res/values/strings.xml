@@ -84,7 +84,7 @@
     <string name="greenscreen_conflict">Erst das Bild-im-Bild-Video entfernen – es kann nur ein Video gleichzeitig laufen.</string>
     <string name="shape">Form der Kachel</string>
     <string name="shape_square">Quadrat</string>
-    <string name="shape_portrait">Hochformat</string>
+    <string name="shape_portrait">Rechteck (3:4)</string>
     <string name="shape_circle">Kreis</string>
     <string name="border_toggle">Signatur-Rahmen an/aus</string>
 </resources>

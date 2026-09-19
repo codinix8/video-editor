@@ -56,7 +56,7 @@ class CameraOverlay(
     var border: Boolean = true
 ) : Overlay() {
     override val aspect: Float get() = when (shape) {
-        SHAPE_PORTRAIT -> cameraAspect
+        SHAPE_PORTRAIT -> 4f / 3f   // klassisches Hochformat-Rechteck, oben/unten leicht beschnitten
         else -> 1f
     }
     override fun snapshot() = OverlaySnapshot(id, cx, cy, widthFrac, rotationDeg, aspect,

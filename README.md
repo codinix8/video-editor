@@ -26,7 +26,7 @@ Auf dem Handy: Datei öffnen → „Aus dieser Quelle installieren" erlauben →
 | 2f | Ton-Historie: entfernte Video-Overlays behalten ihren Ton (Einfügen bis Entfernen), Mehrspur-Mix | ✅ Build 23 |
 | 2g | Protokoll: Play/Pause fürs Overlay-Video während der Aufnahme, Lautstärke gilt ab Änderung | ✅ Build 24 |
 | 4a | Text- und Emoji-Overlays: Farbe, Hintergrund, Deckkraft, bearbeiten | ✅ Build 26 |
-| 3a | Kachel-Modus: Kamerabild als Kachel (Quadrat/Hochformat/Kreis) mit Signatur-Rahmen vor Hintergrundvideo (KI-Freistellung verworfen) | in Test |
+| 3a | Kachel-Modus: Kamerabild als Kachel (Quadrat/Rechteck 3:4/Kreis) mit Signatur-Rahmen vor Hintergrundvideo (KI-Freistellung verworfen) | ✅ Build 29 |
 | 3 | Freistellung (Person vor Video-Hintergrund), Mosaik-Layouts | offen |
 | 4 | Farbfilter, Text- und Emoji-Overlays | offen |
 
