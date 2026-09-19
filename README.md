@@ -24,7 +24,8 @@ Auf dem Handy: Datei öffnen → „Aus dieser Quelle installieren" erlauben →
 | 2d | Review spielt Overlay-Ton synchron mit (Referenz vor dem Export) | ✅ Build 17 |
 | 2e | Eigener Overlay-Ton-Renderer (WAV), Absturzbericht, Wiederherstellung nach Absturz als Entwurf | ✅ Build 22 |
 | 2f | Ton-Historie: entfernte Video-Overlays behalten ihren Ton (Einfügen bis Entfernen), Mehrspur-Mix | ✅ Build 23 |
-| 2g | Protokoll: Play/Pause fürs Overlay-Video während der Aufnahme, Lautstärke gilt ab Änderung | in Test |
+| 2g | Protokoll: Play/Pause fürs Overlay-Video während der Aufnahme, Lautstärke gilt ab Änderung | ✅ Build 24 |
+| 4a | Text- und Emoji-Overlays: Farbe, Hintergrundbalken, bearbeiten | in Test |
 | 3 | Freistellung (Person vor Video-Hintergrund), Mosaik-Layouts | offen |
 | 4 | Farbfilter, Text- und Emoji-Overlays | offen |
 

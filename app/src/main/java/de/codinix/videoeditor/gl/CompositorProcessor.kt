@@ -48,6 +48,8 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
 
     /** GL-Texturen für Overlay-Bitmaps, per Overlay-ID. */
     private val overlayTextures = HashMap<Long, Int>()
+    /** Welches Bitmap-Objekt liegt in der Textur? Ändert es sich (Text neu gerendert), neu hochladen. */
+    private val overlayBitmaps = HashMap<Long, android.graphics.Bitmap>()
 
     /** Video-Overlays: externe Textur + SurfaceTexture, die der Player befüllt. */
     private inner class VideoLayer(val texId: Int, val surfaceTexture: SurfaceTexture, val surface: Surface) {
@@ -362,12 +364,18 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
         val it = overlayTextures.entries.iterator()
         while (it.hasNext()) {
             val e = it.next()
-            if (e.key !in liveIds) { GlUtil.deleteTexture(e.value); it.remove() }
+            if (e.key !in liveIds) { GlUtil.deleteTexture(e.value); it.remove(); overlayBitmaps.remove(e.key) }
         }
         for (o in snapshot) {
             val bmp = o.bitmap ?: continue
-            if (o.id !in overlayTextures && !bmp.isRecycled) {
+            if (bmp.isRecycled) continue
+            val stale = overlayBitmaps[o.id] !== bmp
+            if (o.id in overlayTextures && stale) {
+                GlUtil.deleteTexture(overlayTextures.remove(o.id)!!)
+            }
+            if (o.id !in overlayTextures) {
                 overlayTextures[o.id] = GlUtil.createTextureFromBitmap(bmp)
+                overlayBitmaps[o.id] = bmp
             }
         }
     }
@@ -380,6 +388,7 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
             outputs.clear()
             overlayTextures.values.forEach { GlUtil.deleteTexture(it) }
             overlayTextures.clear()
+            overlayBitmaps.clear()
             videoLayers.values.forEach { destroyVideoLayer(it) }
             videoLayers.clear()
             inputSurface?.release(); inputTexture?.release()

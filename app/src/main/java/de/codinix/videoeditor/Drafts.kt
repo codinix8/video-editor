@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import de.codinix.videoeditor.overlay.ImageOverlay
+import de.codinix.videoeditor.overlay.TextOverlay
 import de.codinix.videoeditor.overlay.Overlay
 import de.codinix.videoeditor.overlay.VideoOverlay
 import org.json.JSONArray
@@ -95,6 +96,9 @@ class DraftStore(context: Context) {
                     png.outputStream().use { o.bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
                     j.put("type", "image").put("file", png.name)
                 }
+                is TextOverlay -> {
+                    j.put("type", "text").put("text", o.text).put("color", o.colorArgb).put("background", o.background)
+                }
                 is VideoOverlay -> {
                     val dest = File(dir, "overlay_$i.mp4")
                     if (!o.file.renameTo(dest)) { o.file.copyTo(dest, overwrite = true); o.file.delete() }
@@ -153,6 +157,7 @@ class DraftStore(context: Context) {
         val ovs = session.optJSONArray("overlays") ?: JSONArray()
         for (i in 0 until ovs.length()) {
             val o = ovs.getJSONObject(i)
+            if (o.optString("type") == "text") { ovArr.put(o); continue }
             val src = File(o.getString("path"))
             if (!src.exists()) continue
             val ext = if (o.getString("type") == "video") "mp4" else "png"
@@ -202,9 +207,14 @@ class DraftStore(context: Context) {
         val overlays = ArrayList<Overlay>()
         for (i in 0 until ovs.length()) {
             val o = ovs.getJSONObject(i)
-            val src = File(info.dir, o.getString("file"))
             val cx = o.getDouble("cx").toFloat(); val cy = o.getDouble("cy").toFloat()
             val w = o.getDouble("widthFrac").toFloat(); val rot = o.getDouble("rotationDeg").toFloat()
+            if (o.optString("type", "image") == "text") {
+                overlays.add(TextOverlay(Overlay.newId(), o.getString("text"), o.getInt("color"),
+                    o.optBoolean("background", false), cx, cy, w, rot))
+                continue
+            }
+            val src = File(info.dir, o.getString("file"))
             if (o.optString("type", "image") == "video") {
                 val dest = File(targetDir.parentFile ?: targetDir, "overlay_video_${System.currentTimeMillis()}_$i.mp4")
                 if (!src.renameTo(dest)) src.copyTo(dest, overwrite = true)

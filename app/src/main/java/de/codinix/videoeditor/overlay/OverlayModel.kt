@@ -42,6 +42,30 @@ class ImageOverlay(
 }
 
 /**
+ * Text (mit Emojis) als Overlay. Wird per Canvas in ein Bitmap gerendert; das Bitmap ist
+ * der GL-Textur-Inhalt. Nach jeder Textänderung entsteht ein neues Bitmap.
+ */
+class TextOverlay(
+    override val id: Long,
+    var text: String,
+    var colorArgb: Int,
+    var background: Boolean,
+    override var cx: Float = 0.5f,
+    override var cy: Float = 0.5f,
+    override var widthFrac: Float = 0.6f,
+    override var rotationDeg: Float = 0f
+) : Overlay() {
+    var bitmap: Bitmap = TextRenderer.render(text, colorArgb, background)
+        private set
+
+    /** Neu rendern nach Textänderung. Der Renderer erkennt das neue Bitmap am Objekt. */
+    fun rerender() { bitmap = TextRenderer.render(text, colorArgb, background) }
+
+    override val aspect: Float get() = bitmap.height.toFloat() / bitmap.width.toFloat()
+    override fun snapshot() = OverlaySnapshot(id, cx, cy, widthFrac, rotationDeg, aspect, bitmap = bitmap)
+}
+
+/**
  * Ein Video als Bild-im-Bild. Die Wiedergabe läuft nur während der Aufnahme
  * (siehe MainActivity), damit das Video im Ergebnis durchgehend ist.
  *  - startOffsetMs: Position in der Gesamtaufnahme, an der das Video eingefügt wurde

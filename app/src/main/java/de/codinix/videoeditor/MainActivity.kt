@@ -39,6 +39,8 @@ import de.codinix.videoeditor.databinding.ActivityMainBinding
 import de.codinix.videoeditor.gl.CompositorEffect
 import de.codinix.videoeditor.gl.CompositorProcessor
 import de.codinix.videoeditor.overlay.ImageOverlay
+import de.codinix.videoeditor.overlay.TextOverlay
+import de.codinix.videoeditor.overlay.TextRenderer
 import de.codinix.videoeditor.overlay.Overlay
 import de.codinix.videoeditor.overlay.OverlayStore
 import de.codinix.videoeditor.overlay.VideoOverlay
@@ -189,6 +191,10 @@ class MainActivity : AppCompatActivity() {
             (overlayStore.selected() as? VideoOverlay)?.let { showVolumeDialog(it) }
         }
         binding.micButton.setOnClickListener { showMicDialog() }
+        binding.addTextButton.setOnClickListener { showTextDialog(null) }
+        binding.editTextButton.setOnClickListener {
+            (overlayStore.selected() as? TextOverlay)?.let { showTextDialog(it) }
+        }
         binding.previewSoundButton.setOnClickListener {
             previewSoundOn = !previewSoundOn
             binding.previewSoundButton.alpha = if (previewSoundOn) 1f else 0.5f
@@ -450,8 +456,81 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** Text-Overlay anlegen (existing == null) oder bearbeiten. */
+    private fun showTextDialog(existing: TextOverlay?) {
+        val pad = (16 * resources.displayMetrics.density).toInt()
+        var color = existing?.colorArgb ?: android.graphics.Color.WHITE
+        val input = android.widget.EditText(this).apply {
+            hint = getString(R.string.text_hint)
+            setText(existing?.text ?: "")
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or
+                android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE or
+                android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+            minLines = 2; maxLines = 5
+            gravity = android.view.Gravity.CENTER
+            textSize = 20f
+            setTextColor(color)
+        }
+        val colorRow = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER
+            setPadding(0, pad, 0, 0)
+        }
+        val swatches = mutableListOf<android.view.View>()
+        fun refreshSwatches() {
+            swatches.forEachIndexed { i, v -> v.scaleX = if (TextRenderer.COLORS[i] == color) 1.25f else 1f; v.scaleY = v.scaleX }
+        }
+        TextRenderer.COLORS.forEach { c ->
+            val size = (34 * resources.displayMetrics.density).toInt()
+            val v = android.view.View(this).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(size, size).apply { setMargins(pad / 3, 0, pad / 3, 0) }
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    shape = android.graphics.drawable.GradientDrawable.OVAL
+                    setColor(c)
+                    setStroke(3, 0xFF888888.toInt())
+                }
+                setOnClickListener { color = c; input.setTextColor(c); refreshSwatches() }
+            }
+            swatches.add(v); colorRow.addView(v)
+        }
+        refreshSwatches()
+        val bgSwitch = com.google.android.material.materialswitch.MaterialSwitch(this).apply {
+            text = getString(R.string.text_background)
+            isChecked = existing?.background ?: false
+            setPadding(0, pad, 0, 0)
+        }
+        val box = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(pad, pad / 2, pad, 0)
+            addView(input); addView(colorRow); addView(bgSwitch)
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.text_dialog_title)
+            .setView(box)
+            .setPositiveButton(R.string.ok) { _, _ ->
+                val text = input.text.toString().trim()
+                if (text.isEmpty()) return@setPositiveButton
+                if (existing == null) {
+                    val o = TextOverlay(Overlay.newId(), text, color, bgSwitch.isChecked, widthFrac = 0.6f)
+                    overlayStore.add(o)
+                    updateOverlayButtons(o)
+                } else {
+                    existing.text = text; existing.colorArgb = color; existing.background = bgSwitch.isChecked
+                    existing.rerender()
+                    overlayStore.publish()
+                    updateOverlayButtons(existing)
+                }
+                binding.gestureView.invalidate()
+                persistSession()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+        input.requestFocus()
+    }
+
     private fun updateOverlayButtons(sel: Overlay?) {
         binding.removeOverlayButton.visibility = if (sel != null) android.view.View.VISIBLE else android.view.View.GONE
+        binding.editTextButton.visibility = if (sel is TextOverlay) android.view.View.VISIBLE else android.view.View.GONE
         val video = sel as? VideoOverlay
         binding.soundButton.visibility = if (video != null) android.view.View.VISIBLE else android.view.View.GONE
         video?.let {
@@ -1029,6 +1108,8 @@ class MainActivity : AppCompatActivity() {
                         if (!png.exists()) png.outputStream().use { o.bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
                         j.put("type", "image").put("path", png.absolutePath)
                     }
+                    is TextOverlay -> j.put("type", "text").put("text", o.text)
+                        .put("color", o.colorArgb).put("background", o.background)
                     is VideoOverlay -> j.put("type", "video").put("path", o.file.absolutePath)
                         .put("volume", o.volume.toDouble()).put("startOffsetMs", o.startOffsetMs)
                         .put("events", eventsJson(o.events))
