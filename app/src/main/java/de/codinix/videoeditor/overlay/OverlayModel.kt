@@ -48,18 +48,22 @@ class ImageOverlay(
 class TextOverlay(
     override val id: Long,
     var text: String,
+    /** Textfarbe inkl. Alpha. */
     var colorArgb: Int,
-    var background: Boolean,
+    /** Hintergrundfarbe inkl. Alpha, null = kein Hintergrund. */
+    var bgColorArgb: Int?,
     override var cx: Float = 0.5f,
     override var cy: Float = 0.5f,
     override var widthFrac: Float = 0.6f,
     override var rotationDeg: Float = 0f
 ) : Overlay() {
-    var bitmap: Bitmap = TextRenderer.render(text, colorArgb, background)
+    var bitmap: Bitmap = TextRenderer.render(text, colorArgb, bgColorArgb)
         private set
 
+    val background: Boolean get() = bgColorArgb != null
+
     /** Neu rendern nach Textänderung. Der Renderer erkennt das neue Bitmap am Objekt. */
-    fun rerender() { bitmap = TextRenderer.render(text, colorArgb, background) }
+    fun rerender() { bitmap = TextRenderer.render(text, colorArgb, bgColorArgb) }
 
     override val aspect: Float get() = bitmap.height.toFloat() / bitmap.width.toFloat()
     override fun snapshot() = OverlaySnapshot(id, cx, cy, widthFrac, rotationDeg, aspect, bitmap = bitmap)

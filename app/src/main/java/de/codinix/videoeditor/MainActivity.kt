@@ -458,8 +458,18 @@ class MainActivity : AppCompatActivity() {
 
     /** Text-Overlay anlegen (existing == null) oder bearbeiten. */
     private fun showTextDialog(existing: TextOverlay?) {
-        val pad = (16 * resources.displayMetrics.density).toInt()
-        var color = existing?.colorArgb ?: android.graphics.Color.WHITE
+        val dp = resources.displayMetrics.density
+        val pad = (16 * dp).toInt()
+
+        var textRgb = (existing?.colorArgb ?: android.graphics.Color.WHITE) or 0xFF000000.toInt()
+        var textAlpha = existing?.let { android.graphics.Color.alpha(it.colorArgb) } ?: 255
+        var bgOn = existing?.bgColorArgb != null
+        var bgRgb = (existing?.bgColorArgb ?: android.graphics.Color.BLACK) or 0xFF000000.toInt()
+        var bgAlpha = existing?.bgColorArgb?.let { android.graphics.Color.alpha(it) } ?: 200
+
+        fun textColor() = (textRgb and 0x00FFFFFF) or (textAlpha shl 24)
+        fun bgColor(): Int? = if (bgOn) (bgRgb and 0x00FFFFFF) or (bgAlpha shl 24) else null
+
         val input = android.widget.EditText(this).apply {
             hint = getString(R.string.text_hint)
             setText(existing?.text ?: "")
@@ -468,54 +478,103 @@ class MainActivity : AppCompatActivity() {
                 android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
             minLines = 2; maxLines = 5
             gravity = android.view.Gravity.CENTER
-            textSize = 20f
-            setTextColor(color)
+            textSize = 22f
+            setPadding(pad, pad, pad, pad)
         }
-        val colorRow = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.HORIZONTAL
-            gravity = android.view.Gravity.CENTER
-            setPadding(0, pad, 0, 0)
+        val previewBg = android.graphics.drawable.GradientDrawable().apply { cornerRadius = 12 * dp }
+        fun refreshPreview() {
+            input.setTextColor(textColor())
+            input.setHintTextColor(0x88888888.toInt())
+            val bg = bgColor()
+            previewBg.setColor(bg ?: 0x22888888)
+            input.background = previewBg
         }
-        val swatches = mutableListOf<android.view.View>()
-        fun refreshSwatches() {
-            swatches.forEachIndexed { i, v -> v.scaleX = if (TextRenderer.COLORS[i] == color) 1.25f else 1f; v.scaleY = v.scaleX }
+
+        fun label(res: Int) = android.widget.TextView(this).apply {
+            text = getString(res); textSize = 13f; setPadding(0, pad, 0, pad / 4)
         }
-        TextRenderer.COLORS.forEach { c ->
-            val size = (34 * resources.displayMetrics.density).toInt()
-            val v = android.view.View(this).apply {
-                layoutParams = android.widget.LinearLayout.LayoutParams(size, size).apply { setMargins(pad / 3, 0, pad / 3, 0) }
-                background = android.graphics.drawable.GradientDrawable().apply {
-                    shape = android.graphics.drawable.GradientDrawable.OVAL
-                    setColor(c)
-                    setStroke(3, 0xFF888888.toInt())
+
+        /** Zwei Reihen Farbfelder; onPick liefert die RGB-Farbe. */
+        fun swatchGrid(selected: () -> Int, onPick: (Int) -> Unit): android.view.View {
+            val col = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.VERTICAL }
+            val views = mutableListOf<Pair<Int, android.view.View>>()
+            fun refresh() { views.forEach { (c, v) -> v.scaleX = if (c == (selected() or 0xFF000000.toInt())) 1.2f else 1f; v.scaleY = v.scaleX } }
+            TextRenderer.COLORS.toList().chunked(6).forEach { rowColors ->
+                val row = android.widget.LinearLayout(this).apply {
+                    orientation = android.widget.LinearLayout.HORIZONTAL
+                    gravity = android.view.Gravity.CENTER
                 }
-                setOnClickListener { color = c; input.setTextColor(c); refreshSwatches() }
+                rowColors.forEach { c ->
+                    val size = (34 * dp).toInt()
+                    val v = android.view.View(this).apply {
+                        layoutParams = android.widget.LinearLayout.LayoutParams(size, size).apply { setMargins(pad / 3, pad / 4, pad / 3, pad / 4) }
+                        background = android.graphics.drawable.GradientDrawable().apply {
+                            shape = android.graphics.drawable.GradientDrawable.OVAL
+                            setColor(c); setStroke(3, 0xFF888888.toInt())
+                        }
+                        setOnClickListener { onPick(c); refresh(); refreshPreview() }
+                    }
+                    views.add(c to v); row.addView(v)
+                }
+                col.addView(row)
             }
-            swatches.add(v); colorRow.addView(v)
+            refresh()
+            return col
         }
-        refreshSwatches()
+
+        fun slider(initial: Int, onChange: (Int) -> Unit) = android.widget.SeekBar(this).apply {
+            max = 100; progress = initial
+            setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(sb: android.widget.SeekBar, v: Int, fromUser: Boolean) { onChange(v); refreshPreview() }
+                override fun onStartTrackingTouch(sb: android.widget.SeekBar) {}
+                override fun onStopTrackingTouch(sb: android.widget.SeekBar) {}
+            })
+        }
+
+        val bgSection = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            visibility = if (bgOn) android.view.View.VISIBLE else android.view.View.GONE
+            addView(label(R.string.bg_color))
+            addView(swatchGrid({ bgRgb }) { bgRgb = it })
+            addView(label(R.string.bg_opacity))
+            addView(slider(bgAlpha * 100 / 255) { bgAlpha = it * 255 / 100 })
+        }
         val bgSwitch = com.google.android.material.materialswitch.MaterialSwitch(this).apply {
             text = getString(R.string.text_background)
-            isChecked = existing?.background ?: false
+            isChecked = bgOn
             setPadding(0, pad, 0, 0)
+            setOnCheckedChangeListener { _, on ->
+                bgOn = on
+                bgSection.visibility = if (on) android.view.View.VISIBLE else android.view.View.GONE
+                refreshPreview()
+            }
         }
+
         val box = android.widget.LinearLayout(this).apply {
             orientation = android.widget.LinearLayout.VERTICAL
             setPadding(pad, pad / 2, pad, 0)
-            addView(input); addView(colorRow); addView(bgSwitch)
+            addView(input)
+            addView(label(R.string.text_color))
+            addView(swatchGrid({ textRgb }) { textRgb = it })
+            addView(label(R.string.text_opacity))
+            addView(slider(textAlpha * 100 / 255) { textAlpha = it * 255 / 100 })
+            addView(bgSwitch)
+            addView(bgSection)
         }
+        refreshPreview()
+
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.text_dialog_title)
-            .setView(box)
+            .setView(android.widget.ScrollView(this).apply { addView(box) })
             .setPositiveButton(R.string.ok) { _, _ ->
                 val text = input.text.toString().trim()
                 if (text.isEmpty()) return@setPositiveButton
                 if (existing == null) {
-                    val o = TextOverlay(Overlay.newId(), text, color, bgSwitch.isChecked, widthFrac = 0.6f)
+                    val o = TextOverlay(Overlay.newId(), text, textColor(), bgColor(), widthFrac = 0.6f)
                     overlayStore.add(o)
                     updateOverlayButtons(o)
                 } else {
-                    existing.text = text; existing.colorArgb = color; existing.background = bgSwitch.isChecked
+                    existing.text = text; existing.colorArgb = textColor(); existing.bgColorArgb = bgColor()
                     existing.rerender()
                     overlayStore.publish()
                     updateOverlayButtons(existing)
@@ -1110,6 +1169,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     is TextOverlay -> j.put("type", "text").put("text", o.text)
                         .put("color", o.colorArgb).put("background", o.background)
+                        .put("bgColor", o.bgColorArgb ?: org.json.JSONObject.NULL)
                     is VideoOverlay -> j.put("type", "video").put("path", o.file.absolutePath)
                         .put("volume", o.volume.toDouble()).put("startOffsetMs", o.startOffsetMs)
                         .put("events", eventsJson(o.events))

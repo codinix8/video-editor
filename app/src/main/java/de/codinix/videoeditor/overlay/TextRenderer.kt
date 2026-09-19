@@ -17,12 +17,17 @@ import android.text.TextPaint
  * Hintergrund lesbar bleibt.
  */
 object TextRenderer {
-    private const val TEXT_SIZE = 72f
-    private const val MAX_WIDTH = 1000
-    private const val PADDING = 28f
-    private const val RADIUS = 28f
+    private const val TEXT_SIZE = 160f
+    private const val MAX_WIDTH = 2200
+    private const val PADDING = 60f
+    private const val RADIUS = 60f
 
-    fun render(text: String, colorArgb: Int, background: Boolean): Bitmap {
+    /**
+     * @param colorArgb Textfarbe inkl. Alpha
+     * @param bgColorArgb Hintergrundfarbe inkl. Alpha oder null für keinen Hintergrund
+     */
+    fun render(text: String, colorArgb: Int, bgColorArgb: Int?): Bitmap {
+        val background = bgColorArgb != null
         val content = text.ifBlank { " " }
         val paint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             textSize = TEXT_SIZE
@@ -42,11 +47,8 @@ object TextRenderer {
         val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
 
-        if (background) {
-            // Balkenfarbe: dunkel bei hellem Text, hell bei dunklem Text
-            val lum = Color.luminance(colorArgb)
-            val bg = if (lum > 0.5f) Color.argb(200, 0, 0, 0) else Color.argb(220, 255, 255, 255)
-            val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = bg }
+        if (bgColorArgb != null) {
+            val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = bgColorArgb }
             canvas.drawRoundRect(RectF(0f, 0f, w.toFloat(), h.toFloat()), RADIUS, RADIUS, bgPaint)
         }
 
@@ -57,7 +59,8 @@ object TextRenderer {
             val outline = TextPaint(paint).apply {
                 style = Paint.Style.STROKE
                 strokeWidth = TEXT_SIZE * 0.12f
-                color = if (Color.luminance(colorArgb) > 0.5f) Color.BLACK else Color.WHITE
+                val base = if (Color.luminance(colorArgb) > 0.5f) Color.BLACK else Color.WHITE
+                color = (base and 0x00FFFFFF) or (Color.alpha(colorArgb) shl 24)  // Kontur mit Text-Alpha
                 strokeJoin = Paint.Join.ROUND
             }
             StaticLayout.Builder.obtain(content, 0, content.length, outline, width)
@@ -71,9 +74,9 @@ object TextRenderer {
         return bmp
     }
 
-    /** Auswahlfarben für den Dialog. */
+    /** Auswahlfarben für den Dialog (ohne Alpha, 2 Reihen à 6). */
     val COLORS = intArrayOf(
-        Color.WHITE, Color.BLACK, 0xFFFFD60A.toInt(), 0xFFFF3B4E.toInt(),
-        0xFF34C759.toInt(), 0xFF0A84FF.toInt(), 0xFFFF6BCB.toInt(), 0xFFFF9500.toInt()
+        Color.WHITE, 0xFFBDBDBD.toInt(), 0xFF616161.toInt(), Color.BLACK, 0xFFFFD60A.toInt(), 0xFFFF9500.toInt(),
+        0xFFFF3B4E.toInt(), 0xFFFF6BCB.toInt(), 0xFFAF52DE.toInt(), 0xFF0A84FF.toInt(), 0xFF32ADE6.toInt(), 0xFF34C759.toInt()
     )
 }

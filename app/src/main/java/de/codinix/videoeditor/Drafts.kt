@@ -97,7 +97,8 @@ class DraftStore(context: Context) {
                     j.put("type", "image").put("file", png.name)
                 }
                 is TextOverlay -> {
-                    j.put("type", "text").put("text", o.text).put("color", o.colorArgb).put("background", o.background)
+                    j.put("type", "text").put("text", o.text).put("color", o.colorArgb)
+                        .put("background", o.background).put("bgColor", o.bgColorArgb ?: JSONObject.NULL)
                 }
                 is VideoOverlay -> {
                     val dest = File(dir, "overlay_$i.mp4")
@@ -210,8 +211,9 @@ class DraftStore(context: Context) {
             val cx = o.getDouble("cx").toFloat(); val cy = o.getDouble("cy").toFloat()
             val w = o.getDouble("widthFrac").toFloat(); val rot = o.getDouble("rotationDeg").toFloat()
             if (o.optString("type", "image") == "text") {
-                overlays.add(TextOverlay(Overlay.newId(), o.getString("text"), o.getInt("color"),
-                    o.optBoolean("background", false), cx, cy, w, rot))
+                val bg: Int? = if (o.has("bgColor") && !o.isNull("bgColor")) o.getInt("bgColor")
+                    else if (o.optBoolean("background", false)) 0xC8000000.toInt() else null
+                overlays.add(TextOverlay(Overlay.newId(), o.getString("text"), o.getInt("color"), bg, cx, cy, w, rot))
                 continue
             }
             val src = File(info.dir, o.getString("file"))

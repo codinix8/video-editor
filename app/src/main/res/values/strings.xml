@@ -71,6 +71,9 @@
     <string name="edit_text">Text bearbeiten</string>
     <string name="text_dialog_title">Text</string>
     <string name="text_hint">Text oder Emojis eingeben…</string>
-    <string name="text_background">Hintergrundbalken</string>
+    <string name="text_background">Hintergrund</string>
     <string name="text_color">Farbe</string>
+    <string name="text_opacity">Text-Deckkraft</string>
+    <string name="bg_color">Hintergrundfarbe</string>
+    <string name="bg_opacity">Hintergrund-Deckkraft</string>
 </resources>
