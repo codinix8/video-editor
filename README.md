@@ -22,7 +22,8 @@ Auf dem Handy: Datei öffnen → „Aus dieser Quelle installieren" erlauben →
 | 2b | Video-Overlay (PiP): läuft nur während der Aufnahme, Ton beim Export mischbar, Teilen-Knopf | ✅ Build 11 |
 | 2c | Lautstärkeregler pro Overlay (0–200 %), Mikrofon-Regler im Export, Overlay-Ton in Vorschau bei Kopfhörern | ✅ Build 15 |
 | 2d | Review spielt Overlay-Ton synchron mit (Referenz vor dem Export) | ✅ Build 17 |
-| 2e | Eigener Overlay-Ton-Renderer (WAV), Absturzbericht, Wiederherstellung nach Absturz als Entwurf | in Test |
+| 2e | Eigener Overlay-Ton-Renderer (WAV), Absturzbericht, Wiederherstellung nach Absturz als Entwurf | ✅ Build 22 |
+| 2f | Ton-Historie: entfernte Video-Overlays behalten ihren Ton (Einfügen bis Entfernen), Mehrspur-Mix | in Test |
 | 3 | Freistellung (Person vor Video-Hintergrund), Mosaik-Layouts | offen |
 | 4 | Farbfilter, Text- und Emoji-Overlays | offen |
 

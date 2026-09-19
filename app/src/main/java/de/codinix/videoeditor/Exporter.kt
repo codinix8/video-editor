@@ -51,10 +51,30 @@ class Exporter(private val context: Context) {
      */
     data class AudioMix(
         val file: File, val startOffsetMs: Long, val videoDurationMs: Long, val gain: Float = 1f,
-        val timeline: List<OverlayAudioRenderer.Segment>? = null
+        val timeline: List<OverlayAudioRenderer.Segment>? = null,
+        /** Ende der Spur (Overlay entfernt) oder null = bis zum Ende des Videos. */
+        val endOffsetMs: Long? = null
     ) {
-        fun effectiveTimeline(): List<OverlayAudioRenderer.Segment> =
-            timeline ?: listOf(OverlayAudioRenderer.Segment(startOffsetMs, gain, true))
+        fun effectiveTimeline(): List<OverlayAudioRenderer.Segment> {
+            val base = timeline ?: listOf(OverlayAudioRenderer.Segment(startOffsetMs, gain, true))
+            val end = endOffsetMs ?: return base
+            return base.filter { it.fromMs < end } + OverlayAudioRenderer.Segment(end, 0f, false)
+        }
+    }
+
+    companion object {
+        private const val TAG = "Exporter"
+
+        /** Rendert alle Overlay-Tonspuren zusammen in eine WAV-Datei. */
+        fun renderMixWav(context: Context, mixes: List<AudioMix>, totalMs: Long, out: File): Boolean {
+            val tracks = mixes.mapNotNull { mix ->
+                val decoded = OverlayAudioRenderer.decode(mix.file, context.cacheDir) ?: return@mapNotNull null
+                OverlayAudioRenderer.Track(decoded, mix.effectiveTimeline())
+            }
+            if (tracks.isEmpty()) return false
+            OverlayAudioRenderer.renderMix(tracks, totalMs, out)
+            return true
+        }
     }
 
     interface Listener {
@@ -89,12 +109,8 @@ class Exporter(private val context: Context) {
             worker.execute {
                 try {
                     val totalMs = segments.sumOf { VideoConcat.durationUs(it) } / 1000
-                    val wavs = audioMix.mapNotNull { mix ->
-                        val decoded = OverlayAudioRenderer.decode(mix.file, context.cacheDir) ?: return@mapNotNull null
-                        val wav = File(context.cacheDir, "ovl_mix_${System.currentTimeMillis()}.wav")
-                        OverlayAudioRenderer.render(decoded, mix.effectiveTimeline(), totalMs, wav)
-                        wav
-                    }
+                    val wav = File(context.cacheDir, "ovl_mix_${System.currentTimeMillis()}.wav")
+                    val wavs = if (renderMixWav(context, audioMix, totalMs, wav)) listOf(wav) else emptyList()
                     main.post { transform(segments, targetHeight, outFile, listener, wavs, micGain) }
                 } catch (e: Exception) {
                     Log.e(TAG, "Overlay-Ton rendern fehlgeschlagen", e)
@@ -260,7 +276,5 @@ class Exporter(private val context: Context) {
         worker.shutdown()
     }
 
-    companion object {
-        private const val TAG = "Exporter"
-    }
+
 }

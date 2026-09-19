@@ -27,11 +27,15 @@ class DraftStore(context: Context) {
         val durationMs: Long
     )
 
+    /** Tonspur eines bereits entfernten Video-Overlays. */
+    data class AudioTrack(val file: File, val startOffsetMs: Long, val endOffsetMs: Long, val volume: Float, val durationMs: Long)
+
     class Loaded(
         val segments: List<Pair<File, Long>>,
         val overlays: List<Overlay>,
         val lensFacing: Int,
-        val qualityLabel: String?
+        val qualityLabel: String?,
+        val audioTracks: List<AudioTrack> = emptyList()
     )
 
     fun list(): List<Info> = root.listFiles()?.mapNotNull { dir ->
@@ -50,7 +54,8 @@ class DraftStore(context: Context) {
         segments: List<Pair<File, Long>>,
         overlays: List<Overlay>,
         lensFacing: Int,
-        qualityLabel: String?
+        qualityLabel: String?,
+        audioTracks: List<AudioTrack> = emptyList()
     ): Info {
         val id = System.currentTimeMillis().toString()
         val dir = File(root, id).apply { mkdirs() }
@@ -85,12 +90,22 @@ class DraftStore(context: Context) {
             ovArr.put(j)
         }
 
+        val trArr = JSONArray()
+        audioTracks.forEachIndexed { i, t ->
+            val dest = File(dir, "audio_$i.mp4")
+            if (!t.file.renameTo(dest)) { t.file.copyTo(dest, overwrite = true); t.file.delete() }
+            trArr.put(JSONObject().put("file", dest.name)
+                .put("startOffsetMs", t.startOffsetMs).put("endOffsetMs", t.endOffsetMs)
+                .put("volume", t.volume.toDouble()).put("durationMs", t.durationMs))
+        }
+
         val meta = JSONObject()
             .put("createdAt", id.toLong())
             .put("lensFacing", lensFacing)
             .put("quality", qualityLabel ?: JSONObject.NULL)
             .put("segments", segArr)
             .put("overlays", ovArr)
+            .put("audioTracks", trArr)
         File(dir, "meta.json").writeText(meta.toString())
 
         val dur = segments.sumOf { it.second }
@@ -129,12 +144,24 @@ class DraftStore(context: Context) {
             j.remove("path"); j.put("file", dest.name)
             ovArr.put(j)
         }
+        val trArr = JSONArray()
+        val trs = session.optJSONArray("audioTracks") ?: JSONArray()
+        for (i in 0 until trs.length()) {
+            val t = trs.getJSONObject(i)
+            val src = File(t.getString("path"))
+            if (!src.exists()) continue
+            val dest = File(dir, "audio_$i.mp4")
+            if (!src.renameTo(dest)) { src.copyTo(dest, overwrite = true); src.delete() }
+            val j = JSONObject(t.toString()); j.remove("path"); j.put("file", dest.name)
+            trArr.put(j)
+        }
         val meta = JSONObject()
             .put("createdAt", id.toLong())
             .put("lensFacing", session.optInt("lensFacing", 1))
             .put("quality", session.opt("quality") ?: JSONObject.NULL)
             .put("segments", segArr)
             .put("overlays", ovArr)
+            .put("audioTracks", trArr)
         File(dir, "meta.json").writeText(meta.toString())
         var dur = 0L
         for (i in 0 until segArr.length()) dur += segArr.getJSONObject(i).getLong("durationMs")
@@ -172,7 +199,19 @@ class DraftStore(context: Context) {
             }
         }
         val quality = if (j.isNull("quality")) null else j.getString("quality")
-        val loaded = Loaded(segments, overlays, j.getInt("lensFacing"), quality)
+        val tracks = ArrayList<AudioTrack>()
+        val trs = j.optJSONArray("audioTracks") ?: JSONArray()
+        for (i in 0 until trs.length()) {
+            val t = trs.getJSONObject(i)
+            val src = File(info.dir, t.getString("file"))
+            if (!src.exists()) continue
+            val dest = File(targetDir.parentFile ?: targetDir, "overlay_videos/hist_${System.currentTimeMillis()}_$i.mp4")
+            dest.parentFile?.mkdirs()
+            if (!src.renameTo(dest)) src.copyTo(dest, overwrite = true)
+            tracks.add(AudioTrack(dest, t.getLong("startOffsetMs"), t.getLong("endOffsetMs"),
+                t.getDouble("volume").toFloat(), t.getLong("durationMs")))
+        }
+        val loaded = Loaded(segments, overlays, j.getInt("lensFacing"), quality, tracks)
         delete(info)
         return loaded
     }

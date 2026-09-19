@@ -94,6 +94,40 @@ class MainActivity : AppCompatActivity() {
     private var overlayPlayer: ExoPlayer? = null
     private val bgExecutor = java.util.concurrent.Executors.newSingleThreadExecutor()
 
+    /**
+     * Tonspuren bereits entfernter Video-Overlays. Ihr Bild steckt in den Segmenten,
+     * ihr Ton muss beim Export weiter gemischt werden – von Einfügen bis Entfernen.
+     */
+    data class AudioTrackEntry(
+        val file: File, val startOffsetMs: Long, val endOffsetMs: Long, val volume: Float, val durationMs: Long
+    )
+    private val audioHistory = mutableListOf<AudioTrackEntry>()
+
+    private fun currentTotalMs() = segments.sumOf { it.durationMs } + liveDurationMs
+
+    /** Alle Tonspuren für Export und Review: Historie plus aktuelles Overlay. */
+    private fun allAudioMixes(): List<Exporter.AudioMix> {
+        val past = audioHistory.map {
+            Exporter.AudioMix(it.file, it.startOffsetMs, it.durationMs, it.volume, endOffsetMs = it.endOffsetMs)
+        }
+        val current = overlayStore.videoOverlay()?.takeIf { it.soundOn && it.durationMs > 0 }
+            ?.let { listOf(Exporter.AudioMix(it.file, it.startOffsetMs, it.durationMs, it.volume)) } ?: emptyList()
+        return past + current
+    }
+
+    /** Nach dem Löschen von Segmenten: Spuren hinter dem neuen Ende verwerfen, Rest kürzen. */
+    private fun trimAudioHistory(totalMs: Long) {
+        val it = audioHistory.listIterator()
+        while (it.hasNext()) {
+            val e = it.next()
+            if (e.startOffsetMs >= totalMs) { it.remove(); if (!isFileReferenced(e.file)) e.file.delete() }
+            else if (e.endOffsetMs > totalMs) it.set(e.copy(endOffsetMs = totalMs))
+        }
+    }
+
+    private fun isFileReferenced(f: File): Boolean =
+        audioHistory.any { it.file == f } || (overlayStore.videoOverlay()?.file == f)
+
     /** Overlay-Ton in der Vorschau hörbar? Bewusster Schalter, standardmäßig aus. */
     private var previewSoundOn = false
     /** Mikrofon-Verstärkung für den Export (1.0 = unverändert). */
@@ -360,6 +394,7 @@ class MainActivity : AppCompatActivity() {
             main.removeCallbacks(disarmRunnable)
             deleteArmed = false
             segments.removeAt(segments.lastIndex).file.delete()
+            trimAudioHistory(currentTotalMs())
             persistSession()
             syncOverlayPlayer(afterDelete = true)
             Toast.makeText(this, R.string.segment_deleted, Toast.LENGTH_SHORT).show()
@@ -418,13 +453,19 @@ class MainActivity : AppCompatActivity() {
 
     private fun removeOverlay(id: Long) {
         val o = overlayStore.items.firstOrNull { it.id == id }
+        if (o is VideoOverlay) {
+            val end = currentTotalMs()
+            if (o.soundOn && o.durationMs > 0 && end > o.startOffsetMs) {
+                audioHistory.add(AudioTrackEntry(o.file, o.startOffsetMs, end, o.volume, o.durationMs))
+            }
+        }
         overlayStore.remove(id)
-        persistSession()
         if (o is VideoOverlay) {
             overlayPlayer?.release(); overlayPlayer = null
             compositor.releaseVideoLayer(o.id)
-            o.file.delete()
+            if (!isFileReferenced(o.file)) o.file.delete()
         }
+        persistSession()
     }
 
     private fun clearOverlays() {
@@ -686,16 +727,18 @@ class MainActivity : AppCompatActivity() {
      */
     private fun buildReviewOverlayPlayer() {
         reviewOverlayPlayer?.release(); reviewOverlayPlayer = null
-        val o = overlayStore.videoOverlay()?.takeIf { it.soundOn && it.durationMs > 0 } ?: return
+        val mixes = allAudioMixes()
+        if (mixes.isEmpty()) return
         val totalMs = segments.sumOf { it.durationMs }
         if (totalMs <= 0) return
         val gen = ++reviewWavGeneration
-        val mix = Exporter.AudioMix(o.file, o.startOffsetMs, o.durationMs, o.volume)
         bgExecutor.execute {
             try {
-                val decoded = OverlayAudioRenderer.decode(o.file, cacheDir) ?: return@execute
                 val wav = File(cacheDir, "review_ovl_$gen.wav")
-                OverlayAudioRenderer.render(decoded, mix.effectiveTimeline(), totalMs, wav)
+                if (!Exporter.renderMixWav(this, mixes, totalMs, wav)) {
+                    main.post { reviewWaitingForAudio = false; player?.play() }
+                    return@execute
+                }
                 main.post {
                     if (gen != reviewWavGeneration || !inReview) { wav.delete(); return@post }
                     val p = newLeanPlayer()
@@ -858,14 +901,12 @@ class MainActivity : AppCompatActivity() {
 
         val ex = Exporter(this)
         exporter = ex
-        val audioMix = overlayStore.videoOverlay()
-            ?.takeIf { it.soundOn && it.durationMs > 0 }
-            ?.let { listOf(Exporter.AudioMix(it.file, it.startOffsetMs, it.durationMs, it.volume)) }
-            ?: emptyList()
+        val audioMix = allAudioMixes()
         val progressRes = if (audioMix.isEmpty() && kotlin.math.abs(micGain - 1f) < 0.01f)
             R.string.export_running else R.string.export_running_mix
-        audioMix.firstOrNull()?.let {
-            Toast.makeText(this, "Export: Overlay ${(it.gain * 100).toInt()} %, Mikrofon ${(micGain * 100).toInt()} %", Toast.LENGTH_LONG).show()
+        if (audioMix.isNotEmpty()) {
+            val levels = audioMix.joinToString("/") { "${(it.gain * 100).toInt()} %" }
+            Toast.makeText(this, "Export: ${audioMix.size} Overlay-Tonspur(en) $levels, Mikrofon ${(micGain * 100).toInt()} %", Toast.LENGTH_LONG).show()
         }
         ex.export(segments.map { it.file }, targetHeight, object : Exporter.Listener {
             override fun onProgress(percent: Int) {
@@ -876,6 +917,8 @@ class MainActivity : AppCompatActivity() {
                 ex.release(); exporter = null
                 segments.forEach { it.file.delete() }
                 segments.clear()
+                audioHistory.forEach { it.file.delete() }
+                audioHistory.clear()
                 clearOverlays()
                 setControlsEnabled(true)
                 if (inReview) exitReview() else refreshUi()
@@ -917,6 +960,8 @@ class MainActivity : AppCompatActivity() {
                 activeRecording?.stop(); activeRecording = null
                 segments.forEach { it.file.delete() }
                 segments.clear()
+                audioHistory.forEach { it.file.delete() }
+                audioHistory.clear()
                 clearSession()
                 clearOverlays()
                 refreshUi()
@@ -956,8 +1001,14 @@ class MainActivity : AppCompatActivity() {
                 }
                 ovs.put(j)
             }
+            val tracks = org.json.JSONArray()
+            audioHistory.forEach { t ->
+                tracks.put(org.json.JSONObject().put("path", t.file.absolutePath)
+                    .put("startOffsetMs", t.startOffsetMs).put("endOffsetMs", t.endOffsetMs)
+                    .put("volume", t.volume.toDouble()).put("durationMs", t.durationMs))
+            }
             val root = org.json.JSONObject()
-                .put("segments", segs).put("overlays", ovs)
+                .put("segments", segs).put("overlays", ovs).put("audioTracks", tracks)
                 .put("lensFacing", lensFacing)
                 .put("quality", preferredQuality?.let { label(it) } ?: org.json.JSONObject.NULL)
             sessionFile.writeText(root.toString())
@@ -1017,9 +1068,11 @@ class MainActivity : AppCompatActivity() {
                 segments.map { it.file to it.durationMs },
                 overlayStore.items.toList(),
                 lensFacing,
-                preferredQuality?.let { label(it) }
+                preferredQuality?.let { label(it) },
+                audioHistory.map { DraftStore.AudioTrack(it.file, it.startOffsetMs, it.endOffsetMs, it.volume, it.durationMs) }
             )
             segments.clear()
+            audioHistory.clear()
             // Dateien der Video-Overlays wurden in den Entwurf verschoben – nur Player/Textur freigeben
             overlayStore.items.filterIsInstance<VideoOverlay>().forEach {
                 overlayPlayer?.release(); overlayPlayer = null
@@ -1072,6 +1125,8 @@ class MainActivity : AppCompatActivity() {
             loaded.segments.forEach { (f, d) -> segments.add(Segment(f, d)) }
             clearOverlays()
             loaded.overlays.forEach { overlayStore.add(it) }
+            audioHistory.clear()
+            loaded.audioTracks.forEach { audioHistory.add(AudioTrackEntry(it.file, it.startOffsetMs, it.endOffsetMs, it.volume, it.durationMs)) }
             overlayStore.selectedId = null
             overlayStore.videoOverlay()?.let { attachVideoOverlay(it) }
             updateOverlayButtons(null)

@@ -121,6 +121,95 @@ object OverlayAudioRenderer {
         return Decoded(out, sampleRate, channels)
     }
 
+    /** Eine Tonquelle mit ihrer Zeitleiste. */
+    class Track(val decoded: Decoded, val timeline: List<Segment>)
+
+    /**
+     * Mischt mehrere Spuren in eine WAV-Datei (48 kHz, Stereo). Jede Spur folgt ihrer eigenen
+     * Zeitleiste; ihre Quelle läuft nur weiter, solange sie „playing“ ist (Schleife).
+     * Unterschiedliche Abtastraten und Kanalzahlen werden angeglichen.
+     */
+    fun renderMix(tracks: List<Track>, totalMs: Long, out: File) {
+        val sr = 48000
+        val ch = 2
+        val bpf = ch * 2
+        val totalFrames = totalMs * sr / 1000
+        val chunk = sr / 10
+        val mix = IntArray(chunk * ch)
+        val outBuf = ByteBuffer.allocate(chunk * bpf).order(ByteOrder.LITTLE_ENDIAN)
+
+        class State(val t: Track) {
+            val raf = RandomAccessFile(t.decoded.pcm, "r")
+            var srcPos = 0.0                       // Position in Quell-Frames (mit Schleife, kontinuierlich)
+            val srcFrames = t.decoded.frames
+            val srcRate = t.decoded.sampleRate
+            val srcCh = t.decoded.channels
+            val step = srcRate.toDouble() / sr     // Quell-Frames pro Ausgabe-Frame
+            var buf = ByteArray(0)
+            fun segAt(ms: Long): Segment? {
+                var s: Segment? = null
+                for (x in t.timeline) if (x.fromMs <= ms) s = x else break
+                return s
+            }
+        }
+        val states = tracks.filter { it.decoded.frames > 0 }.map { State(it) }
+
+        val wav = RandomAccessFile(out, "rw")
+        wav.setLength(0); wav.write(ByteArray(44))
+        try {
+            var frame = 0L
+            while (frame < totalFrames) {
+                val n = minOf(chunk.toLong(), totalFrames - frame).toInt()
+                java.util.Arrays.fill(mix, 0)
+                for (st in states) {
+                    val seg = st.segAt(frame * 1000 / sr)
+                    if (seg == null || !seg.playing || seg.gain <= 0.001f) continue
+                    // Benötigten Quellbereich in einem Stück lesen (mit Umbruch am Ende)
+                    val need = (n * st.step).toInt() + 2
+                    val bytes = need * st.srcCh * 2
+                    if (st.buf.size < bytes) st.buf = ByteArray(bytes)
+                    val startFrame = (st.srcPos.toLong() % st.srcFrames)
+                    var filled = 0
+                    var pos = startFrame
+                    while (filled < need) {
+                        val avail = minOf((need - filled).toLong(), st.srcFrames - pos).toInt()
+                        st.raf.seek(pos * st.srcCh * 2)
+                        st.raf.readFully(st.buf, filled * st.srcCh * 2, avail * st.srcCh * 2)
+                        filled += avail
+                        pos = (pos + avail) % st.srcFrames
+                    }
+                    val view = ByteBuffer.wrap(st.buf).order(ByteOrder.LITTLE_ENDIAN)
+                    val g = seg.gain
+                    val base = st.srcPos - startFrame   // Bruchteil-Offset relativ zum gelesenen Block
+                    for (i in 0 until n) {
+                        val si = ((base + i * st.step).toInt()).coerceIn(0, need - 1)
+                        for (c in 0 until ch) {
+                            val sc = if (st.srcCh == 1) 0 else minOf(c, st.srcCh - 1)
+                            val v = view.getShort((si * st.srcCh + sc) * 2) * g
+                            mix[i * ch + c] += v.toInt()
+                        }
+                    }
+                    st.srcPos += n * st.step
+                }
+                outBuf.clear()
+                for (i in 0 until n * ch) outBuf.putShort(mix[i].coerceIn(-32768, 32767).toShort())
+                wav.write(outBuf.array(), 0, n * bpf)
+                frame += n
+            }
+            val dataLen = (totalFrames * bpf).toInt()
+            val header = ByteBuffer.allocate(44).order(ByteOrder.LITTLE_ENDIAN)
+            header.put("RIFF".toByteArray()).putInt(36 + dataLen).put("WAVE".toByteArray())
+            header.put("fmt ".toByteArray()).putInt(16).putShort(1).putShort(ch.toShort())
+            header.putInt(sr).putInt(sr * bpf).putShort(bpf.toShort()).putShort(16)
+            header.put("data".toByteArray()).putInt(dataLen)
+            wav.seek(0); wav.write(header.array())
+        } finally {
+            states.forEach { it.raf.close() }
+            wav.close()
+        }
+        Log.i(TAG, "Mix gerendert: ${tracks.size} Spuren, $totalMs ms")
+    }
+
     /**
      * Rendert die Zeitleiste in eine WAV-Datei.
      *
