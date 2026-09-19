@@ -96,6 +96,9 @@ class DraftStore(context: Context) {
                     png.outputStream().use { o.bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
                     j.put("type", "image").put("file", png.name)
                 }
+                is de.codinix.videoeditor.overlay.CameraOverlay -> {
+                    j.put("type", "camera").put("shape", o.shape).put("border", o.border)
+                }
                 is TextOverlay -> {
                     j.put("type", "text").put("text", o.text).put("color", o.colorArgb)
                         .put("background", o.background).put("bgColor", o.bgColorArgb ?: JSONObject.NULL)
@@ -159,7 +162,7 @@ class DraftStore(context: Context) {
         val ovs = session.optJSONArray("overlays") ?: JSONArray()
         for (i in 0 until ovs.length()) {
             val o = ovs.getJSONObject(i)
-            if (o.optString("type") == "text") { ovArr.put(o); continue }
+            if (o.optString("type") == "text" || o.optString("type") == "camera") { ovArr.put(o); continue }
             val src = File(o.getString("path"))
             if (!src.exists()) continue
             val ext = if (o.getString("type") == "video") "mp4" else "png"
@@ -211,6 +214,11 @@ class DraftStore(context: Context) {
             val o = ovs.getJSONObject(i)
             val cx = o.getDouble("cx").toFloat(); val cy = o.getDouble("cy").toFloat()
             val w = o.getDouble("widthFrac").toFloat(); val rot = o.getDouble("rotationDeg").toFloat()
+            if (o.optString("type", "image") == "camera") {
+                overlays.add(de.codinix.videoeditor.overlay.CameraOverlay(Overlay.newId(), cx, cy, w, rot,
+                    o.optInt("shape", 0), o.optBoolean("border", true)))
+                continue
+            }
             if (o.optString("type", "image") == "text") {
                 val bg: Int? = if (o.has("bgColor") && !o.isNull("bgColor")) o.getInt("bgColor")
                     else if (o.optBoolean("background", false)) 0xC8000000.toInt() else null

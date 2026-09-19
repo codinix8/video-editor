@@ -76,10 +76,15 @@
     <string name="text_opacity">Text-Deckkraft</string>
     <string name="bg_color">Hintergrundfarbe</string>
     <string name="bg_opacity">Hintergrund-Deckkraft</string>
-    <string name="greenscreen">Freistellung: Hintergrundvideo</string>
-    <string name="greenscreen_on">Freistellung aktiv – Person vor Hintergrundvideo</string>
-    <string name="greenscreen_remove_title">Freistellung beenden?</string>
+    <string name="greenscreen">Kachel-Modus: Hintergrundvideo</string>
+    <string name="greenscreen_on">Kachel-Modus: Dein Bild als Kachel vor dem Hintergrundvideo. Kachel antippen für Form und Rahmen.</string>
+    <string name="greenscreen_remove_title">Kachel-Modus beenden?</string>
     <string name="greenscreen_remove_msg">Das Hintergrundvideo wird entfernt; sein Ton bleibt bis hierher erhalten.</string>
     <string name="remove">Entfernen</string>
     <string name="greenscreen_conflict">Erst das Bild-im-Bild-Video entfernen – es kann nur ein Video gleichzeitig laufen.</string>
+    <string name="shape">Form der Kachel</string>
+    <string name="shape_square">Quadrat</string>
+    <string name="shape_portrait">Hochformat</string>
+    <string name="shape_circle">Kreis</string>
+    <string name="border_toggle">Signatur-Rahmen an/aus</string>
 </resources>

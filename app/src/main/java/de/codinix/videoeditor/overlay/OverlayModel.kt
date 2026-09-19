@@ -42,6 +42,36 @@ class ImageOverlay(
 }
 
 /**
+ * Das eigene Kamerabild als Kachel (nur im Kachel-Modus mit Hintergrundvideo).
+ * Form und Signatur-Rahmen sind wählbar. Das Seitenverhältnis der Kamera (H/B) liefert der
+ * Compositor über [cameraAspect].
+ */
+class CameraOverlay(
+    override val id: Long,
+    override var cx: Float = 0.22f,
+    override var cy: Float = 0.78f,
+    override var widthFrac: Float = 0.36f,
+    override var rotationDeg: Float = 0f,
+    var shape: Int = SHAPE_SQUARE,
+    var border: Boolean = true
+) : Overlay() {
+    override val aspect: Float get() = when (shape) {
+        SHAPE_PORTRAIT -> cameraAspect
+        else -> 1f
+    }
+    override fun snapshot() = OverlaySnapshot(id, cx, cy, widthFrac, rotationDeg, aspect,
+        isCamera = true, shape = shape, border = border)
+
+    companion object {
+        const val SHAPE_SQUARE = 0
+        const val SHAPE_PORTRAIT = 1
+        const val SHAPE_CIRCLE = 2
+        /** Höhe/Breite des sichtbaren Kamerabilds, vom Compositor gesetzt. */
+        @Volatile var cameraAspect: Float = 16f / 9f
+    }
+}
+
+/**
  * Text (mit Emojis) als Overlay. Wird per Canvas in ein Bitmap gerendert; das Bitmap ist
  * der GL-Textur-Inhalt. Nach jeder Textänderung entsteht ein neues Bitmap.
  */
@@ -149,7 +179,10 @@ data class OverlaySnapshot(
     val rotationDeg: Float,
     val aspect: Float,
     val bitmap: Bitmap? = null,
-    val isVideo: Boolean = false
+    val isVideo: Boolean = false,
+    val isCamera: Boolean = false,
+    val shape: Int = 0,
+    val border: Boolean = false
 )
 
 /**
@@ -186,6 +219,7 @@ class OverlayStore {
     fun selected(): Overlay? = items.firstOrNull { it.id == selectedId }
 
     fun videoOverlay(): VideoOverlay? = items.filterIsInstance<VideoOverlay>().firstOrNull()
+    fun cameraOverlay(): CameraOverlay? = items.filterIsInstance<CameraOverlay>().firstOrNull()
 
     fun bringToFront(id: Long) {
         val idx = items.indexOfFirst { it.id == id }
