@@ -18,6 +18,7 @@ add_library(whisperjni SHARED
     ${CMAKE_SOURCE_DIR}/whisper_jni.cpp
 )
 target_compile_definitions(whisperjni PUBLIC GGML_USE_CPU)
+target_compile_definitions(whisperjni PRIVATE WHISPER_VERSION="1.9.4")
 target_include_directories(whisperjni PRIVATE
     ${WHISPER_LIB_DIR}
     ${WHISPER_LIB_DIR}/src
