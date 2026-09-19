@@ -94,14 +94,10 @@ class MainActivity : AppCompatActivity() {
     private var overlayPlayer: ExoPlayer? = null
     private val bgExecutor = java.util.concurrent.Executors.newSingleThreadExecutor()
 
-    private val audioManager by lazy { getSystemService(android.media.AudioManager::class.java) }
-    private var headphonesConnected = false
+    /** Overlay-Ton in der Vorschau hörbar? Bewusster Schalter, standardmäßig aus. */
+    private var previewSoundOn = false
     /** Mikrofon-Verstärkung für den Export (1.0 = unverändert). */
     private var micGain = 1f
-    private val audioDeviceCallback = object : android.media.AudioDeviceCallback() {
-        override fun onAudioDevicesAdded(added: Array<out android.media.AudioDeviceInfo>) { updateHeadphones(true) }
-        override fun onAudioDevicesRemoved(removed: Array<out android.media.AudioDeviceInfo>) { updateHeadphones(false) }
-    }
 
     /** Zweiter Player in der Review: nur der Ton des Overlay-Videos, synchron zur Aufnahme. */
     private var reviewOverlayPlayer: ExoPlayer? = null
@@ -153,8 +149,15 @@ class MainActivity : AppCompatActivity() {
             (overlayStore.selected() as? VideoOverlay)?.let { showVolumeDialog(it) }
         }
         binding.micButton.setOnClickListener { showMicDialog() }
-        audioManager.registerAudioDeviceCallback(audioDeviceCallback, main)
-        updateHeadphones(false)
+        binding.previewSoundButton.setOnClickListener {
+            previewSoundOn = !previewSoundOn
+            binding.previewSoundButton.alpha = if (previewSoundOn) 1f else 0.5f
+            binding.previewSoundButton.setBackgroundResource(
+                if (previewSoundOn) R.drawable.bg_round_button_accent else R.drawable.bg_round_button)
+            overlayStore.videoOverlay()?.let { o -> overlayPlayer?.volume = previewVolume(o) }
+            Toast.makeText(this, if (previewSoundOn) R.string.preview_sound_on else R.string.preview_sound_off,
+                Toast.LENGTH_LONG).show()
+        }
         binding.addImageButton.setOnClickListener {
             pickImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         }
@@ -504,25 +507,9 @@ class MainActivity : AppCompatActivity() {
         compositor.createVideoLayer(overlay.id) { surface -> main.post { overlayPlayer?.setVideoSurface(surface) } }
     }
 
-    /** Vorschau-Lautstärke: nur über Kopfhörer, sonst würde das Mikrofon den Lautsprecher aufnehmen. */
+    /** Vorschau-Lautstärke: nur wenn bewusst eingeschaltet, sonst nähme das Mikrofon den Lautsprecher auf. */
     private fun previewVolume(o: VideoOverlay): Float =
-        if (headphonesConnected) o.volume.coerceIn(0f, 1f) else 0f
-
-    private fun updateHeadphones(announce: Boolean) {
-        val devices = audioManager.getDevices(android.media.AudioManager.GET_DEVICES_OUTPUTS)
-        val types = setOf(
-            android.media.AudioDeviceInfo.TYPE_WIRED_HEADSET,
-            android.media.AudioDeviceInfo.TYPE_WIRED_HEADPHONES,
-            android.media.AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,
-            android.media.AudioDeviceInfo.TYPE_USB_HEADSET,
-            26 /* TYPE_BLE_HEADSET */, 30 /* TYPE_BLE_BROADCAST */
-        )
-        val now = devices.any { it.type in types }
-        val changed = now != headphonesConnected
-        headphonesConnected = now
-        overlayStore.videoOverlay()?.let { o -> overlayPlayer?.volume = previewVolume(o) }
-        if (changed && now && announce) Toast.makeText(this, R.string.headphones_on, Toast.LENGTH_SHORT).show()
-    }
+        if (previewSoundOn) o.volume.coerceIn(0f, 1f) else 0f
 
     private fun showMicDialog() {
         showSliderDialog(R.string.mic_volume_title, R.string.mic_hint, (micGain * 100).toInt()) { v ->
@@ -1144,7 +1131,6 @@ class MainActivity : AppCompatActivity() {
         player?.release(); player = null
         reviewOverlayPlayer?.release(); reviewOverlayPlayer = null
         exporter?.release()
-        audioManager.unregisterAudioDeviceCallback(audioDeviceCallback)
         overlayPlayer?.release(); overlayPlayer = null
         compositor.release()
         bgExecutor.shutdown()

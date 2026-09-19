@@ -46,7 +46,7 @@
     <string name="sound_off">Overlay-Ton: aus</string>
     <string name="overlay_volume_title">Lautstärke Overlay-Video</string>
     <string name="volume_percent">%1$d %%</string>
-    <string name="volume_hint">Wirkt beim Export. In der Vorschau hörbar, sobald Kopfhörer angeschlossen sind.</string>
+    <string name="volume_hint">Wirkt beim Export und in der Review. In der Vorschau nur hörbar, wenn der Kopfhörer-Schalter an ist.</string>
     <string name="mic_volume">Mikrofon-Lautstärke</string>
     <string name="headphones_on">Kopfhörer erkannt – Overlay-Ton in der Vorschau an</string>
     <string name="share">Teilen</string>
@@ -61,4 +61,7 @@
     <string name="copy">Alles kopieren</string>
     <string name="copied">In die Zwischenablage kopiert</string>
     <string name="recovered">Aufnahme nach Absturz als Entwurf wiederhergestellt</string>
+    <string name="preview_sound">Overlay-Ton in der Vorschau (nur mit Kopfhörern!)</string>
+    <string name="preview_sound_on">Vorschau-Ton AN – nur mit Kopfhörern nutzen, sonst nimmt das Mikrofon ihn mit auf</string>
+    <string name="preview_sound_off">Vorschau-Ton aus</string>
 </resources>

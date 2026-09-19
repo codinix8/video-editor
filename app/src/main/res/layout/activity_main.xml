@@ -105,6 +105,18 @@
         app:layout_constraintTop_toBottomOf="@id/addVideoButton" />
 
     <ImageButton
+        android:id="@+id/previewSoundButton"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_marginTop="10dp"
+        android:alpha="0.5"
+        android:background="@drawable/bg_round_button"
+        android:contentDescription="@string/preview_sound"
+        android:src="@drawable/ic_headphones"
+        app:layout_constraintEnd_toEndOf="@id/flipButton"
+        app:layout_constraintTop_toBottomOf="@id/micButton" />
+
+    <ImageButton
         android:id="@+id/soundButton"
         android:layout_width="44dp"
         android:layout_height="44dp"

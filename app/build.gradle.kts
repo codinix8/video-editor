@@ -11,8 +11,8 @@ android {
         applicationId = "de.codinix.videoeditor"
         minSdk = 26
         targetSdk = 35
-        versionCode = 17
-        versionName = "0.9.1-memory"
+        versionCode = 18
+        versionName = "0.9.2-preview-switch"
     }
 
     // Fester Signaturschlüssel, damit jeder Build als Update über den vorherigen
