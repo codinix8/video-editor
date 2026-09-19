@@ -31,9 +31,23 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Debug-APK bauen
+        shell: bash
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          set -o pipefail
+          ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
+
+      - name: Fehlerprotokoll veröffentlichen
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/logs && cp build.log /tmp/logs/build.log
+          cd /tmp/logs
+          git init -q -b build-logs
+          git config user.email "ci@videoeditor" && git config user.name "CI"
+          git add build.log && git commit -qm "Build ${{ github.run_number }} fehlgeschlagen"
+          git push -f "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" build-logs
 
       - name: APK umbenennen
         run: |
