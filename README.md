@@ -29,7 +29,8 @@ Auf dem Handy: Datei öffnen → „Aus dieser Quelle installieren" erlauben →
 | 3a | Kachel-Modus: Kamerabild als Kachel (Quadrat/Rechteck 3:4/Kreis) mit Signatur-Rahmen vor Hintergrundvideo (KI-Freistellung verworfen) | ✅ Build 29 |
 | 3 | Freistellung (Person vor Video-Hintergrund), Mosaik-Layouts | offen |
 | 4 | Farbfilter | offen |
-| 5a | Untertitel: Whisper (tiny) on-device, Sprache wählbar, automatisch in Review optional, Einbrennen beim Export | in Test |
+| 5a | Untertitel: Whisper on-device, Sprache wählbar, automatisch in Review optional, Einbrennen beim Export | ✅ Build 33 |
+| 5b | Base als Standard (Tiny/Small wählbar), Modell-Vorabladen beim Start, 5 Vorlagen, verschieb-/skalierbar | in Test |
 
 ## Technik
 

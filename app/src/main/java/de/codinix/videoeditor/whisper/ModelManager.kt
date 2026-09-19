@@ -20,9 +20,11 @@ class ModelManager(context: Context) {
     fun file(model: Model) = File(dir, model.fileName)
     fun isAvailable(model: Model) = file(model).let { it.exists() && it.length() > 1_000_000 }
 
-    /** Blockierend; auf Hintergrund-Thread aufrufen. */
+    /** Blockierend; auf Hintergrund-Thread aufrufen. Gleichzeitige Aufrufe warten aufeinander. */
+    @Synchronized
     fun download(model: Model, onProgress: (Int) -> Unit) {
         val target = file(model)
+        if (isAvailable(model)) { onProgress(100); return }
         val tmp = File(dir, model.fileName + ".part")
         val conn = URL(model.url).openConnection() as HttpURLConnection
         conn.instanceFollowRedirects = true

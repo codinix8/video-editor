@@ -92,6 +92,7 @@ class Exporter(private val context: Context) {
      */
     /** Untertitel für den Export (leer = keine). */
     var captions: List<de.codinix.videoeditor.whisper.Caption> = emptyList()
+    var captionSettings = de.codinix.videoeditor.whisper.CaptionSettings()
 
     fun export(
         segments: List<File>, targetHeight: Int?, listener: Listener,
@@ -165,7 +166,7 @@ class Exporter(private val context: Context) {
         val items = segments.map { f ->
             val effects = ArrayList<androidx.media3.common.Effect>(videoEffects)
             if (captions.isNotEmpty() && outW > 0 && outH > 0) {
-                val overlay = de.codinix.videoeditor.whisper.CaptionOverlay(captions, outW, outH, offsetUs)
+                val overlay = de.codinix.videoeditor.whisper.CaptionOverlay(captions, captionSettings, outW, outH, offsetUs)
                 effects.add(androidx.media3.effect.OverlayEffect(com.google.common.collect.ImmutableList.of<androidx.media3.effect.TextureOverlay>(overlay)))
             }
             offsetUs += VideoConcat.durationUs(f)

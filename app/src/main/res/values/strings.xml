@@ -101,4 +101,9 @@
     <string name="captions_done">%1$d Untertitel erzeugt (Sprache: %2$s)</string>
     <string name="captions_none">Keine Sprache erkannt</string>
     <string name="captions_export_note">Untertitel werden beim Speichern eingebrannt (Neukodierung).</string>
+    <string name="captions_template">Vorlage</string>
+    <string name="captions_model">Modell</string>
+    <string name="captions_prefetch">Sprachmodell wird im Hintergrund geladen (einmalig, ca. %1$d MB)</string>
+    <string name="captions_prefetch_done">Sprachmodell bereit</string>
+    <string name="captions_hint">Untertitel: Ziehen zum Verschieben, zwei Finger für Größe</string>
 </resources>

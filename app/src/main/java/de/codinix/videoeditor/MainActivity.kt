@@ -145,6 +145,10 @@ class MainActivity : AppCompatActivity() {
     private val prefs by lazy { getSharedPreferences("settings", MODE_PRIVATE) }
     private var transcribing = false
     private val whisperExecutor = java.util.concurrent.Executors.newSingleThreadExecutor()
+    private var captionSettings = de.codinix.videoeditor.whisper.CaptionSettings()
+    private val captionModel: de.codinix.videoeditor.whisper.ModelManager.Model
+        get() = de.codinix.videoeditor.whisper.ModelManager.Model.values()
+            .getOrElse(prefs.getInt("captions_model", 1)) { de.codinix.videoeditor.whisper.ModelManager.Model.BASE }
     private val pickBackground = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) addVideoOverlay(uri, asBackground = true)
     }
@@ -188,6 +192,7 @@ class MainActivity : AppCompatActivity() {
         CrashLog.install(applicationContext)
         showCrashReportIfAny()
         recoverSessionIfAny()
+        prefetchCaptionModel()
         cacheDir.listFiles()?.filter { it.name.startsWith("overlay_video_") || it.name.startsWith("export_") }
             ?.forEach { it.delete() }
 
@@ -956,6 +961,21 @@ class MainActivity : AppCompatActivity() {
         "fr" to "Français", "es" to "Español", "it" to "Italiano", "ru" to "Русский", "ar" to "العربية", "pl" to "Polski"
     )
 
+    /** Sprachmodell einmalig im Hintergrund laden, damit die erste Erkennung nicht warten muss. */
+    private fun prefetchCaptionModel() {
+        val model = captionModel
+        if (modelManager.isAvailable(model)) return
+        Toast.makeText(this, getString(R.string.captions_prefetch, model.approxMb), Toast.LENGTH_LONG).show()
+        whisperExecutor.execute {
+            try {
+                modelManager.download(model) { }
+                main.post { Toast.makeText(this, R.string.captions_prefetch_done, Toast.LENGTH_SHORT).show() }
+            } catch (e: Exception) {
+                Log.w(TAG, "Modell-Vorabladen fehlgeschlagen", e)
+            }
+        }
+    }
+
     private fun showCaptionsDialog() {
         if (transcribing) return
         val pad = (16 * resources.displayMetrics.density).toInt()
@@ -964,6 +984,28 @@ class MainActivity : AppCompatActivity() {
             adapter = android.widget.ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
                 captionLanguages.map { it.second })
             setSelection(captionLanguages.indexOfFirst { it.first == savedLang }.coerceAtLeast(0))
+        }
+        val templateSpinner = android.widget.Spinner(this).apply {
+            adapter = android.widget.ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
+                de.codinix.videoeditor.whisper.CaptionStyle.TEMPLATE_NAMES)
+            setSelection(captionSettings.template)
+            onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(p: android.widget.AdapterView<*>?, v: android.view.View?, pos: Int, id: Long) {
+                    if (captionSettings.template != pos) {
+                        captionSettings.template = pos
+                        binding.review.captionView.settings = captionSettings
+                        prefs.edit().putInt("captions_template", pos).apply()
+                        persistSession()
+                    }
+                }
+                override fun onNothingSelected(p: android.widget.AdapterView<*>?) {}
+            }
+        }
+        val models = de.codinix.videoeditor.whisper.ModelManager.Model.values()
+        val modelSpinner = android.widget.Spinner(this).apply {
+            adapter = android.widget.ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
+                models.map { it.label + if (modelManager.isAvailable(it)) "" else " · ${it.approxMb} MB Download" })
+            setSelection(prefs.getInt("captions_model", 1))
         }
         val auto = android.widget.CheckBox(this).apply {
             text = getString(R.string.captions_always)
@@ -975,15 +1017,21 @@ class MainActivity : AppCompatActivity() {
         val box = android.widget.LinearLayout(this).apply {
             orientation = android.widget.LinearLayout.VERTICAL
             setPadding(pad, pad / 2, pad, 0)
-            addView(android.widget.TextView(this@MainActivity).apply { text = getString(R.string.captions_language) })
-            addView(spinner); addView(auto); addView(note)
+            addView(android.widget.TextView(this@MainActivity).apply { text = getString(R.string.captions_template) })
+            addView(templateSpinner)
+            addView(android.widget.TextView(this@MainActivity).apply { text = getString(R.string.captions_language); setPadding(0, pad / 2, 0, 0) })
+            addView(spinner)
+            addView(android.widget.TextView(this@MainActivity).apply { text = getString(R.string.captions_model); setPadding(0, pad / 2, 0, 0) })
+            addView(modelSpinner)
+            addView(auto); addView(note)
         }
         val b = MaterialAlertDialogBuilder(this)
             .setTitle(R.string.captions_title)
             .setView(box)
             .setPositiveButton(if (captions.isEmpty()) R.string.captions_generate else R.string.captions_regenerate) { _, _ ->
                 val lang = captionLanguages[spinner.selectedItemPosition].first
-                prefs.edit().putString("captions_lang", lang).putBoolean("captions_auto", auto.isChecked).apply()
+                prefs.edit().putString("captions_lang", lang).putBoolean("captions_auto", auto.isChecked)
+                    .putInt("captions_model", modelSpinner.selectedItemPosition).apply()
                 startTranscription(lang)
             }
             .setNegativeButton(R.string.cancel) { _, _ -> prefs.edit().putBoolean("captions_auto", auto.isChecked).apply() }
@@ -996,7 +1044,7 @@ class MainActivity : AppCompatActivity() {
     private fun startTranscription(language: String?) {
         if (transcribing || segments.isEmpty()) return
         transcribing = true
-        val model = de.codinix.videoeditor.whisper.ModelManager.Model.TINY
+        val model = captionModel
         val dialog: AlertDialog = MaterialAlertDialogBuilder(this)
             .setTitle(R.string.captions_title)
             .setMessage(getString(R.string.captions_preparing, 0))
@@ -1028,7 +1076,7 @@ class MainActivity : AppCompatActivity() {
                     binding.review.captionView.captions = captions
                     persistSession()
                     Toast.makeText(this, if (chunks.isEmpty()) getString(R.string.captions_none)
-                        else getString(R.string.captions_done, chunks.size, result.language), Toast.LENGTH_LONG).show()
+                        else getString(R.string.captions_done, chunks.size, result.language) + "\n" + getString(R.string.captions_hint), Toast.LENGTH_LONG).show()
                     if (inReview) player?.play()
                 }
             } catch (e: Throwable) {
@@ -1060,7 +1108,10 @@ class MainActivity : AppCompatActivity() {
         binding.previewView.visibility = android.view.View.INVISIBLE
         binding.gestureView.visibility = android.view.View.GONE
         binding.review.playIcon.visibility = android.view.View.GONE
+        captionSettings.template = prefs.getInt("captions_template", captionSettings.template)
+        binding.review.captionView.settings = captionSettings
         binding.review.captionView.captions = captions
+        binding.review.captionView.onSettingsChanged = { persistSession() }
         buildPlayer()
         if (prefs.getBoolean("captions_auto", false) && captions.isEmpty() && !transcribing) {
             main.postDelayed({ if (inReview) startTranscription(prefs.getString("captions_lang", null)) }, 300)
@@ -1266,6 +1317,7 @@ class MainActivity : AppCompatActivity() {
 
         val ex = Exporter(this)
         ex.captions = captions.toList()
+        ex.captionSettings = captionSettings.copy()
         exporter = ex
         val audioMix = allAudioMixes()
         val progressRes = if (audioMix.isEmpty() && kotlin.math.abs(micGain - 1f) < 0.01f)
@@ -1386,6 +1438,7 @@ class MainActivity : AppCompatActivity() {
             val root = org.json.JSONObject()
                 .put("segments", segs).put("overlays", ovs).put("audioTracks", tracks)
                 .put("captions", de.codinix.videoeditor.whisper.Caption.listToJson(captions))
+                .put("captionSettings", captionSettings.toJson())
                 .put("lensFacing", lensFacing)
                 .put("quality", preferredQuality?.let { label(it) } ?: org.json.JSONObject.NULL)
             sessionFile.writeText(root.toString())
@@ -1454,7 +1507,7 @@ class MainActivity : AppCompatActivity() {
                 preferredQuality?.let { label(it) },
                 audioHistory.map { DraftStore.AudioTrack(it.file, it.startOffsetMs, it.endOffsetMs, it.volume, it.durationMs,
                     it.timeline.map { t -> VideoOverlay.Event(t.fromMs, t.gain, t.playing) }) },
-                captions.toList()
+                captions.toList(), captionSettings
             )
             captions.clear()
             segments.clear()
@@ -1512,6 +1565,7 @@ class MainActivity : AppCompatActivity() {
             clearOverlays()
             loaded.overlays.forEach { overlayStore.add(it) }
             captions.clear(); captions.addAll(loaded.captions)
+            captionSettings = loaded.captionSettings
             audioHistory.clear()
             loaded.audioTracks.forEach { audioHistory.add(AudioTrackEntry(it.file, it.startOffsetMs, it.endOffsetMs, it.volume, it.durationMs,
                 it.events.map { e -> OverlayAudioRenderer.Segment(e.atMs, e.gain, e.playing) })) }

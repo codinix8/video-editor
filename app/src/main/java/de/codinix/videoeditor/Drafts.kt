@@ -53,7 +53,8 @@ class DraftStore(context: Context) {
         val lensFacing: Int,
         val qualityLabel: String?,
         val audioTracks: List<AudioTrack> = emptyList(),
-        val captions: List<de.codinix.videoeditor.whisper.Caption> = emptyList()
+        val captions: List<de.codinix.videoeditor.whisper.Caption> = emptyList(),
+        val captionSettings: de.codinix.videoeditor.whisper.CaptionSettings = de.codinix.videoeditor.whisper.CaptionSettings()
     )
 
     fun list(): List<Info> = root.listFiles()?.mapNotNull { dir ->
@@ -74,7 +75,8 @@ class DraftStore(context: Context) {
         lensFacing: Int,
         qualityLabel: String?,
         audioTracks: List<AudioTrack> = emptyList(),
-        captions: List<de.codinix.videoeditor.whisper.Caption> = emptyList()
+        captions: List<de.codinix.videoeditor.whisper.Caption> = emptyList(),
+        captionSettings: de.codinix.videoeditor.whisper.CaptionSettings = de.codinix.videoeditor.whisper.CaptionSettings()
     ): Info {
         val id = System.currentTimeMillis().toString()
         val dir = File(root, id).apply { mkdirs() }
@@ -136,6 +138,7 @@ class DraftStore(context: Context) {
             .put("overlays", ovArr)
             .put("audioTracks", trArr)
             .put("captions", de.codinix.videoeditor.whisper.Caption.listToJson(captions))
+            .put("captionSettings", captionSettings.toJson())
         File(dir, "meta.json").writeText(meta.toString())
 
         val dur = segments.sumOf { it.second }
@@ -194,6 +197,7 @@ class DraftStore(context: Context) {
             .put("overlays", ovArr)
             .put("audioTracks", trArr)
             .put("captions", session.optJSONArray("captions") ?: JSONArray())
+            .put("captionSettings", session.optJSONObject("captionSettings") ?: JSONObject())
         File(dir, "meta.json").writeText(meta.toString())
         var dur = 0L
         for (i in 0 until segArr.length()) dur += segArr.getJSONObject(i).getLong("durationMs")
@@ -258,7 +262,8 @@ class DraftStore(context: Context) {
                 t.getDouble("volume").toFloat(), t.getLong("durationMs"), eventsFromJson(t.optJSONArray("events"))))
         }
         val loaded = Loaded(segments, overlays, j.getInt("lensFacing"), quality, tracks,
-            de.codinix.videoeditor.whisper.Caption.listFromJson(j.optJSONArray("captions")))
+            de.codinix.videoeditor.whisper.Caption.listFromJson(j.optJSONArray("captions")),
+            de.codinix.videoeditor.whisper.CaptionSettings.fromJson(j.optJSONObject("captionSettings")))
         delete(info)
         return loaded
     }
