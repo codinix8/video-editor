@@ -61,7 +61,52 @@ class VideoOverlay(
     var videoAspect: Float = 16f / 9f
     var durationMs: Long = 0L
     override val aspect: Float get() = videoAspect
-    val soundOn: Boolean get() = volume > 0.005f
+
+    /** Ein Ereignis im Protokoll: ab [atMs] (Aufnahmezeit) gilt [gain]; läuft das Video? */
+    data class Event(val atMs: Long, val gain: Float, val playing: Boolean)
+
+    /**
+     * Protokoll der Aufnahme: Einfügen, Lautstärkeänderungen, Pause/Weiter.
+     * Leer = klassisch (ab startOffsetMs durchgehend mit volume).
+     */
+    val events = mutableListOf<Event>()
+
+    /** Gilt derzeit als laufend? (letztes Ereignis) */
+    val playing: Boolean get() = events.lastOrNull()?.playing ?: true
+
+    fun addEvent(atMs: Long, gain: Float = volume, playing: Boolean = this.playing) {
+        // Ereignis zur selben Zeit ersetzt das vorige
+        if (events.isNotEmpty() && events.last().atMs >= atMs) events.removeAt(events.lastIndex)
+        events.add(Event(atMs, gain, playing))
+    }
+
+    /** Zeitleiste für den Renderer (Segmente ab Einfügezeitpunkt). */
+    fun timeline(): List<Event> =
+        if (events.isEmpty()) listOf(Event(startOffsetMs, volume, true)) else events.toList()
+
+    /** Ereignisse hinter [totalMs] verwerfen (nach Segment-Löschen). */
+    fun trimEvents(totalMs: Long) {
+        events.removeAll { it.atMs > totalMs }
+    }
+
+    /** Ist irgendwo im Protokoll Ton vorhanden? */
+    val soundOn: Boolean get() = timeline().any { it.playing && it.gain > 0.005f }
+
+    /**
+     * Position im Quellvideo zur Aufnahmezeit [atMs]: Summe der Laufzeiten aller „playing“-
+     * Abschnitte bis dahin, in der Schleife.
+     */
+    fun sourcePositionAt(atMs: Long): Long {
+        val tl = timeline()
+        var pos = 0L
+        for (i in tl.indices) {
+            val from = tl[i].atMs
+            if (from >= atMs) break
+            val to = if (i + 1 < tl.size) minOf(tl[i + 1].atMs, atMs) else atMs
+            if (tl[i].playing && to > from) pos += to - from
+        }
+        return if (durationMs > 0) pos % durationMs else pos
+    }
     override fun snapshot() = OverlaySnapshot(id, cx, cy, widthFrac, rotationDeg, aspect, isVideo = true)
 }
 

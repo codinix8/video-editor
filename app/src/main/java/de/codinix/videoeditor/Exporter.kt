@@ -56,7 +56,7 @@ class Exporter(private val context: Context) {
         val endOffsetMs: Long? = null
     ) {
         fun effectiveTimeline(): List<OverlayAudioRenderer.Segment> {
-            val base = timeline ?: listOf(OverlayAudioRenderer.Segment(startOffsetMs, gain, true))
+            val base = timeline?.takeIf { it.isNotEmpty() } ?: listOf(OverlayAudioRenderer.Segment(startOffsetMs, gain, true))
             val end = endOffsetMs ?: return base
             return base.filter { it.fromMs < end } + OverlayAudioRenderer.Segment(end, 0f, false)
         }

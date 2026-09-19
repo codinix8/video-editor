@@ -28,7 +28,23 @@ class DraftStore(context: Context) {
     )
 
     /** Tonspur eines bereits entfernten Video-Overlays. */
-    data class AudioTrack(val file: File, val startOffsetMs: Long, val endOffsetMs: Long, val volume: Float, val durationMs: Long)
+    data class AudioTrack(val file: File, val startOffsetMs: Long, val endOffsetMs: Long, val volume: Float, val durationMs: Long,
+                          val events: List<VideoOverlay.Event> = emptyList())
+
+    private fun eventsToJson(events: List<VideoOverlay.Event>): JSONArray {
+        val a = JSONArray()
+        events.forEach { a.put(JSONObject().put("atMs", it.atMs).put("gain", it.gain.toDouble()).put("playing", it.playing)) }
+        return a
+    }
+    private fun eventsFromJson(a: JSONArray?): List<VideoOverlay.Event> {
+        if (a == null) return emptyList()
+        val out = ArrayList<VideoOverlay.Event>()
+        for (i in 0 until a.length()) {
+            val e = a.getJSONObject(i)
+            out.add(VideoOverlay.Event(e.getLong("atMs"), e.getDouble("gain").toFloat(), e.optBoolean("playing", true)))
+        }
+        return out
+    }
 
     class Loaded(
         val segments: List<Pair<File, Long>>,
@@ -85,6 +101,7 @@ class DraftStore(context: Context) {
                     j.put("type", "video").put("file", dest.name)
                         .put("volume", o.volume.toDouble())
                         .put("startOffsetMs", o.startOffsetMs)
+                        .put("events", eventsToJson(o.events))
                 }
             }
             ovArr.put(j)
@@ -96,7 +113,8 @@ class DraftStore(context: Context) {
             if (!t.file.renameTo(dest)) { t.file.copyTo(dest, overwrite = true); t.file.delete() }
             trArr.put(JSONObject().put("file", dest.name)
                 .put("startOffsetMs", t.startOffsetMs).put("endOffsetMs", t.endOffsetMs)
-                .put("volume", t.volume.toDouble()).put("durationMs", t.durationMs))
+                .put("volume", t.volume.toDouble()).put("durationMs", t.durationMs)
+                .put("events", eventsToJson(t.events)))
         }
 
         val meta = JSONObject()
@@ -190,9 +208,11 @@ class DraftStore(context: Context) {
             if (o.optString("type", "image") == "video") {
                 val dest = File(targetDir.parentFile ?: targetDir, "overlay_video_${System.currentTimeMillis()}_$i.mp4")
                 if (!src.renameTo(dest)) src.copyTo(dest, overwrite = true)
-                overlays.add(VideoOverlay(Overlay.newId(), dest, cx, cy, w, rot,
+                val vo = VideoOverlay(Overlay.newId(), dest, cx, cy, w, rot,
                     volume = if (o.has("volume")) o.getDouble("volume").toFloat() else (if (o.optBoolean("soundOn", true)) 1f else 0f),
-                    startOffsetMs = o.optLong("startOffsetMs", 0L)))
+                    startOffsetMs = o.optLong("startOffsetMs", 0L))
+                vo.events.addAll(eventsFromJson(o.optJSONArray("events")))
+                overlays.add(vo)
             } else {
                 val bmp = BitmapFactory.decodeFile(src.absolutePath) ?: continue
                 overlays.add(ImageOverlay(Overlay.newId(), bmp, cx, cy, w, rot))
@@ -209,7 +229,7 @@ class DraftStore(context: Context) {
             dest.parentFile?.mkdirs()
             if (!src.renameTo(dest)) src.copyTo(dest, overwrite = true)
             tracks.add(AudioTrack(dest, t.getLong("startOffsetMs"), t.getLong("endOffsetMs"),
-                t.getDouble("volume").toFloat(), t.getLong("durationMs")))
+                t.getDouble("volume").toFloat(), t.getLong("durationMs"), eventsFromJson(t.optJSONArray("events"))))
         }
         val loaded = Loaded(segments, overlays, j.getInt("lensFacing"), quality, tracks)
         delete(info)

@@ -99,8 +99,11 @@ class MainActivity : AppCompatActivity() {
      * ihr Ton muss beim Export weiter gemischt werden – von Einfügen bis Entfernen.
      */
     data class AudioTrackEntry(
-        val file: File, val startOffsetMs: Long, val endOffsetMs: Long, val volume: Float, val durationMs: Long
+        val file: File, val startOffsetMs: Long, val endOffsetMs: Long, val volume: Float, val durationMs: Long,
+        val timeline: List<OverlayAudioRenderer.Segment> = emptyList()
     )
+
+    private fun VideoOverlay.rendererTimeline() = timeline().map { OverlayAudioRenderer.Segment(it.atMs, it.gain, it.playing) }
     private val audioHistory = mutableListOf<AudioTrackEntry>()
 
     private fun currentTotalMs() = segments.sumOf { it.durationMs } + liveDurationMs
@@ -108,10 +111,12 @@ class MainActivity : AppCompatActivity() {
     /** Alle Tonspuren für Export und Review: Historie plus aktuelles Overlay. */
     private fun allAudioMixes(): List<Exporter.AudioMix> {
         val past = audioHistory.map {
-            Exporter.AudioMix(it.file, it.startOffsetMs, it.durationMs, it.volume, endOffsetMs = it.endOffsetMs)
+            Exporter.AudioMix(it.file, it.startOffsetMs, it.durationMs, it.volume,
+                timeline = it.timeline.takeIf { t -> t.isNotEmpty() }, endOffsetMs = it.endOffsetMs)
         }
         val current = overlayStore.videoOverlay()?.takeIf { it.soundOn && it.durationMs > 0 }
-            ?.let { listOf(Exporter.AudioMix(it.file, it.startOffsetMs, it.durationMs, it.volume)) } ?: emptyList()
+            ?.let { listOf(Exporter.AudioMix(it.file, it.startOffsetMs, it.durationMs, it.volume, timeline = it.rendererTimeline())) }
+            ?: emptyList()
         return past + current
     }
 
@@ -121,8 +126,9 @@ class MainActivity : AppCompatActivity() {
         while (it.hasNext()) {
             val e = it.next()
             if (e.startOffsetMs >= totalMs) { it.remove(); if (!isFileReferenced(e.file)) e.file.delete() }
-            else if (e.endOffsetMs > totalMs) it.set(e.copy(endOffsetMs = totalMs))
+            else if (e.endOffsetMs > totalMs) it.set(e.copy(endOffsetMs = totalMs, timeline = e.timeline.filter { t -> t.fromMs <= totalMs }))
         }
+        overlayStore.videoOverlay()?.trimEvents(totalMs)
     }
 
     private fun isFileReferenced(f: File): Boolean =
@@ -338,7 +344,7 @@ class MainActivity : AppCompatActivity() {
             when (event) {
                 is VideoRecordEvent.Start -> {
                     liveDurationMs = 0
-                    overlayPlayer?.play()
+                    if (overlayStore.videoOverlay()?.playing != false) overlayPlayer?.play()
                     refreshUi()
                 }
                 is VideoRecordEvent.Status -> {
@@ -374,7 +380,10 @@ class MainActivity : AppCompatActivity() {
     // ---------------------------------------------------------------- Löschen / Fertig
 
     private fun onDeletePressed() {
-        if (activeRecording != null) return
+        if (activeRecording != null) {
+            if (overlayStore.videoOverlay() != null) toggleOverlayPlayPause()
+            return
+        }
         if (segments.isEmpty()) {
             Toast.makeText(this, R.string.no_segments, Toast.LENGTH_SHORT).show(); return
         }
@@ -456,7 +465,7 @@ class MainActivity : AppCompatActivity() {
         if (o is VideoOverlay) {
             val end = currentTotalMs()
             if (o.soundOn && o.durationMs > 0 && end > o.startOffsetMs) {
-                audioHistory.add(AudioTrackEntry(o.file, o.startOffsetMs, end, o.volume, o.durationMs))
+                audioHistory.add(AudioTrackEntry(o.file, o.startOffsetMs, end, o.volume, o.durationMs, o.rendererTimeline()))
             }
         }
         overlayStore.remove(id)
@@ -488,6 +497,7 @@ class MainActivity : AppCompatActivity() {
                     // Einfügezeitpunkt = fertige Segmente + bereits laufende Aufnahme
                     val total = segments.sumOf { it.durationMs } + liveDurationMs
                     val overlay = VideoOverlay(Overlay.newId(), dest, startOffsetMs = total)
+                    overlay.addEvent(total, 1f, true)
                     overlayStore.add(overlay)
                     attachVideoOverlay(overlay)
                     updateOverlayButtons(overlay)
@@ -608,6 +618,15 @@ class MainActivity : AppCompatActivity() {
             setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(sb: android.widget.SeekBar, value: Int, fromUser: Boolean) {
                     o.volume = value / 100f
+                    if (activeRecording != null) {
+                        // Live: gilt ab jetzt
+                        o.addEvent(currentTotalMs(), o.volume, o.playing)
+                    } else if (o.events.isNotEmpty()) {
+                        // Zwischen Segmenten: gilt ab dem Ende der Aufnahme (vorheriges bleibt)
+                        val end = currentTotalMs()
+                        if (o.events.last().atMs >= end) o.events[o.events.lastIndex] = o.events.last().copy(gain = o.volume)
+                        else o.addEvent(end, o.volume, o.playing)
+                    }
                     label.text = getString(R.string.volume_percent, value)
                     overlayPlayer?.volume = previewVolume(o)
                     updateOverlayButtons(o)
@@ -644,10 +663,24 @@ class MainActivity : AppCompatActivity() {
         val o = overlayStore.videoOverlay() ?: return
         val p = overlayPlayer ?: return
         val total = segments.sumOf { it.durationMs } + liveDurationMs
-        if (afterDelete && total < o.startOffsetMs) o.startOffsetMs = total
-        var pos = (total - o.startOffsetMs).coerceAtLeast(0)
-        if (o.durationMs > 0) pos %= o.durationMs
-        p.seekTo(pos)
+        if (afterDelete) {
+            o.trimEvents(total)
+            if (total < o.startOffsetMs) {
+                o.startOffsetMs = total
+                o.events.clear(); o.addEvent(total, o.volume, true)
+            }
+        }
+        p.seekTo(o.sourcePositionAt(total))
+    }
+
+    /** Play/Pause des Overlay-Videos während der Aufnahme – als Protokolleintrag. */
+    private fun toggleOverlayPlayPause() {
+        val o = overlayStore.videoOverlay() ?: return
+        val now = currentTotalMs()
+        val playing = !o.playing
+        o.addEvent(now, o.volume, playing)
+        if (playing) overlayPlayer?.play() else overlayPlayer?.pause()
+        refreshUi()
     }
 
     /**
@@ -998,6 +1031,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     is VideoOverlay -> j.put("type", "video").put("path", o.file.absolutePath)
                         .put("volume", o.volume.toDouble()).put("startOffsetMs", o.startOffsetMs)
+                        .put("events", eventsJson(o.events))
                 }
                 ovs.put(j)
             }
@@ -1005,7 +1039,8 @@ class MainActivity : AppCompatActivity() {
             audioHistory.forEach { t ->
                 tracks.put(org.json.JSONObject().put("path", t.file.absolutePath)
                     .put("startOffsetMs", t.startOffsetMs).put("endOffsetMs", t.endOffsetMs)
-                    .put("volume", t.volume.toDouble()).put("durationMs", t.durationMs))
+                    .put("volume", t.volume.toDouble()).put("durationMs", t.durationMs)
+                    .put("events", eventsJson(t.timeline.map { VideoOverlay.Event(it.fromMs, it.gain, it.playing) })))
             }
             val root = org.json.JSONObject()
                 .put("segments", segs).put("overlays", ovs).put("audioTracks", tracks)
@@ -1013,6 +1048,12 @@ class MainActivity : AppCompatActivity() {
                 .put("quality", preferredQuality?.let { label(it) } ?: org.json.JSONObject.NULL)
             sessionFile.writeText(root.toString())
         } catch (e: Exception) { Log.w(TAG, "Sitzung sichern fehlgeschlagen", e) }
+    }
+
+    private fun eventsJson(events: List<VideoOverlay.Event>): org.json.JSONArray {
+        val a = org.json.JSONArray()
+        events.forEach { a.put(org.json.JSONObject().put("atMs", it.atMs).put("gain", it.gain.toDouble()).put("playing", it.playing)) }
+        return a
     }
 
     private fun clearSession() {
@@ -1069,7 +1110,8 @@ class MainActivity : AppCompatActivity() {
                 overlayStore.items.toList(),
                 lensFacing,
                 preferredQuality?.let { label(it) },
-                audioHistory.map { DraftStore.AudioTrack(it.file, it.startOffsetMs, it.endOffsetMs, it.volume, it.durationMs) }
+                audioHistory.map { DraftStore.AudioTrack(it.file, it.startOffsetMs, it.endOffsetMs, it.volume, it.durationMs,
+                    it.timeline.map { t -> VideoOverlay.Event(t.fromMs, t.gain, t.playing) }) }
             )
             segments.clear()
             audioHistory.clear()
@@ -1126,7 +1168,8 @@ class MainActivity : AppCompatActivity() {
             clearOverlays()
             loaded.overlays.forEach { overlayStore.add(it) }
             audioHistory.clear()
-            loaded.audioTracks.forEach { audioHistory.add(AudioTrackEntry(it.file, it.startOffsetMs, it.endOffsetMs, it.volume, it.durationMs)) }
+            loaded.audioTracks.forEach { audioHistory.add(AudioTrackEntry(it.file, it.startOffsetMs, it.endOffsetMs, it.volume, it.durationMs,
+                it.events.map { e -> OverlayAudioRenderer.Segment(e.atMs, e.gain, e.playing) })) }
             overlayStore.selectedId = null
             overlayStore.videoOverlay()?.let { attachVideoOverlay(it) }
             updateOverlayButtons(null)
@@ -1176,6 +1219,16 @@ class MainActivity : AppCompatActivity() {
         // Während der Aufnahme sind Auflösung, Löschen und Fertig gesperrt (Kamera-Wechsel nicht).
         listOf(binding.qualityButton, binding.deleteButton, binding.finishButton).forEach {
             it.alpha = if (recording) 0.35f else 1f
+        }
+        // Während der Aufnahme wird die Löschtaste zum Play/Pause-Knopf fürs Overlay-Video
+        val vo = overlayStore.videoOverlay()
+        if (recording && vo != null) {
+            binding.deleteButton.alpha = 1f
+            binding.deleteButton.setImageResource(if (vo.playing) R.drawable.ic_pause else R.drawable.ic_play_small)
+            binding.deleteButton.contentDescription = getString(if (vo.playing) R.string.overlay_pause else R.string.overlay_play)
+        } else {
+            binding.deleteButton.setImageResource(R.drawable.ic_backspace)
+            binding.deleteButton.contentDescription = getString(R.string.delete_last)
         }
     }
 

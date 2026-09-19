@@ -23,7 +23,8 @@ Auf dem Handy: Datei öffnen → „Aus dieser Quelle installieren" erlauben →
 | 2c | Lautstärkeregler pro Overlay (0–200 %), Mikrofon-Regler im Export, Overlay-Ton in Vorschau bei Kopfhörern | ✅ Build 15 |
 | 2d | Review spielt Overlay-Ton synchron mit (Referenz vor dem Export) | ✅ Build 17 |
 | 2e | Eigener Overlay-Ton-Renderer (WAV), Absturzbericht, Wiederherstellung nach Absturz als Entwurf | ✅ Build 22 |
-| 2f | Ton-Historie: entfernte Video-Overlays behalten ihren Ton (Einfügen bis Entfernen), Mehrspur-Mix | in Test |
+| 2f | Ton-Historie: entfernte Video-Overlays behalten ihren Ton (Einfügen bis Entfernen), Mehrspur-Mix | ✅ Build 23 |
+| 2g | Protokoll: Play/Pause fürs Overlay-Video während der Aufnahme, Lautstärke gilt ab Änderung | in Test |
 | 3 | Freistellung (Person vor Video-Hintergrund), Mosaik-Layouts | offen |
 | 4 | Farbfilter, Text- und Emoji-Overlays | offen |
 
