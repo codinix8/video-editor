@@ -90,6 +90,9 @@ class Exporter(private val context: Context) {
     /**
      * @param targetHeight gewünschte Ausgabehöhe in Pixeln oder null für Original.
      */
+    /** Untertitel für den Export (leer = keine). */
+    var captions: List<de.codinix.videoeditor.whisper.Caption> = emptyList()
+
     fun export(
         segments: List<File>, targetHeight: Int?, listener: Listener,
         audioMix: List<AudioMix> = emptyList(),
@@ -119,7 +122,7 @@ class Exporter(private val context: Context) {
             }
             return
         }
-        if (!isUnity(micGain)) {
+        if (!isUnity(micGain) || captions.isNotEmpty()) {
             transform(segments, targetHeight, outFile, listener, emptyList(), micGain)
             return
         }
@@ -149,9 +152,25 @@ class Exporter(private val context: Context) {
             if (targetHeight != null) add(Presentation.createForHeight(targetHeight))
         }
         val micProcessors = gainProcessors(micGain)
+
+        // Ausgabegröße (aufrecht) für die Untertitel-Bitmaps
+        val info0 = VideoConcat.inspect(segments.first())
+        val rot = info0.rotation == 90 || info0.rotation == 270
+        val visW = if (rot) info0.height else info0.width
+        val visH = if (rot) info0.width else info0.height
+        val outH = targetHeight?.takeIf { it < visH } ?: visH
+        val outW = if (visH > 0) (visW.toLong() * outH / visH).toInt() else visW
+
+        var offsetUs = 0L
         val items = segments.map { f ->
+            val effects = ArrayList<androidx.media3.common.Effect>(videoEffects)
+            if (captions.isNotEmpty() && outW > 0 && outH > 0) {
+                val overlay = de.codinix.videoeditor.whisper.CaptionOverlay(captions, outW, outH, offsetUs)
+                effects.add(androidx.media3.effect.OverlayEffect(com.google.common.collect.ImmutableList.of<androidx.media3.effect.TextureOverlay>(overlay)))
+            }
+            offsetUs += VideoConcat.durationUs(f)
             EditedMediaItem.Builder(MediaItem.fromUri(Uri.fromFile(f)))
-                .setEffects(Effects(micProcessors, videoEffects))
+                .setEffects(Effects(micProcessors, effects))
                 .build()
         }
         val sequences = mutableListOf(EditedMediaItemSequence(items))

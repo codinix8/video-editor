@@ -14,6 +14,12 @@ jobs:
     steps:
       - name: Code holen
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: NDK und CMake installieren
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;27.2.12479018" "cmake;3.22.1" > /dev/null
 
       - name: Java 17 einrichten
         uses: actions/setup-java@v4

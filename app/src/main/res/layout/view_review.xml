@@ -14,6 +14,11 @@
         app:surface_type="surface_view"
         app:use_controller="false" />
 
+    <de.codinix.videoeditor.whisper.CaptionView
+        android:id="@+id/captionView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
     <ImageView
         android:id="@+id/playIcon"
         android:layout_width="72dp"
@@ -47,6 +52,17 @@
         android:src="@drawable/ic_back"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/reviewBar" />
+
+    <ImageButton
+        android:id="@+id/captionsButton"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_marginEnd="10dp"
+        android:background="@drawable/bg_round_button"
+        android:contentDescription="@string/captions"
+        android:src="@drawable/ic_captions"
+        app:layout_constraintEnd_toStartOf="@id/saveDraftButton"
+        app:layout_constraintTop_toTopOf="@id/backButton" />
 
     <ImageButton
         android:id="@+id/saveDraftButton"

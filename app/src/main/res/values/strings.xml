@@ -87,4 +87,18 @@
     <string name="shape_portrait">Rechteck (3:4)</string>
     <string name="shape_circle">Kreis</string>
     <string name="border_toggle">Signatur-Rahmen an/aus</string>
+    <string name="captions">Untertitel</string>
+    <string name="captions_title">Untertitel per Spracherkennung</string>
+    <string name="captions_language">Sprache</string>
+    <string name="captions_auto">Automatisch erkennen</string>
+    <string name="captions_always">Beim Öffnen der Review immer automatisch erzeugen</string>
+    <string name="captions_generate">Erzeugen</string>
+    <string name="captions_regenerate">Neu erzeugen</string>
+    <string name="captions_remove">Entfernen</string>
+    <string name="captions_model_download">Sprachmodell wird geladen (einmalig, ca. %1$d MB)… %2$d %%</string>
+    <string name="captions_preparing">Ton wird aufbereitet… %1$d %%</string>
+    <string name="captions_running">Spracherkennung… %1$d %%</string>
+    <string name="captions_done">%1$d Untertitel erzeugt (Sprache: %2$s)</string>
+    <string name="captions_none">Keine Sprache erkannt</string>
+    <string name="captions_export_note">Untertitel werden beim Speichern eingebrannt (Neukodierung).</string>
 </resources>

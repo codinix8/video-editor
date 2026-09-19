@@ -138,6 +138,13 @@ class MainActivity : AppCompatActivity() {
 
     // ---- Freistellung ----
     private val greenscreenActive: Boolean get() = overlayStore.videoOverlay()?.isBackground == true
+
+    // ---- Untertitel ----
+    private val captions = mutableListOf<de.codinix.videoeditor.whisper.Caption>()
+    private val modelManager by lazy { de.codinix.videoeditor.whisper.ModelManager(this) }
+    private val prefs by lazy { getSharedPreferences("settings", MODE_PRIVATE) }
+    private var transcribing = false
+    private val whisperExecutor = java.util.concurrent.Executors.newSingleThreadExecutor()
     private val pickBackground = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) addVideoOverlay(uri, asBackground = true)
     }
@@ -250,6 +257,7 @@ class MainActivity : AppCompatActivity() {
         binding.review.reviewSaveButton.setOnClickListener { showExportDialog() }
         binding.review.reviewDeleteButton.setOnClickListener { onDeletePressed() }
         binding.review.saveDraftButton.setOnClickListener { saveDraft() }
+        binding.review.captionsButton.setOnClickListener { showCaptionsDialog() }
         binding.draftsButton.setOnClickListener { showDrafts() }
         binding.review.playerView.setOnClickListener { togglePlayback() }
 
@@ -439,6 +447,7 @@ class MainActivity : AppCompatActivity() {
             deleteArmed = false
             segments.removeAt(segments.lastIndex).file.delete()
             trimAudioHistory(currentTotalMs())
+            trimCaptions(currentTotalMs())
             persistSession()
             syncOverlayPlayer(afterDelete = true)
             Toast.makeText(this, R.string.segment_deleted, Toast.LENGTH_SHORT).show()
@@ -940,6 +949,107 @@ class MainActivity : AppCompatActivity() {
         return android.graphics.Bitmap.createBitmap(raw, 0, 0, raw.width, raw.height, m, true)
     }
 
+    // ---------------------------------------------------------------- Untertitel
+
+    private val captionLanguages = listOf(
+        null to "Automatisch erkennen", "de" to "Deutsch", "en" to "English", "tr" to "Türkçe",
+        "fr" to "Français", "es" to "Español", "it" to "Italiano", "ru" to "Русский", "ar" to "العربية", "pl" to "Polski"
+    )
+
+    private fun showCaptionsDialog() {
+        if (transcribing) return
+        val pad = (16 * resources.displayMetrics.density).toInt()
+        val savedLang = prefs.getString("captions_lang", null)
+        val spinner = android.widget.Spinner(this).apply {
+            adapter = android.widget.ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
+                captionLanguages.map { it.second })
+            setSelection(captionLanguages.indexOfFirst { it.first == savedLang }.coerceAtLeast(0))
+        }
+        val auto = android.widget.CheckBox(this).apply {
+            text = getString(R.string.captions_always)
+            isChecked = prefs.getBoolean("captions_auto", false)
+        }
+        val note = android.widget.TextView(this).apply {
+            text = getString(R.string.captions_export_note); textSize = 12f; setPadding(0, pad / 2, 0, 0)
+        }
+        val box = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(pad, pad / 2, pad, 0)
+            addView(android.widget.TextView(this@MainActivity).apply { text = getString(R.string.captions_language) })
+            addView(spinner); addView(auto); addView(note)
+        }
+        val b = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.captions_title)
+            .setView(box)
+            .setPositiveButton(if (captions.isEmpty()) R.string.captions_generate else R.string.captions_regenerate) { _, _ ->
+                val lang = captionLanguages[spinner.selectedItemPosition].first
+                prefs.edit().putString("captions_lang", lang).putBoolean("captions_auto", auto.isChecked).apply()
+                startTranscription(lang)
+            }
+            .setNegativeButton(R.string.cancel) { _, _ -> prefs.edit().putBoolean("captions_auto", auto.isChecked).apply() }
+        if (captions.isNotEmpty()) b.setNeutralButton(R.string.captions_remove) { _, _ ->
+            captions.clear(); binding.review.captionView.captions = captions; persistSession()
+        }
+        b.show()
+    }
+
+    private fun startTranscription(language: String?) {
+        if (transcribing || segments.isEmpty()) return
+        transcribing = true
+        val model = de.codinix.videoeditor.whisper.ModelManager.Model.TINY
+        val dialog: AlertDialog = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.captions_title)
+            .setMessage(getString(R.string.captions_preparing, 0))
+            .setCancelable(false)
+            .show()
+        player?.pause()
+        val segs = segments.map { it.file to it.durationMs }
+        whisperExecutor.execute {
+            var engine: de.codinix.videoeditor.whisper.WhisperEngine? = null
+            try {
+                if (!modelManager.isAvailable(model)) {
+                    modelManager.download(model) { p ->
+                        main.post { dialog.setMessage(getString(R.string.captions_model_download, model.approxMb, p)) }
+                    }
+                }
+                val pcm = de.codinix.videoeditor.whisper.AudioPrep.prepare(segs, cacheDir) { p ->
+                    main.post { dialog.setMessage(getString(R.string.captions_preparing, p)) }
+                }
+                main.post { dialog.setMessage(getString(R.string.captions_running, 0)) }
+                engine = de.codinix.videoeditor.whisper.WhisperEngine.load(modelManager.file(model))
+                val result = engine.transcribe(pcm, language, object : de.codinix.videoeditor.whisper.WhisperEngine.Progress {
+                    override fun onProgress(percent: Int) { main.post { dialog.setMessage(getString(R.string.captions_running, percent)) } }
+                })
+                val chunks = de.codinix.videoeditor.whisper.Caption.chunk(result.words)
+                main.post {
+                    dialog.dismiss()
+                    transcribing = false
+                    captions.clear(); captions.addAll(chunks)
+                    binding.review.captionView.captions = captions
+                    persistSession()
+                    Toast.makeText(this, if (chunks.isEmpty()) getString(R.string.captions_none)
+                        else getString(R.string.captions_done, chunks.size, result.language), Toast.LENGTH_LONG).show()
+                    if (inReview) player?.play()
+                }
+            } catch (e: Throwable) {
+                Log.e(TAG, "Transkription fehlgeschlagen", e)
+                main.post {
+                    dialog.dismiss(); transcribing = false
+                    Toast.makeText(this, getString(R.string.error, e.message ?: "Spracherkennung"), Toast.LENGTH_LONG).show()
+                    if (inReview) player?.play()
+                }
+            } finally {
+                engine?.close()
+            }
+        }
+    }
+
+    /** Nach dem Löschen von Segmenten: Untertitel hinter dem neuen Ende verwerfen. */
+    private fun trimCaptions(totalMs: Long) {
+        captions.removeAll { it.startMs >= totalMs }
+        binding.review.captionView.captions = captions
+    }
+
     // ---------------------------------------------------------------- Review
 
     private fun enterReview() {
@@ -950,7 +1060,11 @@ class MainActivity : AppCompatActivity() {
         binding.previewView.visibility = android.view.View.INVISIBLE
         binding.gestureView.visibility = android.view.View.GONE
         binding.review.playIcon.visibility = android.view.View.GONE
+        binding.review.captionView.captions = captions
         buildPlayer()
+        if (prefs.getBoolean("captions_auto", false) && captions.isEmpty() && !transcribing) {
+            main.postDelayed({ if (inReview) startTranscription(prefs.getString("captions_lang", null)) }, 300)
+        }
         main.post(playbackTicker)
     }
 
@@ -1082,6 +1196,7 @@ class MainActivity : AppCompatActivity() {
         val total = segments.sumOf { it.durationMs }
         syncReviewOverlayAudio(pos, p.isPlaying)
         binding.review.reviewBar.updatePlayback(segments.map { it.durationMs }, pos, deleteArmed)
+        binding.review.captionView.setTime(pos)
         if (!deleteArmed && !reviewWaitingForAudio) {
             val vol = overlayStore.videoOverlay()?.let { " · Overlay ${(it.volume * 100).toInt()} %" } ?: ""
             binding.review.reviewStatus.text = getString(R.string.review_position, fmt(pos), fmt(total), segments.size) + vol
@@ -1150,6 +1265,7 @@ class MainActivity : AppCompatActivity() {
         binding.review.playerView.player = null
 
         val ex = Exporter(this)
+        ex.captions = captions.toList()
         exporter = ex
         val audioMix = allAudioMixes()
         val progressRes = if (audioMix.isEmpty() && kotlin.math.abs(micGain - 1f) < 0.01f)
@@ -1169,6 +1285,7 @@ class MainActivity : AppCompatActivity() {
                 segments.clear()
                 audioHistory.forEach { it.file.delete() }
                 audioHistory.clear()
+                captions.clear()
                 clearOverlays()
                 setControlsEnabled(true)
                 if (inReview) exitReview() else refreshUi()
@@ -1212,6 +1329,7 @@ class MainActivity : AppCompatActivity() {
                 segments.clear()
                 audioHistory.forEach { it.file.delete() }
                 audioHistory.clear()
+                captions.clear()
                 clearSession()
                 clearOverlays()
                 refreshUi()
@@ -1267,6 +1385,7 @@ class MainActivity : AppCompatActivity() {
             }
             val root = org.json.JSONObject()
                 .put("segments", segs).put("overlays", ovs).put("audioTracks", tracks)
+                .put("captions", de.codinix.videoeditor.whisper.Caption.listToJson(captions))
                 .put("lensFacing", lensFacing)
                 .put("quality", preferredQuality?.let { label(it) } ?: org.json.JSONObject.NULL)
             sessionFile.writeText(root.toString())
@@ -1334,8 +1453,10 @@ class MainActivity : AppCompatActivity() {
                 lensFacing,
                 preferredQuality?.let { label(it) },
                 audioHistory.map { DraftStore.AudioTrack(it.file, it.startOffsetMs, it.endOffsetMs, it.volume, it.durationMs,
-                    it.timeline.map { t -> VideoOverlay.Event(t.fromMs, t.gain, t.playing) }) }
+                    it.timeline.map { t -> VideoOverlay.Event(t.fromMs, t.gain, t.playing) }) },
+                captions.toList()
             )
+            captions.clear()
             segments.clear()
             audioHistory.clear()
             // Dateien der Video-Overlays wurden in den Entwurf verschoben – nur Player/Textur freigeben
@@ -1390,6 +1511,7 @@ class MainActivity : AppCompatActivity() {
             loaded.segments.forEach { (f, d) -> segments.add(Segment(f, d)) }
             clearOverlays()
             loaded.overlays.forEach { overlayStore.add(it) }
+            captions.clear(); captions.addAll(loaded.captions)
             audioHistory.clear()
             loaded.audioTracks.forEach { audioHistory.add(AudioTrackEntry(it.file, it.startOffsetMs, it.endOffsetMs, it.volume, it.durationMs,
                 it.events.map { e -> OverlayAudioRenderer.Segment(e.atMs, e.gain, e.playing) })) }
@@ -1491,6 +1613,7 @@ class MainActivity : AppCompatActivity() {
         exporter?.release()
         overlayPlayer?.release(); overlayPlayer = null
         compositor.release()
+        whisperExecutor.shutdown()
         bgExecutor.shutdown()
     }
 

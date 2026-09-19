@@ -6,13 +6,14 @@ plugins {
 android {
     namespace = "de.codinix.videoeditor"
     compileSdk = 35
+    ndkVersion = "27.2.12479018"
 
     defaultConfig {
         applicationId = "de.codinix.videoeditor"
         minSdk = 26
         targetSdk = 35
-        versionCode = 28
-        versionName = "1.3.1-tile-rect"
+        versionCode = 29
+        versionName = "1.4-captions"
         ndk { abiFilters += listOf("arm64-v8a") }
     }
 
@@ -49,6 +50,20 @@ android {
     buildFeatures {
         viewBinding = true
         buildConfig = true
+    }
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
+    }
+    defaultConfig {
+        externalNativeBuild {
+            cmake {
+                arguments += listOf("-DANDROID_STL=c++_static")
+                cppFlags += listOf("-O3")
+            }
+        }
     }
 }
 

@@ -28,7 +28,8 @@ Auf dem Handy: Datei öffnen → „Aus dieser Quelle installieren" erlauben →
 | 4a | Text- und Emoji-Overlays: Farbe, Hintergrund, Deckkraft, bearbeiten | ✅ Build 26 |
 | 3a | Kachel-Modus: Kamerabild als Kachel (Quadrat/Rechteck 3:4/Kreis) mit Signatur-Rahmen vor Hintergrundvideo (KI-Freistellung verworfen) | ✅ Build 29 |
 | 3 | Freistellung (Person vor Video-Hintergrund), Mosaik-Layouts | offen |
-| 4 | Farbfilter, Text- und Emoji-Overlays | offen |
+| 4 | Farbfilter | offen |
+| 5a | Untertitel: Whisper (tiny) on-device, Sprache wählbar, automatisch in Review optional, Einbrennen beim Export | in Test |
 
 ## Technik
 
