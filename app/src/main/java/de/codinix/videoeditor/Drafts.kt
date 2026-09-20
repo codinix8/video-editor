@@ -76,7 +76,8 @@ class DraftStore(context: Context) {
         val qualityLabel: String?,
         val audioTracks: List<AudioTrack> = emptyList(),
         val captions: List<de.codinix.videoeditor.whisper.Caption> = emptyList(),
-        val captionSettings: de.codinix.videoeditor.whisper.CaptionSettings = de.codinix.videoeditor.whisper.CaptionSettings()
+        val captionSettings: de.codinix.videoeditor.whisper.CaptionSettings = de.codinix.videoeditor.whisper.CaptionSettings(),
+        val mosaic: de.codinix.videoeditor.overlay.Mosaic? = null
     )
 
     fun list(): List<Info> = root.listFiles()?.mapNotNull { dir ->
@@ -98,7 +99,8 @@ class DraftStore(context: Context) {
         qualityLabel: String?,
         audioTracks: List<AudioTrack> = emptyList(),
         captions: List<de.codinix.videoeditor.whisper.Caption> = emptyList(),
-        captionSettings: de.codinix.videoeditor.whisper.CaptionSettings = de.codinix.videoeditor.whisper.CaptionSettings()
+        captionSettings: de.codinix.videoeditor.whisper.CaptionSettings = de.codinix.videoeditor.whisper.CaptionSettings(),
+        mosaic: de.codinix.videoeditor.overlay.Mosaic? = null
     ): Info {
         val id = System.currentTimeMillis().toString()
         val dir = File(root, id).apply { mkdirs() }
@@ -161,6 +163,16 @@ class DraftStore(context: Context) {
             .put("audioTracks", trArr)
             .put("captions", de.codinix.videoeditor.whisper.Caption.listToJson(captions))
             .put("captionSettings", captionSettings.toJson())
+        if (mosaic != null) {
+            val files = mosaic.tiles.mapIndexed { i, t ->
+                t.bitmap?.let { b ->
+                    val png = File(dir, "tile_$i.png")
+                    png.outputStream().use { b.compress(Bitmap.CompressFormat.PNG, 100, it) }
+                    png.name
+                }
+            }
+            meta.put("mosaic", mosaic.toJson(files))
+        }
         File(dir, "meta.json").writeText(meta.toString())
         segments.firstOrNull()?.let { writeThumbnail(dir, File(dir, "seg_0.mp4"), it.second) }
 
@@ -221,6 +233,18 @@ class DraftStore(context: Context) {
             .put("audioTracks", trArr)
             .put("captions", session.optJSONArray("captions") ?: JSONArray())
             .put("captionSettings", session.optJSONObject("captionSettings") ?: JSONObject())
+        session.optJSONObject("mosaic")?.let { mj ->
+            val tiles = mj.optJSONArray("tiles") ?: JSONArray()
+            for (i in 0 until tiles.length()) {
+                val t = tiles.getJSONObject(i)
+                if (!t.isNull("file")) {
+                    val src = File(t.getString("file"))
+                    if (src.exists()) { val dest = File(dir, "tile_$i.png"); src.copyTo(dest, overwrite = true); t.put("file", dest.name) }
+                    else t.put("file", JSONObject.NULL)
+                }
+            }
+            meta.put("mosaic", mj)
+        }
         File(dir, "meta.json").writeText(meta.toString())
         if (segArr.length() > 0) {
             val first = segArr.getJSONObject(0)
@@ -288,9 +312,12 @@ class DraftStore(context: Context) {
             tracks.add(AudioTrack(dest, t.getLong("startOffsetMs"), t.getLong("endOffsetMs"),
                 t.getDouble("volume").toFloat(), t.getLong("durationMs"), eventsFromJson(t.optJSONArray("events"))))
         }
+        val mosaic = j.optJSONObject("mosaic")?.let { mj ->
+            de.codinix.videoeditor.overlay.Mosaic.fromJson(mj) { name -> BitmapFactory.decodeFile(File(info.dir, name).absolutePath) }
+        }
         val loaded = Loaded(segments, overlays, j.getInt("lensFacing"), quality, tracks,
             de.codinix.videoeditor.whisper.Caption.listFromJson(j.optJSONArray("captions")),
-            de.codinix.videoeditor.whisper.CaptionSettings.fromJson(j.optJSONObject("captionSettings")))
+            de.codinix.videoeditor.whisper.CaptionSettings.fromJson(j.optJSONObject("captionSettings")), mosaic)
         delete(info)
         return loaded
     }

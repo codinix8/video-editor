@@ -139,6 +139,13 @@ class MainActivity : AppCompatActivity() {
     // ---- Freistellung ----
     private val greenscreenActive: Boolean get() = overlayStore.videoOverlay()?.isBackground == true
 
+    // ---- Mosaik ----
+    private var mosaic = de.codinix.videoeditor.overlay.Mosaic(de.codinix.videoeditor.overlay.Mosaic.LAYOUT_NONE)
+    private val mosaicActive: Boolean get() = mosaic.layout != de.codinix.videoeditor.overlay.Mosaic.LAYOUT_NONE
+    private val pickTileImage = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) setTileImage(uri)
+    }
+
     // ---- Untertitel ----
     private val captions = mutableListOf<de.codinix.videoeditor.whisper.Caption>()
     private val modelManager by lazy { de.codinix.videoeditor.whisper.ModelManager(this) }
@@ -233,6 +240,22 @@ class MainActivity : AppCompatActivity() {
         binding.micButton.setOnClickListener { showMicDialog() }
         binding.addTextButton.setOnClickListener { showTextDialog(null) }
         binding.greenscreenButton.setOnClickListener { onGreenscreenPressed() }
+        binding.mosaicButton.setOnClickListener { showMosaicDialog() }
+        binding.tileMediaButton.setOnClickListener {
+            if (mosaic.selected >= 0) pickTileImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+        }
+        binding.tileCameraButton.setOnClickListener {
+            mosaic.tiles.getOrNull(mosaic.selected)?.let { t ->
+                t.kind = de.codinix.videoeditor.overlay.Mosaic.KIND_CAMERA; t.bitmap = null; t.zoom = 1f; t.offX = 0f; t.offY = 0f
+                publishMosaic(); updateTileButtons()
+            }
+        }
+        binding.tileFillButton.setOnClickListener {
+            mosaic.tiles.getOrNull(mosaic.selected)?.let { t -> t.fillWhite = !t.fillWhite; publishMosaic() }
+        }
+        binding.gestureView.mosaic = mosaic
+        binding.gestureView.onMosaicChanged = { publishMosaic() }
+        binding.gestureView.onMosaicTileSelected = { updateTileButtons() }
         binding.shapeButton.setOnClickListener {
             (overlayStore.selected() as? de.codinix.videoeditor.overlay.CameraOverlay)?.let { c ->
                 c.shape = (c.shape + 1) % 3
@@ -680,8 +703,86 @@ class MainActivity : AppCompatActivity() {
         input.requestFocus()
     }
 
+    // ---------------------------------------------------------------- Mosaik
+
+    private fun publishMosaic() {
+        compositor.mosaic = if (mosaicActive) mosaic.snapshot() else null
+        binding.gestureView.invalidate()
+        persistSession()
+    }
+
+    private fun updateTileButtons() {
+        val show = mosaicActive && mosaic.selected >= 0
+        val v = if (show) android.view.View.VISIBLE else android.view.View.GONE
+        binding.tileMediaButton.visibility = v
+        binding.tileCameraButton.visibility = v
+        binding.tileFillButton.visibility = v
+        if (show) {
+            val t = mosaic.tiles[mosaic.selected]
+            binding.tileCameraButton.alpha = if (t.kind == de.codinix.videoeditor.overlay.Mosaic.KIND_CAMERA) 0.4f else 1f
+        }
+        binding.mosaicButton.setBackgroundResource(if (mosaicActive) R.drawable.bg_round_button_accent else R.drawable.bg_round_button)
+    }
+
+    private fun showMosaicDialog() {
+        if (activeRecording != null) return
+        if (greenscreenActive) { Toast.makeText(this, R.string.mosaic_conflict, Toast.LENGTH_SHORT).show(); return }
+        val pad = (16 * resources.displayMetrics.density).toInt()
+        val radios = android.widget.RadioGroup(this)
+        de.codinix.videoeditor.overlay.Mosaic.LAYOUT_NAMES.forEachIndexed { i, name ->
+            radios.addView(android.widget.RadioButton(this).apply { id = 2000 + i; text = name; isChecked = i == mosaic.layout })
+        }
+        val gapWhite = com.google.android.material.materialswitch.MaterialSwitch(this).apply {
+            text = getString(R.string.mosaic_gap_white); isChecked = mosaic.gapWhite; setPadding(0, pad / 2, 0, 0)
+        }
+        val rainbow = com.google.android.material.materialswitch.MaterialSwitch(this).apply {
+            text = getString(R.string.mosaic_rainbow); isChecked = mosaic.rainbowGaps
+        }
+        val box = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(pad, pad / 2, pad, 0)
+            addView(radios); addView(gapWhite); addView(rainbow)
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.mosaic_title)
+            .setView(android.widget.ScrollView(this).apply { addView(box) })
+            .setPositiveButton(R.string.ok) { _, _ ->
+                val layout = (radios.checkedRadioButtonId - 2000).coerceIn(0, de.codinix.videoeditor.overlay.Mosaic.LAYOUT_NAMES.lastIndex)
+                mosaic.setLayout(layout)
+                mosaic.gapWhite = gapWhite.isChecked
+                mosaic.rainbowGaps = rainbow.isChecked
+                if (!mosaicActive) mosaic.selected = -1
+                publishMosaic(); updateTileButtons()
+                if (mosaicActive) Toast.makeText(this, R.string.mosaic_hint, Toast.LENGTH_LONG).show()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun setTileImage(uri: Uri) {
+        val idx = mosaic.selected
+        if (idx < 0) return
+        try {
+            val bmp = loadBitmap(uri, 1920)
+            val t = mosaic.tiles[idx]
+            t.kind = de.codinix.videoeditor.overlay.Mosaic.KIND_IMAGE; t.bitmap = bmp; t.zoom = 1f; t.offX = 0f; t.offY = 0f
+            publishMosaic(); updateTileButtons()
+        } catch (e: Exception) {
+            Log.e(TAG, "Kachelbild laden fehlgeschlagen", e)
+            Toast.makeText(this, getString(R.string.error, e.message ?: "Bild"), Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun resetMosaic() {
+        mosaic = de.codinix.videoeditor.overlay.Mosaic(de.codinix.videoeditor.overlay.Mosaic.LAYOUT_NONE)
+        binding.gestureView.mosaic = mosaic
+        compositor.mosaic = null
+        updateTileButtons()
+    }
+
     private fun onGreenscreenPressed() {
         if (activeRecording != null) return
+        if (mosaicActive) { Toast.makeText(this, "Erst das Mosaik ausschalten.", Toast.LENGTH_SHORT).show(); return }
         val bg = overlayStore.videoOverlay()?.takeIf { it.isBackground }
         if (bg == null) {
             pickBackground.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
@@ -1670,6 +1771,7 @@ class MainActivity : AppCompatActivity() {
                 captions.clear()
                 captionSettings = loadDefaultCaptionSettings()
                 clearOverlays()
+                resetMosaic()
                 setControlsEnabled(true)
                 if (inReview) exitReview() else refreshUi()
                 MaterialAlertDialogBuilder(this@MainActivity)
@@ -1714,6 +1816,7 @@ class MainActivity : AppCompatActivity() {
                 audioHistory.clear()
                 captions.clear()
                 captionSettings = loadDefaultCaptionSettings()
+                resetMosaic()
                 clearSession()
                 clearOverlays()
                 refreshUi()
@@ -1767,8 +1870,16 @@ class MainActivity : AppCompatActivity() {
                     .put("volume", t.volume.toDouble()).put("durationMs", t.durationMs)
                     .put("events", eventsJson(t.timeline.map { VideoOverlay.Event(it.fromMs, it.gain, it.playing) })))
             }
+            val mosaicJson = if (mosaicActive) mosaic.toJson(mosaic.tiles.mapIndexed { i, t ->
+                t.bitmap?.let { b ->
+                    val png = File(sessionImgDir, "tile_${i}_${System.identityHashCode(b)}.png")
+                    if (!png.exists()) png.outputStream().use { b.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+                    png.absolutePath
+                }
+            }) else null
             val root = org.json.JSONObject()
                 .put("segments", segs).put("overlays", ovs).put("audioTracks", tracks)
+                .put("mosaic", mosaicJson ?: org.json.JSONObject.NULL)
                 .put("captions", de.codinix.videoeditor.whisper.Caption.listToJson(captions))
                 .put("captionSettings", captionSettings.toJson())
                 .put("lensFacing", lensFacing)
@@ -1839,9 +1950,11 @@ class MainActivity : AppCompatActivity() {
                 preferredQuality?.let { label(it) },
                 audioHistory.map { DraftStore.AudioTrack(it.file, it.startOffsetMs, it.endOffsetMs, it.volume, it.durationMs,
                     it.timeline.map { t -> VideoOverlay.Event(t.fromMs, t.gain, t.playing) }) },
-                captions.toList(), captionSettings
+                captions.toList(), captionSettings,
+                if (mosaicActive) mosaic else null
             )
             captions.clear()
+            resetMosaic()
             segments.clear()
             audioHistory.clear()
             // Dateien der Video-Overlays wurden in den Entwurf verschoben – nur Player/Textur freigeben
@@ -1929,6 +2042,9 @@ class MainActivity : AppCompatActivity() {
             loaded.overlays.forEach { overlayStore.add(it) }
             captions.clear(); captions.addAll(loaded.captions)
             captionSettings = loaded.captionSettings
+            mosaic = loaded.mosaic ?: de.codinix.videoeditor.overlay.Mosaic(de.codinix.videoeditor.overlay.Mosaic.LAYOUT_NONE)
+            binding.gestureView.mosaic = mosaic
+            publishMosaic(); updateTileButtons()
             audioHistory.clear()
             loaded.audioTracks.forEach { audioHistory.add(AudioTrackEntry(it.file, it.startOffsetMs, it.endOffsetMs, it.volume, it.durationMs,
                 it.events.map { e -> OverlayAudioRenderer.Segment(e.atMs, e.gain, e.playing) })) }

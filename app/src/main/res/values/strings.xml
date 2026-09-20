@@ -119,4 +119,13 @@
     <string name="captions_edit_title">Untertitel bearbeiten</string>
     <string name="limit_reached">Maximale Länge von 5 Minuten erreicht – Segmente löschen, um weiter aufzunehmen</string>
     <string name="low_space">Wenig Speicherplatz: nur noch %1$.1f GB frei</string>
+    <string name="mosaic">Mosaik</string>
+    <string name="mosaic_title">Mosaik-Raster</string>
+    <string name="mosaic_gap_white">Trennlinien und Füllung weiß (sonst schwarz)</string>
+    <string name="mosaic_rainbow">Trennlinien als Signatur-Regenbogen</string>
+    <string name="mosaic_hint">Kachel antippen: Medium wählen, Kamera, Füllfarbe · Ziehen verschiebt, zwei Finger zoomen</string>
+    <string name="mosaic_conflict">Erst den Kachel-Modus beenden.</string>
+    <string name="tile_media">Bild in diese Kachel</string>
+    <string name="tile_camera">Kachel zurück auf Kamera</string>
+    <string name="tile_fill">Füllfarbe dieser Kachel (schwarz/weiß)</string>
 </resources>

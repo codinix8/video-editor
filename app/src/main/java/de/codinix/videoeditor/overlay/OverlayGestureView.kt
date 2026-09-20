@@ -30,6 +30,20 @@ class OverlayGestureView @JvmOverloads constructor(
 ) : View(context, attrs) {
 
     lateinit var store: OverlayStore
+    /** Aktives Mosaik (oder null). Kacheln werden angefasst, wenn kein Overlay getroffen wurde. */
+    var mosaic: Mosaic? = null
+    var onMosaicChanged: (() -> Unit)? = null
+    var onMosaicTileSelected: ((Int) -> Unit)? = null
+    private var mosaicTile = -1
+    private var mosaicStartZoom = 1f
+
+    private fun mosaicTileAt(px: Float, py: Float): Int {
+        val m = mosaic ?: return -1
+        if (m.layout == Mosaic.LAYOUT_NONE) return -1
+        val fx = toFrameX(px); val fy = toFrameY(py)
+        Mosaic.rects(m.layout).forEachIndexed { i, r -> if (r.contains(fx, fy)) return i }
+        return -1
+    }
     var onChanged: (() -> Unit)? = null
     var onSelectionChanged: ((Overlay?) -> Unit)? = null
 
@@ -106,9 +120,14 @@ class OverlayGestureView @JvmOverloads constructor(
                 lastX = e.x; lastY = e.y
                 active = hitTest(e.x, e.y)
                 active?.let { store.bringToFront(it.id) }
+                mosaicTile = if (active == null) mosaicTileAt(e.x, e.y) else -1
                 return true
             }
             MotionEvent.ACTION_POINTER_DOWN -> {
+                if (e.pointerCount == 2 && active == null && mosaicTile >= 0) {
+                    startDist = dist(e); mosaicStartZoom = mosaic?.tiles?.getOrNull(mosaicTile)?.zoom ?: 1f
+                    return true
+                }
                 if (e.pointerCount == 2) {
                     val o = active ?: hitTest(midX(e), midY(e)) ?: return true
                     active = o
@@ -119,6 +138,24 @@ class OverlayGestureView @JvmOverloads constructor(
                 return true
             }
             MotionEvent.ACTION_MOVE -> {
+                if (active == null && mosaicTile >= 0) {
+                    val m = mosaic ?: return true
+                    val t = m.tiles.getOrNull(mosaicTile) ?: return true
+                    val r = Mosaic.rects(m.layout)[mosaicTile]
+                    if (e.pointerCount >= 2 && startDist > 0) {
+                        t.zoom = (mosaicStartZoom * dist(e) / startDist).coerceIn(0.3f, 4f)
+                    } else {
+                        val dx = e.x - lastX; val dy = e.y - lastY
+                        if (kotlin.math.abs(dx) > 2 || kotlin.math.abs(dy) > 2) moved = true
+                        // Inhalt folgt dem Finger: Verschiebung relativ zur Kachelgröße
+                        t.offX = (t.offX - dx / (r.width() * frameRect.width()) * 2f).coerceIn(-1f, 1f)
+                        t.offY = (t.offY - dy / (r.height() * frameRect.height()) * 2f).coerceIn(-1f, 1f)
+                        lastX = e.x; lastY = e.y
+                    }
+                    onMosaicChanged?.invoke()
+                    invalidate()
+                    return true
+                }
                 val o = active ?: return true
                 if (e.pointerCount >= 2) {
                     val d = dist(e)
@@ -155,7 +192,11 @@ class OverlayGestureView @JvmOverloads constructor(
                     store.selectedId = newSel
                     onSelectionChanged?.invoke(active)
                 }
-                active = null
+                mosaic?.let { m ->
+                    val tile = if (active == null) mosaicTile else -1
+                    if (m.selected != tile) { m.selected = tile; onMosaicTileSelected?.invoke(tile) }
+                }
+                active = null; mosaicTile = -1
                 invalidate()
                 return true
             }
@@ -172,8 +213,14 @@ class OverlayGestureView @JvmOverloads constructor(
     // --------------------------------------------------------------- Zeichnen
 
     override fun onDraw(canvas: Canvas) {
-        val o = store.selected() ?: return
         computeFrameRect()
+        mosaic?.let { m ->
+            if (m.selected >= 0 && m.layout != Mosaic.LAYOUT_NONE) {
+                val r = Mosaic.rects(m.layout)[m.selected]
+                canvas.drawRoundRect(toPxX(r.left) + 6, toPxY(r.top) + 6, toPxX(r.right) - 6, toPxY(r.bottom) - 6, 10f, 10f, framePaint)
+            }
+        }
+        val o = store.selected() ?: return
         val cx = toPxX(o.cx); val cy = toPxY(o.cy)
         val halfW = o.widthFrac * frameRect.width() / 2f
         val halfH = halfW * o.aspect

@@ -190,6 +190,56 @@
         app:layout_constraintTop_toBottomOf="@id/statusText" />
 
     <ImageButton
+        android:id="@+id/mosaicButton"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_round_button"
+        android:contentDescription="@string/mosaic"
+        android:src="@drawable/ic_mosaic"
+        app:layout_constraintEnd_toEndOf="@id/flipButton"
+        app:layout_constraintTop_toBottomOf="@id/greenscreenButton" />
+
+    <ImageButton
+        android:id="@+id/tileMediaButton"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="78dp"
+        android:background="@drawable/bg_round_button"
+        android:contentDescription="@string/tile_media"
+        android:src="@drawable/ic_add_image"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/statusText" />
+
+    <ImageButton
+        android:id="@+id/tileCameraButton"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="132dp"
+        android:background="@drawable/bg_round_button"
+        android:contentDescription="@string/tile_camera"
+        android:src="@drawable/ic_camera_back"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/statusText" />
+
+    <ImageButton
+        android:id="@+id/tileFillButton"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="186dp"
+        android:background="@drawable/bg_round_button"
+        android:contentDescription="@string/tile_fill"
+        android:src="@drawable/ic_fill"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/statusText" />
+
+    <ImageButton
         android:id="@+id/editTextButton"
         android:layout_width="44dp"
         android:layout_height="44dp"

@@ -46,6 +46,12 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
     }
     private val outputs = mutableListOf<Output>()
 
+    // ---- Mosaik ----
+    @Volatile var mosaic: de.codinix.videoeditor.overlay.MosaicSnapshot? = null
+    private var imageTileProgram = 0
+    private var lineProgram = 0
+    private val mosaicTextures = HashMap<Int, Pair<android.graphics.Bitmap, Int>>()
+
     // ---- Kachel-Modus ----
     /** ID des Video-Overlays, das als Vollbild-Hintergrund dient (0 = keins). */
     @Volatile var backgroundOverlayId: Long = 0L
@@ -104,6 +110,8 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
             cameraProgram = GlUtil.createProgram(VERTEX_CAMERA, FRAGMENT_CAMERA)
             overlayProgram = GlUtil.createProgram(VERTEX_OVERLAY, FRAGMENT_OVERLAY)
             tileProgram = GlUtil.createProgram(VERTEX_TILE, FRAGMENT_TILE)
+            imageTileProgram = GlUtil.createProgram(VERTEX_TILE, FRAGMENT_TILE_IMAGE)
+            lineProgram = GlUtil.createProgram(VERTEX_TILE, FRAGMENT_LINE)
             cameraTexId = GlUtil.createExternalTexture()
         } catch (e: Exception) {
             Log.e(TAG, "GL-Initialisierung fehlgeschlagen", e)
@@ -260,7 +268,10 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
                 val consumerMirrors = frontFacing && isPreview && pendingRotation(out.size) != 0
 
                 val tileMode = backgroundOverlayId != 0L && snapshot.any { it.isCamera }
-                if (tileMode) {
+                val mo = mosaic
+                if (mo != null && mo.layout != 0) {
+                    drawMosaic(mo, out.size, pendingRotation(out.size), consumerMirrors, outMatrix)
+                } else if (tileMode) {
                     drawBackground(snapshot, out.size, consumerMirrors)
                 } else {
                     drawCamera(outMatrix)
@@ -302,6 +313,124 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
      * [preMatrix] = Drehung/Spiegelung Display→Puffer (wie bei den Overlay-Vertices),
      * damit die Abtastung des Kamerabilds zur Anzeige passt.
      */
+    // ------------------------------------------------------------------ Mosaik
+
+    private fun drawMosaic(mo: de.codinix.videoeditor.overlay.MosaicSnapshot, size: Size, preRotation: Int, preMirror: Boolean, camTransform: FloatArray) {
+        val dispAspect = displayAspect(size)
+        val rects = de.codinix.videoeditor.overlay.Mosaic.rects(mo.layout)
+        val gapX = 0.006f                       // Anteil der Breite
+        val gapY = gapX * dispAspect            // gleicher Pixelabstand in der Höhe
+        // Grundfarbe: Zwischenräume/Füllung
+        GLES20.glClearColor(if (mo.gapWhite) 1f else 0f, if (mo.gapWhite) 1f else 0f, if (mo.gapWhite) 1f else 0f, 1f)
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
+
+        Matrix.setIdentityM(tmp, 0)
+        if (preRotation != 0) Matrix.rotateM(tmp, 0, preRotation.toFloat(), 0f, 0f, 1f)
+        if (preMirror) Matrix.scaleM(tmp, 0, -1f, 1f, 1f)
+
+        syncMosaicTextures(mo)
+        rects.forEachIndexed { i, r0 ->
+            val t = mo.tiles.getOrNull(i) ?: return@forEachIndexed
+            // Innenrand für Zwischenraum
+            val l = r0.left + if (r0.left > 0f) gapX / 2 else 0f
+            val rr = r0.right - if (r0.right < 1f) gapX / 2 else 0f
+            val tp = r0.top + if (r0.top > 0f) gapY / 2 else 0f
+            val bt = r0.bottom - if (r0.bottom < 1f) gapY / 2 else 0f
+            val w = rr - l; val h = bt - tp
+            val tileAspect = (h / w) / dispAspect                  // H/B in Breiten-Einheiten
+            val quad = OverlaySnapshot(0, (l + rr) / 2f, (tp + bt) / 2f, w, 0f, tileAspect)
+            buildOverlayMatrix(quad, dispAspect, preRotation, preMirror, mvp)
+
+            // Zuschnitt: Inhalt formatfüllend × Zoom, verschoben
+            val contentAspect = when (t.kind) {
+                de.codinix.videoeditor.overlay.Mosaic.KIND_IMAGE -> t.bitmap?.let { it.height.toFloat() / it.width } ?: 1f
+                else -> 1f / dispAspect
+            }
+            var cropW = 1f; var cropH = 1f
+            if (tileAspect < contentAspect) cropH = tileAspect / contentAspect else cropW = contentAspect / tileAspect
+            val z = t.zoom.coerceIn(0.3f, 4f)
+            cropW /= z; cropH /= z
+            val cropX = (1f - cropW) / 2f + t.offX.coerceIn(-1f, 1f) * kotlin.math.abs(1f - cropW) / 2f
+            val cropY = (1f - cropH) / 2f + t.offY.coerceIn(-1f, 1f) * kotlin.math.abs(1f - cropH) / 2f
+            val fill = if (t.fillWhite) floatArrayOf(1f, 1f, 1f, 1f) else floatArrayOf(0f, 0f, 0f, 1f)
+
+            val program = if (t.kind == de.codinix.videoeditor.overlay.Mosaic.KIND_IMAGE) imageTileProgram else tileProgram
+            GLES20.glUseProgram(program)
+            val aPos = GLES20.glGetAttribLocation(program, "aPosition")
+            GLES20.glEnableVertexAttribArray(aPos)
+            GLES20.glVertexAttribPointer(aPos, 2, GLES20.GL_FLOAT, false, 0, fullQuad)
+            GLES20.glUniformMatrix4fv(GLES20.glGetUniformLocation(program, "uMvp"), 1, false, mvp, 0)
+            GLES20.glUniform2f(GLES20.glGetUniformLocation(program, "uHalfQuad"), 1f, tileAspect)
+            GLES20.glUniform2f(GLES20.glGetUniformLocation(program, "uHalfTile"), 1f, tileAspect)
+            GLES20.glUniform4f(GLES20.glGetUniformLocation(program, "uCrop"), cropX, cropY, cropW, cropH)
+            GLES20.glUniform4fv(GLES20.glGetUniformLocation(program, "uFill"), 1, fill, 0)
+            if (t.kind == de.codinix.videoeditor.overlay.Mosaic.KIND_IMAGE) {
+                val tex = mosaicTextures[i]?.second ?: return@forEachIndexed
+                GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
+                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, tex)
+                GLES20.glUniform1i(GLES20.glGetUniformLocation(program, "sTexture"), 0)
+            } else {
+                GLES20.glUniformMatrix4fv(GLES20.glGetUniformLocation(program, "uPre"), 1, false, tmp, 0)
+                GLES20.glUniformMatrix4fv(GLES20.glGetUniformLocation(program, "uTexMatrix"), 1, false, camTransform, 0)
+                GLES20.glUniform1i(GLES20.glGetUniformLocation(program, "uShape"), 0)
+                GLES20.glUniform1f(GLES20.glGetUniformLocation(program, "uBorder"), 0f)
+                GLES20.glUniform1f(GLES20.glGetUniformLocation(program, "uGlow"), 0f)
+                GLES20.glUniform1f(GLES20.glGetUniformLocation(program, "uRadius"), 0f)
+                GLES20.glUniform1f(GLES20.glGetUniformLocation(program, "uTime"), 0f)
+                GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
+                GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, cameraTexId)
+                GLES20.glUniform1i(GLES20.glGetUniformLocation(program, "sTexture"), 0)
+            }
+            GLES20.glDisable(GLES20.GL_BLEND)
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
+            GLES20.glDisableVertexAttribArray(aPos)
+        }
+
+        if (mo.rainbowGaps) drawRainbowGaps(mo.layout, dispAspect, preRotation, preMirror, gapX, gapY)
+    }
+
+    /** Trennlinien als wandernder Regenbogen über den Zwischenräumen. */
+    private fun drawRainbowGaps(layout: Int, dispAspect: Float, preRotation: Int, preMirror: Boolean, gapX: Float, gapY: Float) {
+        val lines = ArrayList<FloatArray>() // cx, cy, w, h (Frame-Anteile)
+        when (layout) {
+            de.codinix.videoeditor.overlay.Mosaic.LAYOUT_2_ROWS -> lines.add(floatArrayOf(0.5f, 0.5f, 1f, gapY))
+            de.codinix.videoeditor.overlay.Mosaic.LAYOUT_2_COLS -> lines.add(floatArrayOf(0.5f, 0.5f, gapX, 1f))
+            de.codinix.videoeditor.overlay.Mosaic.LAYOUT_3_ROWS -> { lines.add(floatArrayOf(0.5f, 1f / 3, 1f, gapY)); lines.add(floatArrayOf(0.5f, 2f / 3, 1f, gapY)) }
+            de.codinix.videoeditor.overlay.Mosaic.LAYOUT_3_COLS -> { lines.add(floatArrayOf(1f / 3, 0.5f, gapX, 1f)); lines.add(floatArrayOf(2f / 3, 0.5f, gapX, 1f)) }
+            de.codinix.videoeditor.overlay.Mosaic.LAYOUT_2X2 -> { lines.add(floatArrayOf(0.5f, 0.5f, 1f, gapY)); lines.add(floatArrayOf(0.5f, 0.5f, gapX, 1f)) }
+        }
+        val t = ((System.nanoTime() - startNanos) / 1_000_000_000.0).toFloat()
+        GLES20.glUseProgram(lineProgram)
+        val aPos = GLES20.glGetAttribLocation(lineProgram, "aPosition")
+        GLES20.glEnableVertexAttribArray(aPos)
+        GLES20.glVertexAttribPointer(aPos, 2, GLES20.GL_FLOAT, false, 0, fullQuad)
+        GLES20.glUniform1f(GLES20.glGetUniformLocation(lineProgram, "uTime"), t)
+        lines.forEach { ln ->
+            val w = ln[2]; val h = ln[3]
+            val quad = OverlaySnapshot(0, ln[0], ln[1], w, 0f, (h / w) / dispAspect)
+            buildOverlayMatrix(quad, dispAspect, preRotation, preMirror, mvp)
+            GLES20.glUniformMatrix4fv(GLES20.glGetUniformLocation(lineProgram, "uMvp"), 1, false, mvp, 0)
+            GLES20.glUniform1i(GLES20.glGetUniformLocation(lineProgram, "uHorizontal"), if (w > h) 1 else 0)
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
+        }
+        GLES20.glDisableVertexAttribArray(aPos)
+    }
+
+    private fun syncMosaicTextures(mo: de.codinix.videoeditor.overlay.MosaicSnapshot) {
+        val it = mosaicTextures.entries.iterator()
+        while (it.hasNext()) {
+            val e = it.next()
+            val tile = mo.tiles.getOrNull(e.key)
+            if (tile == null || tile.bitmap !== e.value.first) { GlUtil.deleteTexture(e.value.second); it.remove() }
+        }
+        mo.tiles.forEachIndexed { i, t ->
+            val bmp = t.bitmap ?: return@forEachIndexed
+            if (t.kind == de.codinix.videoeditor.overlay.Mosaic.KIND_IMAGE && i !in mosaicTextures && !bmp.isRecycled) {
+                mosaicTextures[i] = bmp to GlUtil.createTextureFromBitmap(bmp)
+            }
+        }
+    }
+
     private fun drawCameraTile(o: OverlaySnapshot, dispAspect: Float, preRotation: Int, preMirror: Boolean,
                                camTransform: FloatArray) {
         val glow = if (o.border) 0.10f else 0f
@@ -337,6 +466,7 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
         GLES20.glUniform1f(GLES20.glGetUniformLocation(tileProgram, "uBorder"), if (o.border) 0.035f else 0f)
         GLES20.glUniform1f(GLES20.glGetUniformLocation(tileProgram, "uGlow"), glow)
         GLES20.glUniform1f(GLES20.glGetUniformLocation(tileProgram, "uRadius"), 0.14f)
+        GLES20.glUniform4f(GLES20.glGetUniformLocation(tileProgram, "uFill"), 0f, 0f, 0f, 1f)
         val t = ((System.nanoTime() - startNanos) / 1_000_000_000.0).toFloat()
         GLES20.glUniform1f(GLES20.glGetUniformLocation(tileProgram, "uTime"), t)
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
@@ -484,6 +614,8 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
             overlayTextures.values.forEach { GlUtil.deleteTexture(it) }
             overlayTextures.clear()
             overlayBitmaps.clear()
+            mosaicTextures.values.forEach { GlUtil.deleteTexture(it.second) }
+            mosaicTextures.clear()
             videoLayers.values.forEach { destroyVideoLayer(it) }
             videoLayers.clear()
             inputSurface?.release(); inputTexture?.release()
@@ -543,6 +675,7 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
             uniform float uGlow;
             uniform float uRadius;
             uniform float uTime;
+            uniform vec4 uFill;
 
             vec3 hsv(float h) {
                 vec3 p = abs(fract(vec3(h) + vec3(0.0, 2.0/3.0, 1.0/3.0)) * 6.0 - 3.0);
@@ -565,6 +698,7 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
                 vec2 tb = (bufNdc + 1.0) * 0.5;
                 vec2 cam = (uTexMatrix * vec4(tb, 0.0, 1.0)).xy;
                 vec4 c = texture2D(sTexture, cam);
+                if (disp.x < 0.0 || disp.x > 1.0 || disp.y < 0.0 || disp.y > 1.0) c = uFill;   // Inhalt kleiner als Kachel
 
                 float angle = atan(p.y, p.x) / 6.2831853;
                 vec3 rainbow = hsv(fract(angle - uTime * 0.12));
@@ -585,6 +719,40 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
                     float a = uBorder > 0.0 ? 0.0 : 1.0 - smoothstep(0.0, aa, d);
                     gl_FragColor = vec4(c.rgb, a);
                 }
+            }
+        """
+        /** Bild in einer Mosaik-Kachel: Zuschnitt/Zoom/Verschiebung, außen Füllfarbe. */
+        private const val FRAGMENT_TILE_IMAGE = """
+            precision mediump float;
+            varying vec2 vLocal;
+            uniform sampler2D sTexture;
+            uniform vec2 uHalfQuad;
+            uniform vec2 uHalfTile;
+            uniform vec4 uCrop;
+            uniform vec4 uFill;
+            void main() {
+                vec2 p = vLocal * uHalfQuad;
+                vec2 local01 = (p / uHalfTile + 1.0) * 0.5;
+                vec2 disp = uCrop.xy + vec2(local01.x, 1.0 - local01.y) * uCrop.zw;
+                if (disp.x < 0.0 || disp.x > 1.0 || disp.y < 0.0 || disp.y > 1.0) { gl_FragColor = uFill; return; }
+                vec4 c = texture2D(sTexture, disp);
+                gl_FragColor = vec4(c.rgb, 1.0);
+            }
+        """
+        /** Trennlinie als Regenbogen entlang der Linie. */
+        private const val FRAGMENT_LINE = """
+            precision mediump float;
+            varying vec2 vLocal;
+            uniform float uTime;
+            uniform int uHorizontal;
+            vec3 hsv(float h) {
+                vec3 p = abs(fract(vec3(h) + vec3(0.0, 2.0/3.0, 1.0/3.0)) * 6.0 - 3.0);
+                return clamp(p - 1.0, 0.0, 1.0);
+            }
+            void main() {
+                float u = uHorizontal == 1 ? vLocal.x : vLocal.y;
+                vec3 c = mix(hsv(fract(u * 0.5 + 0.5 - uTime * 0.12)), vec3(1.0), 0.15);
+                gl_FragColor = vec4(c, 1.0);
             }
         """
         private const val VERTEX_OVERLAY = """
