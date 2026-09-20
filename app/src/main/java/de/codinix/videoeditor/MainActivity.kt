@@ -1159,10 +1159,119 @@ class MainActivity : AppCompatActivity() {
                 startTranscription(lang)
             }
             .setNegativeButton(R.string.cancel) { _, _ -> prefs.edit().putBoolean("captions_auto", auto.isChecked).apply() }
-        if (captions.isNotEmpty()) b.setNeutralButton(R.string.captions_remove) { _, _ ->
-            captions.clear(); binding.review.captionView.captions = captions; persistSession()
+        var removeBtn: android.widget.Button? = null
+        if (captions.isNotEmpty()) {
+            b.setNeutralButton(R.string.captions_edit) { _, _ -> showCaptionEditor(-1) }
+            removeBtn = android.widget.Button(this, null, android.R.attr.borderlessButtonStyle).apply {
+                text = getString(R.string.captions_remove)
+            }
+            box.addView(removeBtn)
         }
-        b.show()
+        val dlg = b.create()
+        removeBtn?.setOnClickListener {
+            captions.clear(); binding.review.captionView.captions = captions; persistSession(); dlg.dismiss()
+        }
+        dlg.show()
+    }
+
+    /**
+     * Untertitel-Editor: Liste aller Blöcke mit Zeit, Textfeld, Verschiebe-Pfeilen und Löschen.
+     * Antippen der Zeit springt in der Review zum Block. [focusIdx] wird beim Öffnen fokussiert.
+     */
+    private fun showCaptionEditor(focusIdx: Int) {
+        if (captions.isEmpty()) return
+        player?.pause()
+        val dp = resources.displayMetrics.density
+        val pad = (10 * dp).toInt()
+        val list = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.VERTICAL; setPadding(pad, 0, pad, 0) }
+        val working = captions.toMutableList()
+        var focusView: android.view.View? = null
+
+        fun timeLabel(c: de.codinix.videoeditor.whisper.Caption) = "%d:%02d.%d".format(c.startMs / 60000, (c.startMs / 1000) % 60, (c.startMs % 1000) / 100)
+
+        fun rebuild() {
+            list.removeAllViews()
+            working.forEachIndexed { idx, c ->
+                val row = android.widget.LinearLayout(this).apply {
+                    orientation = android.widget.LinearLayout.VERTICAL
+                    setPadding(0, pad / 2, 0, pad / 2)
+                }
+                val head = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.HORIZONTAL; gravity = android.view.Gravity.CENTER_VERTICAL }
+                val time = android.widget.TextView(this).apply {
+                    text = timeLabel(c); textSize = 13f; alpha = 0.8f
+                    setPadding(0, 0, pad, 0)
+                    setOnClickListener { player?.let { p ->
+                        // Position innerhalb der Segment-Playlist finden
+                        var rest = c.startMs; var item = 0
+                        for (seg in segments) { if (rest < seg.durationMs) break; rest -= seg.durationMs; item++ }
+                        p.seekTo(item.coerceAtMost(segments.lastIndex), rest); p.play()
+                    } }
+                }
+                fun smallBtn(label: String, onClick: () -> Unit) = android.widget.Button(this, null, android.R.attr.borderlessButtonStyle).apply {
+                    text = label; textSize = 14f; minWidth = 0; minimumWidth = 0
+                    setPadding(pad, 0, pad, 0)
+                    setOnClickListener { onClick() }
+                }
+                head.addView(time, android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+                head.addView(smallBtn("◀ 0,25 s") { working[idx] = shiftCaption(c, -250); rebuild() })
+                head.addView(smallBtn("0,25 s ▶") { working[idx] = shiftCaption(c, +250); rebuild() })
+                head.addView(smallBtn("🗑") { working.removeAt(idx); rebuild() })
+                val edit = android.widget.EditText(this).apply {
+                    setText(c.text)
+                    textSize = 15f
+                    inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE or android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+                    imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_DONE or android.view.inputmethod.EditorInfo.IME_FLAG_NO_ENTER_ACTION
+                    addTextChangedListener(object : android.text.TextWatcher {
+                        override fun afterTextChanged(t: android.text.Editable?) {
+                            val newText = t?.toString()?.trim() ?: return
+                            if (idx < working.size && working[idx].text != newText) working[idx] = retext(working[idx], newText)
+                        }
+                        override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+                        override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+                    })
+                }
+                if (idx == focusIdx) focusView = edit
+                row.addView(head); row.addView(edit)
+                list.addView(row)
+            }
+        }
+        rebuild()
+        val scroll = android.widget.ScrollView(this).apply { addView(list) }
+        val dlg = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.captions_edit_title)
+            .setView(scroll)
+            .setPositiveButton(R.string.ok) { _, _ ->
+                captions.clear(); captions.addAll(working.sortedBy { it.startMs })
+                binding.review.captionView.captions = captions
+                persistSession()
+                if (inReview) player?.play()
+            }
+            .setNegativeButton(R.string.cancel) { _, _ -> if (inReview) player?.play() }
+            .setOnCancelListener { if (inReview) player?.play() }
+            .create()
+        dlg.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        dlg.show()
+        focusView?.let { v -> v.requestFocus(); scroll.post { scroll.smoothScrollTo(0, (v.parent as android.view.View).top) } }
+    }
+
+    /** Block zeitlich verschieben (Start ≥ 0), Wörter mitnehmen. */
+    private fun shiftCaption(c: de.codinix.videoeditor.whisper.Caption, deltaMs: Long): de.codinix.videoeditor.whisper.Caption {
+        val d = if (c.startMs + deltaMs < 0) -c.startMs else deltaMs
+        return c.copy(startMs = c.startMs + d, endMs = c.endMs + d, words = c.words.map { it.copy(startMs = it.startMs + d, endMs = it.endMs + d) })
+    }
+
+    /** Neuer Text: bei gleicher Wortzahl Zeiten behalten, sonst gleichmäßig über die Dauer verteilen. */
+    private fun retext(c: de.codinix.videoeditor.whisper.Caption, text: String): de.codinix.videoeditor.whisper.Caption {
+        val parts = text.split(Regex("\\s+")).filter { it.isNotBlank() }
+        if (parts.isEmpty()) return c.copy(text = text, words = emptyList())
+        val words = if (parts.size == c.words.size) {
+            c.words.mapIndexed { i, w -> w.copy(text = parts[i]) }
+        } else {
+            val dur = (c.endMs - c.startMs).coerceAtLeast(parts.size * 120L)
+            val per = dur / parts.size
+            parts.mapIndexed { i, w -> de.codinix.videoeditor.whisper.Word(c.startMs + i * per, c.startMs + (i + 1) * per - 20, w) }
+        }
+        return c.copy(text = parts.joinToString(" "), words = words)
     }
 
     private fun startTranscription(language: String?) {
@@ -1235,6 +1344,7 @@ class MainActivity : AppCompatActivity() {
         binding.review.captionView.settings = captionSettings
         binding.review.captionView.captions = captions
         binding.review.captionView.onSettingsChanged = { persistSession(); saveDefaultCaptionSettings() }
+        binding.review.captionView.onEditRequested = { idx -> showCaptionEditor(idx) }
         buildPlayer()
         if (prefs.getBoolean("captions_auto", false) && captions.isEmpty() && !transcribing) {
             main.postDelayed({ if (inReview) startTranscription(prefs.getString("captions_lang", null)) }, 300)

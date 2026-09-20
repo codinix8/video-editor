@@ -57,12 +57,13 @@
         android:id="@+id/captionsButton"
         android:layout_width="52dp"
         android:layout_height="52dp"
-        android:layout_marginEnd="10dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="10dp"
         android:background="@drawable/bg_round_button"
         android:contentDescription="@string/captions"
         android:src="@drawable/ic_captions"
-        app:layout_constraintEnd_toStartOf="@id/saveDraftButton"
-        app:layout_constraintTop_toTopOf="@id/backButton" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/saveDraftButton" />
 
     <ImageButton
         android:id="@+id/saveDraftButton"

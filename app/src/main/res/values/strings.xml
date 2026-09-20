@@ -115,4 +115,6 @@
         <item quantity="one">%d Segment</item>
         <item quantity="other">%d Segmente</item>
     </plurals>
+    <string name="captions_edit">Bearbeiten</string>
+    <string name="captions_edit_title">Untertitel bearbeiten</string>
 </resources>

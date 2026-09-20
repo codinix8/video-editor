@@ -21,6 +21,9 @@ class CaptionView @JvmOverloads constructor(context: Context, attrs: AttributeSe
     var settings = CaptionSettings()
         set(v) { field = v; cache.clear(); invalidate() }
     var onSettingsChanged: (() -> Unit)? = null
+    /** Doppeltipp auf den Untertitel: Editor öffnen (mit Index des Blocks). */
+    var onEditRequested: ((Int) -> Unit)? = null
+    private var lastTapAt = 0L
 
     private var timeMs = 0L
     private var current: Caption? = null
@@ -79,6 +82,9 @@ class CaptionView @JvmOverloads constructor(context: Context, attrs: AttributeSe
                 val ly = (dx * Math.sin(rad) + dy * Math.cos(rad)).toFloat() + cy
                 val hit = android.graphics.RectF(lastRect).apply { inset(-40f, -40f) }.contains(lx, ly)
                 if (!hit) return false
+                val now = System.currentTimeMillis()
+                if (now - lastTapAt < 320) { lastTapAt = 0; dragging = false; onEditRequested?.invoke(currentIdx); return true }
+                lastTapAt = now
                 dragging = true; lastX = e.x; lastY = e.y
                 return true
             }
