@@ -12,8 +12,8 @@ android {
         applicationId = "de.codinix.videoeditor"
         minSdk = 26
         targetSdk = 35
-        versionCode = 44
-        versionName = "2.1-tile-videos"
+        versionCode = 45
+        versionName = "2.1.1-selection"
         ndk { abiFilters += listOf("arm64-v8a") }
     }
 

@@ -734,6 +734,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateTileButtons() {
         val show = mosaicActive && mosaic.selected >= 0
+        if (show) {
+            // Overlay-Knopfspalte ausblenden, solange eine Kachel ausgewählt ist
+            listOf(binding.removeOverlayButton, binding.soundButton, binding.editTextButton, binding.shapeButton, binding.borderButton)
+                .forEach { it.visibility = android.view.View.GONE }
+        } else if (!mosaicActive || mosaic.selected < 0) {
+            updateOverlayButtons(overlayStore.selected())
+        }
         val v = if (show) android.view.View.VISIBLE else android.view.View.GONE
         binding.tileMediaButton.visibility = v
         binding.tileCameraButton.visibility = v
@@ -750,7 +757,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun showMosaicDialog() {
         if (activeRecording != null) return
-        if (greenscreenActive) { Toast.makeText(this, R.string.mosaic_conflict, Toast.LENGTH_SHORT).show(); return }
+        if (greenscreenActive || overlayStore.cameraOverlay() != null) { Toast.makeText(this, R.string.mosaic_conflict, Toast.LENGTH_SHORT).show(); return }
         val pad = (16 * resources.displayMetrics.density).toInt()
         val radios = android.widget.RadioGroup(this)
         de.codinix.videoeditor.overlay.Mosaic.LAYOUT_NAMES.forEachIndexed { i, name ->
@@ -989,6 +996,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateOverlayButtons(sel: Overlay?) {
+        if (mosaicActive && mosaic.selected >= 0) return   // Kachel hat Vorrang, siehe updateTileButtons
         binding.removeOverlayButton.visibility = if (sel != null) android.view.View.VISIBLE else android.view.View.GONE
         binding.editTextButton.visibility = if (sel is TextOverlay) android.view.View.VISIBLE else android.view.View.GONE
         val cam = sel as? de.codinix.videoeditor.overlay.CameraOverlay
@@ -1033,6 +1041,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun addVideoOverlay(uri: Uri, asBackground: Boolean = false) {
+        if (asBackground && mosaicActive) { Toast.makeText(this, "Erst das Mosaik ausschalten.", Toast.LENGTH_SHORT).show(); return }
         if (overlayStore.videoOverlay() != null) {
             Toast.makeText(this, if (asBackground) R.string.greenscreen_conflict else R.string.only_one_video, Toast.LENGTH_LONG).show(); return
         }

@@ -192,13 +192,14 @@ class OverlayGestureView @JvmOverloads constructor(
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 val newSel = active?.id
+                mosaic?.let { m ->
+                    // Exklusiv: Kachel oder Overlay, nie beides
+                    val tile = if (active == null) mosaicTile else -1
+                    if (m.selected != tile) { m.selected = tile; onMosaicTileSelected?.invoke(tile) }
+                }
                 if (store.selectedId != newSel) {
                     store.selectedId = newSel
                     onSelectionChanged?.invoke(active)
-                }
-                mosaic?.let { m ->
-                    val tile = if (active == null) mosaicTile else -1
-                    if (m.selected != tile) { m.selected = tile; onMosaicTileSelected?.invoke(tile) }
                 }
                 active = null; mosaicTile = -1
                 invalidate()
