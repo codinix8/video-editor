@@ -66,6 +66,19 @@
         app:layout_constraintTop_toBottomOf="@id/saveDraftButton" />
 
     <ImageButton
+        android:id="@+id/captionsEditButton"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_round_button"
+        android:contentDescription="@string/captions_edit"
+        android:src="@drawable/ic_captions_edit"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/captionsButton" />
+
+    <ImageButton
         android:id="@+id/saveDraftButton"
         android:layout_width="52dp"
         android:layout_height="52dp"

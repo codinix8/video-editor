@@ -278,6 +278,7 @@ class MainActivity : AppCompatActivity() {
         binding.review.reviewDeleteButton.setOnClickListener { onDeletePressed() }
         binding.review.saveDraftButton.setOnClickListener { saveDraft() }
         binding.review.captionsButton.setOnClickListener { showCaptionsDialog() }
+        binding.review.captionsEditButton.setOnClickListener { showCaptionEditor(-1) }
         binding.draftsButton.setOnClickListener { showDrafts() }
         binding.review.playerView.setOnClickListener { togglePlayback() }
 
@@ -1169,7 +1170,7 @@ class MainActivity : AppCompatActivity() {
         }
         val dlg = b.create()
         removeBtn?.setOnClickListener {
-            captions.clear(); binding.review.captionView.captions = captions; persistSession(); dlg.dismiss()
+            captions.clear(); refreshCaptionUi(); persistSession(); dlg.dismiss()
         }
         dlg.show()
     }
@@ -1213,8 +1214,8 @@ class MainActivity : AppCompatActivity() {
                     setOnClickListener { onClick() }
                 }
                 head.addView(time, android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-                head.addView(smallBtn("◀ 0,25 s") { working[idx] = shiftCaption(c, -250); rebuild() })
-                head.addView(smallBtn("0,25 s ▶") { working[idx] = shiftCaption(c, +250); rebuild() })
+                head.addView(smallBtn("◀ 0,25 s") { shiftStart(working, idx, -250); rebuild() })
+                head.addView(smallBtn("0,25 s ▶") { shiftStart(working, idx, +250); rebuild() })
                 head.addView(smallBtn("🗑") { working.removeAt(idx); rebuild() })
                 val edit = android.widget.EditText(this).apply {
                     setText(c.text)
@@ -1242,7 +1243,7 @@ class MainActivity : AppCompatActivity() {
             .setView(scroll)
             .setPositiveButton(R.string.ok) { _, _ ->
                 captions.clear(); captions.addAll(working.sortedBy { it.startMs })
-                binding.review.captionView.captions = captions
+                refreshCaptionUi()
                 persistSession()
                 if (inReview) player?.play()
             }
@@ -1254,10 +1255,31 @@ class MainActivity : AppCompatActivity() {
         focusView?.let { v -> v.requestFocus(); scroll.post { scroll.smoothScrollTo(0, (v.parent as android.view.View).top) } }
     }
 
-    /** Block zeitlich verschieben (Start ≥ 0), Wörter mitnehmen. */
-    private fun shiftCaption(c: de.codinix.videoeditor.whisper.Caption, deltaMs: Long): de.codinix.videoeditor.whisper.Caption {
-        val d = if (c.startMs + deltaMs < 0) -c.startMs else deltaMs
-        return c.copy(startMs = c.startMs + d, endMs = c.endMs + d, words = c.words.map { it.copy(startMs = it.startMs + d, endMs = it.endMs + d) })
+    /**
+     * Nur den ANFANG eines Blocks verschieben, das Ende bleibt. Nach vorn: der vorherige Block
+     * wird gekürzt, damit nichts überlappt. Nach hinten: mindestens 0,3 s Anzeige bleiben.
+     * Wörter werden proportional in die neue Dauer eingepasst.
+     */
+    private fun shiftStart(list: MutableList<de.codinix.videoeditor.whisper.Caption>, idx: Int, deltaMs: Long) {
+        val c = list[idx]
+        var newStart = (c.startMs + deltaMs).coerceAtLeast(0)
+        if (newStart > c.endMs - 300) newStart = c.endMs - 300
+        if (newStart == c.startMs) return
+        val oldDur = (c.endMs - c.startMs).coerceAtLeast(1)
+        val newDur = c.endMs - newStart
+        val words = c.words.map { w ->
+            val rs = (w.startMs - c.startMs).toDouble() / oldDur
+            val re = (w.endMs - c.startMs).toDouble() / oldDur
+            w.copy(startMs = newStart + (rs * newDur).toLong(), endMs = newStart + (re * newDur).toLong())
+        }
+        list[idx] = c.copy(startMs = newStart, words = words)
+        if (deltaMs < 0 && idx > 0) {
+            val prev = list[idx - 1]
+            if (prev.endMs > newStart - 40) {
+                val prevEnd = maxOf(newStart - 40, prev.startMs + 300)
+                list[idx - 1] = prev.copy(endMs = prevEnd, words = prev.words.map { w -> w.copy(endMs = minOf(w.endMs, prevEnd)) })
+            }
+        }
     }
 
     /** Neuer Text: bei gleicher Wortzahl Zeiten behalten, sonst gleichmäßig über die Dauer verteilen. */
@@ -1306,7 +1328,7 @@ class MainActivity : AppCompatActivity() {
                     dialog.dismiss()
                     transcribing = false
                     captions.clear(); captions.addAll(chunks)
-                    binding.review.captionView.captions = captions
+                    refreshCaptionUi()
                     persistSession()
                     Toast.makeText(this, if (chunks.isEmpty()) getString(R.string.captions_none)
                         else getString(R.string.captions_done, chunks.size, result.language) + "\n" + getString(R.string.captions_hint), Toast.LENGTH_LONG).show()
@@ -1325,10 +1347,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun refreshCaptionUi() {
+        binding.review.captionView.captions = captions
+        binding.review.captionsEditButton.visibility =
+            if (captions.isNotEmpty()) android.view.View.VISIBLE else android.view.View.GONE
+    }
+
     /** Nach dem Löschen von Segmenten: Untertitel hinter dem neuen Ende verwerfen. */
     private fun trimCaptions(totalMs: Long) {
         captions.removeAll { it.startMs >= totalMs }
-        binding.review.captionView.captions = captions
+        refreshCaptionUi()
     }
 
     // ---------------------------------------------------------------- Review
@@ -1342,7 +1370,7 @@ class MainActivity : AppCompatActivity() {
         binding.gestureView.visibility = android.view.View.GONE
         binding.review.playIcon.visibility = android.view.View.GONE
         binding.review.captionView.settings = captionSettings
-        binding.review.captionView.captions = captions
+        refreshCaptionUi()
         binding.review.captionView.onSettingsChanged = { persistSession(); saveDefaultCaptionSettings() }
         binding.review.captionView.onEditRequested = { idx -> showCaptionEditor(idx) }
         buildPlayer()
