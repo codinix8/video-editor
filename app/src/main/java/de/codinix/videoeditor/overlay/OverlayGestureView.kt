@@ -36,6 +36,7 @@ class OverlayGestureView @JvmOverloads constructor(
     var onMosaicTileSelected: ((Int) -> Unit)? = null
     private var mosaicTile = -1
     private var mosaicStartZoom = 1f
+    private var mosaicStartRot = 0f
 
     private fun mosaicTileAt(px: Float, py: Float): Int {
         val m = mosaic ?: return -1
@@ -125,7 +126,9 @@ class OverlayGestureView @JvmOverloads constructor(
             }
             MotionEvent.ACTION_POINTER_DOWN -> {
                 if (e.pointerCount == 2 && active == null && mosaicTile >= 0) {
-                    startDist = dist(e); mosaicStartZoom = mosaic?.tiles?.getOrNull(mosaicTile)?.zoom ?: 1f
+                    startDist = dist(e); startAngle = angle(e)
+                    mosaicStartZoom = mosaic?.tiles?.getOrNull(mosaicTile)?.zoom ?: 1f
+                    mosaicStartRot = mosaic?.tiles?.getOrNull(mosaicTile)?.rotationDeg ?: 0f
                     return true
                 }
                 if (e.pointerCount == 2) {
@@ -144,6 +147,7 @@ class OverlayGestureView @JvmOverloads constructor(
                     val r = Mosaic.rects(m.layout)[mosaicTile]
                     if (e.pointerCount >= 2 && startDist > 0) {
                         t.zoom = (mosaicStartZoom * dist(e) / startDist).coerceIn(0.3f, 4f)
+                        t.rotationDeg = mosaicStartRot + (angle(e) - startAngle)
                     } else {
                         val dx = e.x - lastX; val dy = e.y - lastY
                         if (kotlin.math.abs(dx) > 2 || kotlin.math.abs(dy) > 2) moved = true

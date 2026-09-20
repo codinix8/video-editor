@@ -352,7 +352,8 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
             cropW /= z; cropH /= z
             val cropX = (1f - cropW) / 2f + t.offX.coerceIn(-1f, 1f) * kotlin.math.abs(1f - cropW) / 2f
             val cropY = (1f - cropH) / 2f + t.offY.coerceIn(-1f, 1f) * kotlin.math.abs(1f - cropH) / 2f
-            val fill = if (t.fillWhite) floatArrayOf(1f, 1f, 1f, 1f) else floatArrayOf(0f, 0f, 0f, 1f)
+            val fc = t.fillColor
+            val fill = floatArrayOf(((fc shr 16) and 0xFF) / 255f, ((fc shr 8) and 0xFF) / 255f, (fc and 0xFF) / 255f, 1f)
 
             val program = if (t.kind == de.codinix.videoeditor.overlay.Mosaic.KIND_IMAGE) imageTileProgram else tileProgram
             GLES20.glUseProgram(program)
@@ -364,6 +365,7 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
             GLES20.glUniform2f(GLES20.glGetUniformLocation(program, "uHalfTile"), 1f, tileAspect)
             GLES20.glUniform4f(GLES20.glGetUniformLocation(program, "uCrop"), cropX, cropY, cropW, cropH)
             GLES20.glUniform4fv(GLES20.glGetUniformLocation(program, "uFill"), 1, fill, 0)
+            GLES20.glUniform1f(GLES20.glGetUniformLocation(program, "uRot"), Math.toRadians(t.rotationDeg.toDouble()).toFloat())
             if (t.kind == de.codinix.videoeditor.overlay.Mosaic.KIND_IMAGE) {
                 val tex = mosaicTextures[i]?.second ?: return@forEachIndexed
                 GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
@@ -467,6 +469,7 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
         GLES20.glUniform1f(GLES20.glGetUniformLocation(tileProgram, "uGlow"), glow)
         GLES20.glUniform1f(GLES20.glGetUniformLocation(tileProgram, "uRadius"), 0.14f)
         GLES20.glUniform4f(GLES20.glGetUniformLocation(tileProgram, "uFill"), 0f, 0f, 0f, 1f)
+        GLES20.glUniform1f(GLES20.glGetUniformLocation(tileProgram, "uRot"), 0f)
         val t = ((System.nanoTime() - startNanos) / 1_000_000_000.0).toFloat()
         GLES20.glUniform1f(GLES20.glGetUniformLocation(tileProgram, "uTime"), t)
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
@@ -676,6 +679,7 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
             uniform float uRadius;
             uniform float uTime;
             uniform vec4 uFill;
+            uniform float uRot;
 
             vec3 hsv(float h) {
                 vec3 p = abs(fract(vec3(h) + vec3(0.0, 2.0/3.0, 1.0/3.0)) * 6.0 - 3.0);
@@ -690,8 +694,10 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
                 vec2 p = vLocal * uHalfQuad;              // Breiten-Einheiten, Ursprung Kachelmitte
                 float d = sdf(p);
                 float aa = 0.006;
-                // Kamerabild
-                vec2 local01 = (p / uHalfTile + 1.0) * 0.5;            // x rechts, y oben
+                // Kamerabild (Inhalt ggf. gedreht: Abtastpunkt gegen den Uhrzeigersinn drehen)
+                float cr = cos(uRot), sr = sin(uRot);
+                vec2 pr = vec2(p.x * cr - p.y * sr, p.x * sr + p.y * cr);
+                vec2 local01 = (pr / uHalfTile + 1.0) * 0.5;           // x rechts, y oben
                 vec2 disp = uCrop.xy + vec2(local01.x, 1.0 - local01.y) * uCrop.zw;
                 vec2 dispNdc = vec2(disp.x * 2.0 - 1.0, 1.0 - disp.y * 2.0);
                 vec2 bufNdc = (uPre * vec4(dispNdc, 0.0, 1.0)).xy;
@@ -730,9 +736,12 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
             uniform vec2 uHalfTile;
             uniform vec4 uCrop;
             uniform vec4 uFill;
+            uniform float uRot;
             void main() {
                 vec2 p = vLocal * uHalfQuad;
-                vec2 local01 = (p / uHalfTile + 1.0) * 0.5;
+                float cr = cos(uRot), sr = sin(uRot);
+                vec2 pr = vec2(p.x * cr - p.y * sr, p.x * sr + p.y * cr);
+                vec2 local01 = (pr / uHalfTile + 1.0) * 0.5;
                 vec2 disp = uCrop.xy + vec2(local01.x, 1.0 - local01.y) * uCrop.zw;
                 if (disp.x < 0.0 || disp.x > 1.0 || disp.y < 0.0 || disp.y > 1.0) { gl_FragColor = uFill; return; }
                 vec4 c = texture2D(sTexture, disp);

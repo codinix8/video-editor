@@ -251,7 +251,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         binding.tileFillButton.setOnClickListener {
-            mosaic.tiles.getOrNull(mosaic.selected)?.let { t -> t.fillWhite = !t.fillWhite; publishMosaic() }
+            mosaic.tiles.getOrNull(mosaic.selected)?.let { t -> showTileFillDialog(t) }
         }
         binding.gestureView.mosaic = mosaic
         binding.gestureView.onMosaicChanged = { publishMosaic() }
@@ -753,10 +753,47 @@ class MainActivity : AppCompatActivity() {
                 mosaic.rainbowGaps = rainbow.isChecked
                 if (!mosaicActive) mosaic.selected = -1
                 publishMosaic(); updateTileButtons()
-                if (mosaicActive) Toast.makeText(this, R.string.mosaic_hint, Toast.LENGTH_LONG).show()
+                if (mosaicActive) showTip(getString(R.string.mosaic_tip))
             }
             .setNegativeButton(R.string.cancel, null)
             .show()
+    }
+
+    private fun showTileFillDialog(t: de.codinix.videoeditor.overlay.Mosaic.Tile) {
+        val dp = resources.displayMetrics.density
+        val pad = (16 * dp).toInt()
+        val row = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.HORIZONTAL; setPadding(pad, pad, pad, pad) }
+        lateinit var dlg: AlertDialog
+        TextRenderer.COLORS.forEach { c ->
+            val size = (36 * dp).toInt()
+            row.addView(android.view.View(this).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(size, size).apply { setMargins(pad / 3, 0, pad / 3, 0) }
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    shape = android.graphics.drawable.GradientDrawable.OVAL; setColor(c)
+                    setStroke((if (c == t.fillColor) 4 else 1) * dp.toInt().coerceAtLeast(1), 0xFFFFFFFF.toInt())
+                }
+                setOnClickListener { t.fillColor = c; publishMosaic(); dlg.dismiss() }
+            })
+        }
+        dlg = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.tile_fill)
+            .setView(android.widget.HorizontalScrollView(this).apply { addView(row); isHorizontalScrollBarEnabled = false })
+            .setNegativeButton(R.string.cancel, null)
+            .create()
+        dlg.show()
+    }
+
+    /** Kurzer, halbtransparenter Hinweis oben im Bild, verschwindet nach [ms]. */
+    private fun showTip(text: String, ms: Long = 5000) {
+        val tip = binding.tipText
+        tip.text = text
+        tip.alpha = 0f; tip.visibility = android.view.View.VISIBLE
+        tip.animate().alpha(1f).setDuration(250).start()
+        main.removeCallbacks(hideTip)
+        main.postDelayed(hideTip, ms)
+    }
+    private val hideTip = Runnable {
+        binding.tipText.animate().alpha(0f).setDuration(400).withEndAction { binding.tipText.visibility = android.view.View.GONE }.start()
     }
 
     private fun setTileImage(uri: Uri) {

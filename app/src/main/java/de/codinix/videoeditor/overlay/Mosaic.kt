@@ -21,9 +21,11 @@ class Mosaic(var layout: Int) {
         var offY: Float = 0f,
         /** 1 = formatfüllend, < 1 kleiner mit Füllfarbe, > 1 hineingezoomt. */
         var zoom: Float = 1f,
-        var fillWhite: Boolean = false
+        var fillColor: Int = 0xFF000000.toInt(),
+        /** Drehung des Inhalts im Uhrzeigersinn. */
+        var rotationDeg: Float = 0f
     ) {
-        fun snapshot() = TileSnapshot(kind, bitmap, offX, offY, zoom, fillWhite)
+        fun snapshot() = TileSnapshot(kind, bitmap, offX, offY, zoom, fillColor, rotationDeg)
     }
 
     val tiles: MutableList<Tile> = MutableList(tileCount(layout)) { Tile() }
@@ -45,7 +47,8 @@ class Mosaic(var layout: Int) {
         val arr = JSONArray()
         tiles.forEachIndexed { i, t ->
             arr.put(JSONObject().put("kind", t.kind).put("offX", t.offX.toDouble()).put("offY", t.offY.toDouble())
-                .put("zoom", t.zoom.toDouble()).put("fillWhite", t.fillWhite).put("file", imageFiles.getOrNull(i) ?: JSONObject.NULL))
+                .put("zoom", t.zoom.toDouble()).put("fillColor", t.fillColor).put("rot", t.rotationDeg.toDouble())
+                .put("file", imageFiles.getOrNull(i) ?: JSONObject.NULL))
         }
         return JSONObject().put("layout", layout).put("gapWhite", gapWhite).put("rainbow", rainbowGaps).put("tiles", arr)
     }
@@ -90,7 +93,9 @@ class Mosaic(var layout: Int) {
                 val tile = m.tiles[i]
                 tile.kind = t.optInt("kind", KIND_CAMERA)
                 tile.offX = t.optDouble("offX", 0.0).toFloat(); tile.offY = t.optDouble("offY", 0.0).toFloat()
-                tile.zoom = t.optDouble("zoom", 1.0).toFloat(); tile.fillWhite = t.optBoolean("fillWhite", false)
+                tile.zoom = t.optDouble("zoom", 1.0).toFloat()
+                tile.fillColor = if (t.has("fillColor")) t.getInt("fillColor") else (if (t.optBoolean("fillWhite", false)) 0xFFFFFFFF.toInt() else 0xFF000000.toInt())
+                tile.rotationDeg = t.optDouble("rot", 0.0).toFloat()
                 if (tile.kind == KIND_IMAGE) {
                     val f = if (t.isNull("file")) null else t.optString("file")
                     tile.bitmap = f?.let(loadBitmap)
@@ -102,5 +107,5 @@ class Mosaic(var layout: Int) {
     }
 }
 
-data class TileSnapshot(val kind: Int, val bitmap: Bitmap?, val offX: Float, val offY: Float, val zoom: Float, val fillWhite: Boolean)
+data class TileSnapshot(val kind: Int, val bitmap: Bitmap?, val offX: Float, val offY: Float, val zoom: Float, val fillColor: Int, val rotationDeg: Float)
 data class MosaicSnapshot(val layout: Int, val tiles: List<TileSnapshot>, val gapWhite: Boolean, val rainbowGaps: Boolean)

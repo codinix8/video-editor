@@ -12,8 +12,8 @@ android {
         applicationId = "de.codinix.videoeditor"
         minSdk = 26
         targetSdk = 35
-        versionCode = 41
-        versionName = "2.0-mosaic"
+        versionCode = 42
+        versionName = "2.0.1-mosaic-rotate"
         ndk { abiFilters += listOf("arm64-v8a") }
     }
 
