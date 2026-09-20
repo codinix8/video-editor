@@ -27,6 +27,10 @@ class SegmentProgressView @JvmOverloads constructor(
     private var lastArmed = false
     /** Wiedergabeposition in ms (Review-Modus) oder -1 im Aufnahmemodus. */
     private var playheadMs = -1L
+    /** Skala des Aufnahmemodus: Gesamtlimit (Balken voll = Limit erreicht). */
+    var limitMs: Long = 0L
+    /** Letzte Sekunden vor dem Limit: laufendes Segment orange. */
+    var warn: Boolean = false
 
     private val rect = RectF()
 
@@ -55,7 +59,7 @@ class SegmentProgressView @JvmOverloads constructor(
         canvas.drawRoundRect(rect, r, r, trackPaint)
 
         val total = segmentsMs.sum() + liveMs
-        val scale = (if (playheadMs >= 0) maxOf(1L, total) else maxOf(MIN_SCALE_MS, total)).toFloat()
+        val scale = (if (playheadMs >= 0) maxOf(1L, total) else if (limitMs > 0) limitMs else maxOf(MIN_SCALE_MS, total)).toFloat()
         val gap = h * 0.6f
         var x = 0f
 
@@ -69,7 +73,7 @@ class SegmentProgressView @JvmOverloads constructor(
         if (liveMs > 0) {
             val len = liveMs / scale * w
             rect.set(x, 0f, x + len, h)
-            canvas.drawRoundRect(rect, r, r, livePaint)
+            canvas.drawRoundRect(rect, r, r, if (warn) armedPaint else livePaint)
         }
         if (playheadMs >= 0 && total > 0) {
             val px = (playheadMs / scale * w).coerceIn(0f, w)

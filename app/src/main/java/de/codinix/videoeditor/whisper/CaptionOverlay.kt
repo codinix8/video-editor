@@ -38,7 +38,9 @@ class CaptionOverlay(
         if (key == lastKey) return last
         lastKey = key
         last = cache.getOrPut(key) { CaptionStyle.renderBlock(c, ms, settings, frameW, frameH) }
-        if (cache.size > 128) { cache.clear(); cache[key] = last }
+        // Speichergrenze: höchstens ~40 MB Bitmaps im Cache halten
+        var bytes = 0L; cache.values.forEach { bytes += it.byteCount }
+        if (bytes > 40L * 1024 * 1024) { cache.clear(); cache[key] = last }
         return last
     }
 

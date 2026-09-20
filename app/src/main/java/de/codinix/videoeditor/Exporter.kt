@@ -64,6 +64,16 @@ class Exporter(private val context: Context) {
 
     companion object {
         private const val TAG = "Exporter"
+        const val AUDIO_BITRATE = 192_000
+
+        /** Feste Video-Bitraten (H.264, 30 fps) je Ausgabehöhe – macht Größe vorhersagbar. */
+        fun videoBitrateFor(height: Int): Int = when {
+            height >= 2160 -> 45_000_000
+            height >= 1440 -> 24_000_000
+            height >= 1080 -> 14_000_000
+            height >= 720 -> 7_000_000
+            else -> 3_000_000
+        }
 
         /** Rendert alle Overlay-Tonspuren zusammen in eine WAV-Datei. */
         fun renderMixWav(context: Context, mixes: List<AudioMix>, totalMs: Long, out: File): Boolean {
@@ -183,7 +193,12 @@ class Exporter(private val context: Context) {
         }
         val composition = Composition.Builder(sequences).build()
 
+        val encoderFactory = androidx.media3.transformer.DefaultEncoderFactory.Builder(context)
+            .setRequestedVideoEncoderSettings(
+                androidx.media3.transformer.VideoEncoderSettings.Builder().setBitrate(videoBitrateFor(outH)).build())
+            .build()
         val t = Transformer.Builder(context)
+            .setEncoderFactory(encoderFactory)
             .addListener(object : Transformer.Listener {
                 override fun onCompleted(composition: Composition, exportResult: ExportResult) {
                     transformer = null

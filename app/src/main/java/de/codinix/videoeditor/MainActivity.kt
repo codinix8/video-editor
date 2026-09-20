@@ -279,6 +279,9 @@ class MainActivity : AppCompatActivity() {
         binding.review.saveDraftButton.setOnClickListener { saveDraft() }
         binding.review.captionsButton.setOnClickListener { showCaptionsDialog() }
         binding.review.captionsEditButton.setOnClickListener { showCaptionEditor(-1) }
+        binding.review.scrubBar.onScrubStart = { player?.pause(); reviewOverlayPlayer?.pause() }
+        binding.review.scrubBar.onScrub = { ms -> seekReviewTo(ms, play = false) }
+        binding.review.scrubBar.onScrubEnd = { ms -> seekReviewTo(ms, play = true) }
         binding.draftsButton.setOnClickListener { showDrafts() }
         binding.review.playerView.setOnClickListener { togglePlayback() }
 
@@ -391,6 +394,12 @@ class MainActivity : AppCompatActivity() {
     private fun toggleRecording() {
         val capture = videoCapture ?: return
         disarmDelete()
+        if (activeRecording == null) {
+            if (currentTotalMs() >= MAX_TOTAL_MS) {
+                Toast.makeText(this, R.string.limit_reached, Toast.LENGTH_LONG).show(); return
+            }
+            checkFreeSpace()
+        }
 
         activeRecording?.let {
             it.stop()          // Finalize-Event legt das Segment an
@@ -399,7 +408,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         val file = File(segmentDir, "seg_${System.currentTimeMillis()}.mp4")
-        val pending = capture.output.prepareRecording(this, FileOutputOptions.Builder(file).build())
+        val pending = capture.output.prepareRecording(this,
+            FileOutputOptions.Builder(file).setFileSizeLimit(3_500L * 1024 * 1024).build())
         val micGranted = PermissionChecker.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) ==
             PermissionChecker.PERMISSION_GRANTED
         if (micGranted) pending.withAudioEnabled()
@@ -413,6 +423,11 @@ class MainActivity : AppCompatActivity() {
                 }
                 is VideoRecordEvent.Status -> {
                     liveDurationMs = event.recordingStats.recordedDurationNanos / 1_000_000
+                    if (currentTotalMs() >= MAX_TOTAL_MS) {
+                        // Limit erreicht: Aufnahme stoppt von selbst
+                        activeRecording?.stop(); activeRecording = null
+                        Toast.makeText(this, R.string.limit_reached, Toast.LENGTH_LONG).show()
+                    }
                     refreshUi()
                 }
                 is VideoRecordEvent.Finalize -> onSegmentFinalized(event, file)
@@ -420,7 +435,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** Warnt, wenn der freie Speicher für die restliche mögliche Aufnahme knapp wird. */
+    private fun checkFreeSpace() {
+        try {
+            val stat = android.os.StatFs(cacheDir.absolutePath)
+            val freeMb = stat.availableBytes / (1024 * 1024)
+            val perMinMb = if (preferredQuality == Quality.UHD || (preferredQuality == null && supportedQualities.firstOrNull() == Quality.UHD)) 600 else 150
+            val remainingMin = ((MAX_TOTAL_MS - currentTotalMs()) / 60000.0).coerceAtLeast(0.5)
+            val neededMb = (perMinMb * remainingMin * 2).toLong()   // Aufnahme + Export
+            if (freeMb < neededMb) Toast.makeText(this, getString(R.string.low_space, freeMb / 1024.0), Toast.LENGTH_LONG).show()
+        } catch (_: Exception) { }
+    }
+
     private fun onSegmentFinalized(event: VideoRecordEvent.Finalize, file: File) {
+        val hitSizeLimit = event.error == VideoRecordEvent.Finalize.ERROR_FILE_SIZE_LIMIT_REACHED
         activeRecording = null
         overlayPlayer?.pause()
         main.post { persistSession() }
@@ -1384,6 +1412,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** Review an Gesamtposition [ms] setzen (Segment und Position in der Playlist berechnen). */
+    private fun seekReviewTo(ms: Long, play: Boolean) {
+        val p = player ?: return
+        var rest = ms.coerceAtLeast(0); var item = 0
+        for (seg in segments) { if (rest < seg.durationMs) break; rest -= seg.durationMs; item++ }
+        p.seekTo(item.coerceAtMost(segments.lastIndex.coerceAtLeast(0)), rest)
+        if (play) { p.play(); binding.review.playIcon.visibility = android.view.View.GONE }
+        binding.review.captionView.setTime(ms)
+    }
+
     private fun refreshCaptionUi() {
         binding.review.captionView.captions = captions
         binding.review.captionsEditButton.visibility =
@@ -1545,6 +1583,8 @@ class MainActivity : AppCompatActivity() {
         val total = segments.sumOf { it.durationMs }
         syncReviewOverlayAudio(pos, p.isPlaying)
         binding.review.reviewBar.updatePlayback(segments.map { it.durationMs }, pos, deleteArmed)
+        binding.review.scrubBar.segmentsMs = segments.map { it.durationMs }
+        binding.review.scrubBar.positionMs = pos
         binding.review.captionView.setTime(pos)
         if (!deleteArmed && !reviewWaitingForAudio) {
             val vol = overlayStore.videoOverlay()?.let { " · Overlay ${(it.volume * 100).toInt()} %" } ?: ""
@@ -1558,10 +1598,15 @@ class MainActivity : AppCompatActivity() {
         player?.pause()
         val info = VideoConcat.inspect(segments.first().file)
         val recordedHeight = if (info.rotation == 90 || info.rotation == 270) info.width else info.height
-        val options = mutableListOf<Pair<String, Int?>>(getString(R.string.export_original) to null)
+        val totalSec = segments.sumOf { it.durationMs } / 1000.0
+        val needsReencode = allAudioMixes().isNotEmpty() || captions.isNotEmpty() || kotlin.math.abs(micGain - 1f) >= 0.01f
+        fun sizeText(bytes: Double) = if (bytes >= 1e9) "≈ %.1f GB".format(Locale.GERMANY, bytes / 1e9) else "≈ %.0f MB".format(Locale.GERMANY, bytes / 1e6)
+        fun estimate(height: Int) = (Exporter.videoBitrateFor(height) + Exporter.AUDIO_BITRATE) / 8.0 * totalSec
+        val originalSize = if (needsReencode) estimate(recordedHeight) else segments.sumOf { it.file.length() }.toDouble()
+        val options = mutableListOf<Pair<String, Int?>>((getString(R.string.export_original) + "  " + sizeText(originalSize)) to null)
         listOf(2160 to "4K (2160p)", 1440 to "2K (1440p)", 1080 to "1080p", 720 to "720p", 480 to "480p")
             .filter { it.first < recordedHeight }
-            .forEach { options.add(it.second to it.first) }
+            .forEach { options.add((it.second + "  " + sizeText(estimate(it.first))) to it.first) }
 
         val pad = (20 * resources.displayMetrics.density).toInt()
         val radios = android.widget.RadioGroup(this)
@@ -1943,6 +1988,8 @@ class MainActivity : AppCompatActivity() {
             else -> getString(R.string.paused, segments.size, fmt(total))
         }
         binding.segmentBar.update(segments.map { it.durationMs }, liveDurationMs, deleteArmed)
+        binding.segmentBar.limitMs = MAX_TOTAL_MS
+        binding.segmentBar.warn = currentTotalMs() > MAX_TOTAL_MS - 30_000
 
         binding.draftsButton.visibility =
             if (segments.isEmpty() && !recording) android.view.View.VISIBLE else android.view.View.GONE
@@ -2004,6 +2051,8 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "VideoEditor"
+        /** Gesamtlänge einer Aufnahme (Produktlimit, wie TikTok-Kurzvideos). */
+        const val MAX_TOTAL_MS = 5 * 60_000L
         private val QUALITY_ORDER = listOf(Quality.UHD, Quality.FHD, Quality.HD, Quality.SD)
     }
 }

@@ -117,4 +117,6 @@
     </plurals>
     <string name="captions_edit">Bearbeiten</string>
     <string name="captions_edit_title">Untertitel bearbeiten</string>
+    <string name="limit_reached">Maximale Länge von 5 Minuten erreicht – Segmente löschen, um weiter aufzunehmen</string>
+    <string name="low_space">Wenig Speicherplatz: nur noch %1$.1f GB frei</string>
 </resources>

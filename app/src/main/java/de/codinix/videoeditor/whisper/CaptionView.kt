@@ -57,7 +57,8 @@ class CaptionView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         if (width == 0 || height == 0) return
         val key = (currentIdx.toLong() shl 20) or (CaptionStyle.cacheKey(c, timeMs, settings).toLong() and 0xFFFFF)
         val bmp = cache.getOrPut(key) { CaptionStyle.renderBlock(c, timeMs, settings, width, height) }
-        if (cache.size > 64) cache.clear()
+        var bytes = 0L; cache.values.forEach { bytes += it.byteCount }
+        if (bytes > 24L * 1024 * 1024) { cache.clear(); cache[key] = bmp }
         val pop = CaptionStyle.popScale(c, timeMs, settings)
         val cx = width * settings.cxFrac
         val cy = height * settings.cyFrac

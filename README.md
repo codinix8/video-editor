@@ -34,7 +34,8 @@ Auf dem Handy: Datei öffnen → „Aus dieser Quelle installieren" erlauben →
 | 5c | 11 Vorlagen mit Vorschaukarten, Akzentfarbe, Untertitel frei verschieb- und drehbar | ✅ Build 35 |
 | 5d | Emoji-Wörterbuch (DE/EN, ~300 Stämme, Flaggen), Schalter im CC-Dialog | ✅ Build 38 |
 | 1c | Entwürfe mit Vorschaubild | ✅ Build 39 |
-| 5e | Untertitel-Editor: Text ändern, löschen, zeitlich verschieben, Sprung zum Block; CC-Knopf rechts | in Test |
+| 5e | Untertitel-Editor: Text ändern, löschen, Anfang/Ende verschieben, Sprung zum Block; CC-Knopf rechts | ✅ Build 42 |
+| 1d | Spulleiste in der Review, 5-Minuten-Limit, Speicherplatz-Warnung, Segmentteilung bei 3,5 GB, feste Export-Bitraten mit Größenschätzung, Cache-Grenzen | in Test |
 
 ## Technik
 
