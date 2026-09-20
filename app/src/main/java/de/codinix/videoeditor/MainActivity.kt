@@ -198,6 +198,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        // Kamera-App: Bildschirm bleibt an, sonst schaltet Android bei längeren Aufnahmen ab
+        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         CrashLog.install(applicationContext)
         showCrashReportIfAny()
@@ -1613,32 +1615,17 @@ class MainActivity : AppCompatActivity() {
         options.forEachIndexed { i, (name, _) ->
             radios.addView(android.widget.RadioButton(this).apply { id = 1000 + i; text = name; isChecked = i == 0 })
         }
-        val micLabel = android.widget.TextView(this).apply {
-            text = getString(R.string.mic_volume) + ": " + getString(R.string.volume_percent, (micGain * 100).toInt())
-            setPadding(0, pad, 0, 0)
-        }
-        val micSeek = android.widget.SeekBar(this).apply {
-            max = 200; progress = (micGain * 100).toInt()
-            setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
-                override fun onProgressChanged(sb: android.widget.SeekBar, v: Int, fromUser: Boolean) {
-                    micLabel.text = getString(R.string.mic_volume) + ": " + getString(R.string.volume_percent, v)
-                    micGain = v / 100f
-                }
-                override fun onStartTrackingTouch(sb: android.widget.SeekBar) {}
-                override fun onStopTrackingTouch(sb: android.widget.SeekBar) {}
-            })
-        }
         val box = android.widget.LinearLayout(this).apply {
             orientation = android.widget.LinearLayout.VERTICAL
             setPadding(pad, pad / 2, pad, 0)
-            addView(radios); addView(micLabel); addView(micSeek)
+            addView(radios)
         }
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.export_title)
             .setView(android.widget.ScrollView(this).apply { addView(box) })
             .setPositiveButton(R.string.save) { _, _ ->
                 val idx = (radios.checkedRadioButtonId - 1000).coerceIn(0, options.lastIndex)
-                runExport(options[idx].second, micSeek.progress / 100f)
+                runExport(options[idx].second, micGain)
             }
             .setNegativeButton(R.string.cancel) { _, _ -> player?.play() }
             .setOnCancelListener { player?.play() }
@@ -1989,7 +1976,8 @@ class MainActivity : AppCompatActivity() {
         }
         binding.segmentBar.update(segments.map { it.durationMs }, liveDurationMs, deleteArmed)
         binding.segmentBar.limitMs = MAX_TOTAL_MS
-        binding.segmentBar.warn = currentTotalMs() > MAX_TOTAL_MS - 30_000
+        val remaining = MAX_TOTAL_MS - currentTotalMs()
+        binding.segmentBar.warnLevel = when { remaining <= 30_000 -> 2; remaining <= 60_000 -> 1; else -> 0 }
 
         binding.draftsButton.visibility =
             if (segments.isEmpty() && !recording) android.view.View.VISIBLE else android.view.View.GONE

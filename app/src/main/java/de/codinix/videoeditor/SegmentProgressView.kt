@@ -19,7 +19,9 @@ class SegmentProgressView @JvmOverloads constructor(
 
     private val trackPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x55FFFFFF }
     private val segmentPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.WHITE }
-    private val livePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFFF3B4E.toInt() }
+    private val livePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFF34C759.toInt() }   // grün
+    private val orangePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFFF9500.toInt() }
+    private val redPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFFF3B4E.toInt() }
     private val armedPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFFFC107.toInt() }
 
     private var segmentsMs: List<Long> = emptyList()
@@ -29,8 +31,8 @@ class SegmentProgressView @JvmOverloads constructor(
     private var playheadMs = -1L
     /** Skala des Aufnahmemodus: Gesamtlimit (Balken voll = Limit erreicht). */
     var limitMs: Long = 0L
-    /** Letzte Sekunden vor dem Limit: laufendes Segment orange. */
-    var warn: Boolean = false
+    /** 0 = normal (grün), 1 = letzte Minute (orange), 2 = letzte 30 s (rot). */
+    var warnLevel: Int = 0
 
     private val rect = RectF()
 
@@ -73,7 +75,7 @@ class SegmentProgressView @JvmOverloads constructor(
         if (liveMs > 0) {
             val len = liveMs / scale * w
             rect.set(x, 0f, x + len, h)
-            canvas.drawRoundRect(rect, r, r, if (warn) armedPaint else livePaint)
+            canvas.drawRoundRect(rect, r, r, when (warnLevel) { 2 -> redPaint; 1 -> orangePaint; else -> livePaint })
         }
         if (playheadMs >= 0 && total > 0) {
             val px = (playheadMs / scale * w).coerceIn(0f, w)
@@ -85,7 +87,7 @@ class SegmentProgressView @JvmOverloads constructor(
             segmentsMs.forEach { ms ->
                 val len = ms / scale * w
                 rect.set(sx, 0f, (sx + len - gap).coerceAtLeast(sx + 1f), h)
-                canvas.drawRoundRect(rect, r, r, livePaint)
+                canvas.drawRoundRect(rect, r, r, redPaint)
                 sx += len
             }
             canvas.restore()
