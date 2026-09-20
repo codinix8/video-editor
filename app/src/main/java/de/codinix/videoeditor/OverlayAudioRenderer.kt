@@ -179,7 +179,7 @@ object OverlayAudioRenderer {
                         pos = (pos + avail) % st.srcFrames
                     }
                     val view = ByteBuffer.wrap(st.buf).order(ByteOrder.LITTLE_ENDIAN)
-                    val g = seg.gain
+                    val g = Loudness.gain(seg.gain)
                     val base = st.srcPos - startFrame   // Bruchteil-Offset relativ zum gelesenen Block
                     for (i in 0 until n) {
                         val si = ((base + i * st.step).toInt()).coerceIn(0, need - 1)
@@ -265,7 +265,7 @@ object OverlayAudioRenderer {
                         srcPos += avail
                     }
                     inView.clear()
-                    val g = seg.gain
+                    val g = Loudness.gain(seg.gain)
                     for (i in 0 until n * ch) {
                         val v = (inView.getShort(i * 2) * g).toInt().coerceIn(-32768, 32767)
                         outBuf.putShort(v.toShort())

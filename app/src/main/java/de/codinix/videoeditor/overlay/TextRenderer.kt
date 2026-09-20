@@ -74,9 +74,16 @@ object TextRenderer {
         return bmp
     }
 
-    /** Auswahlfarben für den Dialog (ohne Alpha, 2 Reihen à 6). */
+    /** Gemeinsame Palette für Text- und Untertitel-Dialog: Grautöne, dann Farbkreis (hell/kräftig). */
     val COLORS = intArrayOf(
-        Color.WHITE, 0xFFBDBDBD.toInt(), 0xFF616161.toInt(), Color.BLACK, 0xFFFFD60A.toInt(), 0xFFFF9500.toInt(),
-        0xFFFF3B4E.toInt(), 0xFFFF6BCB.toInt(), 0xFFAF52DE.toInt(), 0xFF0A84FF.toInt(), 0xFF32ADE6.toInt(), 0xFF34C759.toInt()
+        0xFFFFFFFF.toInt(), 0xFFD9D9D9.toInt(), 0xFF9E9E9E.toInt(), 0xFF555555.toInt(), 0xFF000000.toInt(),
+        0xFFFFF176.toInt(), 0xFFFFD60A.toInt(),
+        0xFFFFB74D.toInt(), 0xFFFF9500.toInt(),
+        0xFFFF8A80.toInt(), 0xFFFF3B4E.toInt(), 0xFFC62828.toInt(),
+        0xFFFF6BCB.toInt(), 0xFFE91E63.toInt(),
+        0xFFCE93D8.toInt(), 0xFFAF52DE.toInt(),
+        0xFF82B1FF.toInt(), 0xFF0A84FF.toInt(), 0xFF1A237E.toInt(),
+        0xFF80DEEA.toInt(), 0xFF32ADE6.toInt(),
+        0xFFA5D6A7.toInt(), 0xFF34C759.toInt(), 0xFF1B5E20.toInt()
     )
 }

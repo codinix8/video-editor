@@ -58,10 +58,7 @@ object CaptionStyle {
         "Neon", "Highlight-Box", "Schatten", "Zweifarbig", "Schreibmaschine", "Groß & klein"
     )
 
-    val ACCENT_COLORS = intArrayOf(
-        0xFFFFD60A.toInt(), 0xFFFF9500.toInt(), 0xFFFF3B4E.toInt(), 0xFFFF6BCB.toInt(),
-        0xFFAF52DE.toInt(), 0xFF0A84FF.toInt(), 0xFF32ADE6.toInt(), 0xFF34C759.toInt()
-    )
+    val ACCENT_COLORS: IntArray get() = de.codinix.videoeditor.overlay.TextRenderer.COLORS
 
     private const val TEXT_FRAC = 0.042f
     private const val WIDTH_FRAC = 0.86f

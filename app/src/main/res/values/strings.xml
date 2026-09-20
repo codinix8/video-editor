@@ -55,7 +55,7 @@
     <string name="export_running_mix">Video wird gerendert (mit Overlay-Ton)… %1$d %%</string>
     <string name="ok">OK</string>
     <string name="mic_volume_title">Mikrofon-Lautstärke</string>
-    <string name="mic_hint">Wirkt beim Export auf deine Aufnahme. 100 % = unverändert.</string>
+    <string name="mic_hint">Wirkt beim Export auf deine Aufnahme. 100 % = unverändert, 50 % klingt halb so laut.</string>
     <string name="crash_title">Die App ist zuvor abgestürzt</string>
     <string name="crash_msg">Bitte den Bericht kopieren und an Claude schicken.</string>
     <string name="copy">Alles kopieren</string>
@@ -106,4 +106,8 @@
     <string name="captions_prefetch">Sprachmodell wird im Hintergrund geladen (einmalig, ca. %1$d MB)</string>
     <string name="captions_prefetch_done">Sprachmodell bereit</string>
     <string name="captions_hint">Untertitel: Ziehen zum Verschieben, zwei Finger für Größe und Drehung</string>
+    <string name="tile_volume_title">Lautstärke im Kachel-Modus</string>
+    <string name="tile_bg_volume">Hintergrundvideo</string>
+    <string name="tile_mic_volume">Meine Stimme (Mikrofon)</string>
+    <string name="tile_volume_hint">Prozent = empfundene Lautstärke: 50 % klingt halb so laut, 0 % ist still.</string>
 </resources>

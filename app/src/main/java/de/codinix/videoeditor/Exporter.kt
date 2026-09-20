@@ -228,7 +228,7 @@ class Exporter(private val context: Context) {
      */
     private fun gainProcessors(gain: Float): List<androidx.media3.common.audio.AudioProcessor> {
         if (isUnity(gain)) return emptyList()
-        val g = gain.coerceIn(0f, 2f)
+        val g = Loudness.gain(gain.coerceIn(0f, 2f))
         val proc = androidx.media3.common.audio.ChannelMixingAudioProcessor()
         for (ch in 1..2) {
             proc.putChannelMixingMatrix(

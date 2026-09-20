@@ -210,8 +210,12 @@ class MainActivity : AppCompatActivity() {
             pickVideo.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
         }
         binding.soundButton.setOnClickListener {
-            ((overlayStore.selected() as? VideoOverlay) ?: overlayStore.videoOverlay()?.takeIf { it.isBackground })
-                ?.let { showVolumeDialog(it) }
+            val bg = overlayStore.videoOverlay()?.takeIf { it.isBackground }
+            val sel = overlayStore.selected() as? VideoOverlay
+            when {
+                sel != null && !sel.isBackground -> showVolumeDialog(sel)
+                bg != null -> showTileVolumeDialog(bg)
+            }
         }
         binding.micButton.setOnClickListener { showMicDialog() }
         binding.addTextButton.setOnClickListener { showTextDialog(null) }
@@ -538,38 +542,35 @@ class MainActivity : AppCompatActivity() {
         }
 
         /** Zwei Reihen Farbfelder; onPick liefert die RGB-Farbe. */
+        fun hideKeyboard() {
+            getSystemService(android.view.inputmethod.InputMethodManager::class.java)
+                .hideSoftInputFromWindow(input.windowToken, 0)
+        }
         fun swatchGrid(selected: () -> Int, onPick: (Int) -> Unit): android.view.View {
-            val col = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.VERTICAL }
+            val row = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.HORIZONTAL }
             val views = mutableListOf<Pair<Int, android.view.View>>()
             fun refresh() { views.forEach { (c, v) -> v.scaleX = if (c == (selected() or 0xFF000000.toInt())) 1.2f else 1f; v.scaleY = v.scaleX } }
-            TextRenderer.COLORS.toList().chunked(6).forEach { rowColors ->
-                val row = android.widget.LinearLayout(this).apply {
-                    orientation = android.widget.LinearLayout.HORIZONTAL
-                    gravity = android.view.Gravity.CENTER
-                }
-                rowColors.forEach { c ->
-                    val size = (34 * dp).toInt()
-                    val v = android.view.View(this).apply {
-                        layoutParams = android.widget.LinearLayout.LayoutParams(size, size).apply { setMargins(pad / 3, pad / 4, pad / 3, pad / 4) }
-                        background = android.graphics.drawable.GradientDrawable().apply {
-                            shape = android.graphics.drawable.GradientDrawable.OVAL
-                            setColor(c); setStroke(3, 0xFF888888.toInt())
-                        }
-                        setOnClickListener { onPick(c); refresh(); refreshPreview() }
+            TextRenderer.COLORS.forEach { c ->
+                val size = (34 * dp).toInt()
+                val v = android.view.View(this).apply {
+                    layoutParams = android.widget.LinearLayout.LayoutParams(size, size).apply { setMargins(pad / 3, pad / 4, pad / 3, pad / 4) }
+                    background = android.graphics.drawable.GradientDrawable().apply {
+                        shape = android.graphics.drawable.GradientDrawable.OVAL
+                        setColor(c); setStroke(3, 0xFF888888.toInt())
                     }
-                    views.add(c to v); row.addView(v)
+                    setOnClickListener { hideKeyboard(); onPick(c); refresh(); refreshPreview() }
                 }
-                col.addView(row)
+                views.add(c to v); row.addView(v)
             }
             refresh()
-            return col
+            return android.widget.HorizontalScrollView(this).apply { addView(row); isHorizontalScrollBarEnabled = false }
         }
 
         fun slider(initial: Int, onChange: (Int) -> Unit) = android.widget.SeekBar(this).apply {
             max = 100; progress = initial
             setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(sb: android.widget.SeekBar, v: Int, fromUser: Boolean) { onChange(v); refreshPreview() }
-                override fun onStartTrackingTouch(sb: android.widget.SeekBar) {}
+                override fun onStartTrackingTouch(sb: android.widget.SeekBar) { hideKeyboard() }
                 override fun onStopTrackingTouch(sb: android.widget.SeekBar) {}
             })
         }
@@ -605,8 +606,12 @@ class MainActivity : AppCompatActivity() {
             addView(bgSection)
         }
         refreshPreview()
+        input.imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_DONE or android.view.inputmethod.EditorInfo.IME_FLAG_NO_ENTER_ACTION
+        input.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE) { hideKeyboard(); true } else false
+        }
 
-        MaterialAlertDialogBuilder(this)
+        val textDialog = MaterialAlertDialogBuilder(this)
             .setTitle(R.string.text_dialog_title)
             .setView(android.widget.ScrollView(this).apply { addView(box) })
             .setPositiveButton(R.string.ok) { _, _ ->
@@ -626,7 +631,10 @@ class MainActivity : AppCompatActivity() {
                 persistSession()
             }
             .setNegativeButton(R.string.cancel, null)
-            .show()
+            .create()
+        // Bei offener Tastatur schrumpft der Dialog und bleibt scrollbar, statt nach oben zu rutschen
+        textDialog.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        textDialog.show()
         input.requestFocus()
     }
 
@@ -791,7 +799,7 @@ class MainActivity : AppCompatActivity() {
 
     /** Vorschau-Lautstärke: nur wenn bewusst eingeschaltet, sonst nähme das Mikrofon den Lautsprecher auf. */
     private fun previewVolume(o: VideoOverlay): Float =
-        if (previewSoundOn) o.volume.coerceIn(0f, 1f) else 0f
+        if (previewSoundOn) Loudness.gain(o.volume).coerceIn(0f, 1f) else 0f
 
     private fun showMicDialog() {
         showSliderDialog(R.string.mic_volume_title, R.string.mic_hint, (micGain * 100).toInt()) { v ->
@@ -833,6 +841,52 @@ class MainActivity : AppCompatActivity() {
             .setTitle(titleRes)
             .setView(box)
             .setPositiveButton(R.string.ok, null)
+            .show()
+    }
+
+    /** Kachel-Modus: Hintergrundvideo und Mikrofon in einem Dialog, klar beschriftet. */
+    private fun showTileVolumeDialog(bg: VideoOverlay) {
+        val pad = (16 * resources.displayMetrics.density).toInt()
+        fun section(title: String, initial: Int, onChange: (Int) -> Unit): List<android.view.View> {
+            val label = android.widget.TextView(this).apply {
+                textSize = 15f; text = "$title: " + getString(R.string.volume_percent, initial); setPadding(0, pad / 2, 0, 0)
+            }
+            val seek = android.widget.SeekBar(this).apply {
+                max = 200; progress = initial
+                setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
+                    override fun onProgressChanged(sb: android.widget.SeekBar, v: Int, fromUser: Boolean) {
+                        label.text = "$title: " + getString(R.string.volume_percent, v); onChange(v)
+                    }
+                    override fun onStartTrackingTouch(sb: android.widget.SeekBar) {}
+                    override fun onStopTrackingTouch(sb: android.widget.SeekBar) {}
+                })
+            }
+            return listOf(label, seek)
+        }
+        val box = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(pad, pad / 2, pad, 0)
+            section(getString(R.string.tile_bg_volume), (bg.volume * 100).toInt()) { v ->
+                bg.volume = v / 100f
+                if (activeRecording != null) bg.addEvent(currentTotalMs(), bg.volume, bg.playing)
+                else if (bg.events.isNotEmpty()) {
+                    val end = currentTotalMs()
+                    if (bg.events.last().atMs >= end) bg.events[bg.events.lastIndex] = bg.events.last().copy(gain = bg.volume)
+                    else bg.addEvent(end, bg.volume, bg.playing)
+                }
+                overlayPlayer?.volume = previewVolume(bg)
+                updateOverlayButtons(overlayStore.selected())
+            }.forEach { addView(it) }
+            section(getString(R.string.tile_mic_volume), (micGain * 100).toInt()) { v -> micGain = v / 100f }.forEach { addView(it) }
+            addView(android.widget.TextView(this@MainActivity).apply {
+                textSize = 12f; text = getString(R.string.tile_volume_hint); setPadding(0, pad / 2, 0, 0)
+            })
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.tile_volume_title)
+            .setView(box)
+            .setPositiveButton(R.string.ok) { _, _ -> persistSession() }
+            .setOnDismissListener { persistSession() }
             .show()
     }
 
@@ -1024,7 +1078,7 @@ class MainActivity : AppCompatActivity() {
         val cardScroll = android.widget.HorizontalScrollView(this).apply { addView(cardRow); isHorizontalScrollBarEnabled = false }
 
         // Akzentfarbe
-        val accentRow = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.HORIZONTAL; gravity = android.view.Gravity.CENTER; setPadding(0, pad / 2, 0, 0) }
+        val accentRow = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.HORIZONTAL; setPadding(0, pad / 2, 0, 0) }
         de.codinix.videoeditor.whisper.CaptionStyle.ACCENT_COLORS.forEach { c ->
             val size = (30 * dp).toInt()
             accentRow.addView(android.view.View(this).apply {
@@ -1064,7 +1118,7 @@ class MainActivity : AppCompatActivity() {
             setPadding(pad, pad / 2, pad, 0)
             addView(android.widget.TextView(this@MainActivity).apply { text = getString(R.string.captions_template) })
             addView(cardScroll)
-            addView(accentRow)
+            addView(android.widget.HorizontalScrollView(this@MainActivity).apply { addView(accentRow); isHorizontalScrollBarEnabled = false })
             addView(android.widget.TextView(this@MainActivity).apply { text = getString(R.string.captions_language); setPadding(0, pad / 2, 0, 0) })
             addView(spinner)
             addView(android.widget.TextView(this@MainActivity).apply { text = getString(R.string.captions_model); setPadding(0, pad / 2, 0, 0) })
@@ -1175,7 +1229,7 @@ class MainActivity : AppCompatActivity() {
         p.playWhenReady = true
         binding.review.playerView.player = p
         // Mikrofon-Regler in der Review hörbar machen (Anhebung über 100 % kann ein Player nicht)
-        p.volume = micGain.coerceIn(0f, 1f)
+        p.volume = Loudness.gain(micGain).coerceIn(0f, 1f)
         player = p
         buildReviewOverlayPlayer()
     }
