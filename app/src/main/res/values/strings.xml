@@ -128,5 +128,5 @@
     <string name="tile_media">Bild in diese Kachel</string>
     <string name="tile_camera">Kachel zurück auf Kamera</string>
     <string name="tile_fill">Füllfarbe dieser Kachel (schwarz/weiß)</string>
-    <string name="mosaic_tip">Tippe eine Kachel an und nutze die Knöpfe oben links.\nZiehen verschiebt · zwei Finger zoomen und drehen.</string>
+    <string name="mosaic_tip">Kachel antippen, dann die Knöpfe oben links nutzen</string>
 </resources>

@@ -784,16 +784,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     /** Kurzer, halbtransparenter Hinweis oben im Bild, verschwindet nach [ms]. */
-    private fun showTip(text: String, ms: Long = 5000) {
-        val tip = binding.tipText
-        tip.text = text
-        tip.alpha = 0f; tip.visibility = android.view.View.VISIBLE
-        tip.animate().alpha(1f).setDuration(250).start()
+    private fun showTip(text: String, ms: Long = 5000, gesture: Boolean = true) {
+        val card = binding.tipCard
+        binding.tipText.text = text
+        binding.tipGesture.visibility = if (gesture) android.view.View.VISIBLE else android.view.View.GONE
+        card.alpha = 0f; card.visibility = android.view.View.VISIBLE
+        card.animate().alpha(1f).setDuration(250).start()
         main.removeCallbacks(hideTip)
         main.postDelayed(hideTip, ms)
     }
     private val hideTip = Runnable {
-        binding.tipText.animate().alpha(0f).setDuration(400).withEndAction { binding.tipText.visibility = android.view.View.GONE }.start()
+        binding.tipCard.animate().alpha(0f).setDuration(400).withEndAction { binding.tipCard.visibility = android.view.View.GONE }.start()
     }
 
     private fun setTileImage(uri: Uri) {
