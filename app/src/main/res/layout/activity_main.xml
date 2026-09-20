@@ -290,7 +290,7 @@
         android:layout_marginStart="12dp"
         android:layout_marginTop="294dp"
         android:background="@drawable/bg_round_button"
-        android:contentDescription="@string/mute"
+        android:contentDescription="@string/overlay_volume_title"
         android:src="@drawable/ic_overlay_volume"
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
