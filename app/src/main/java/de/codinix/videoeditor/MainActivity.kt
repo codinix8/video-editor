@@ -1188,7 +1188,7 @@ class MainActivity : AppCompatActivity() {
         val working = captions.toMutableList()
         var focusView: android.view.View? = null
 
-        fun timeLabel(c: de.codinix.videoeditor.whisper.Caption) = "%d:%02d.%d".format(c.startMs / 60000, (c.startMs / 1000) % 60, (c.startMs % 1000) / 100)
+        fun t(ms: Long) = "%d:%02d.%d".format(ms / 60000, (ms / 1000) % 60, (ms % 1000) / 100)
 
         fun rebuild() {
             list.removeAllViews()
@@ -1197,25 +1197,32 @@ class MainActivity : AppCompatActivity() {
                     orientation = android.widget.LinearLayout.VERTICAL
                     setPadding(0, pad / 2, 0, pad / 2)
                 }
-                val head = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.HORIZONTAL; gravity = android.view.Gravity.CENTER_VERTICAL }
-                val time = android.widget.TextView(this).apply {
-                    text = timeLabel(c); textSize = 13f; alpha = 0.8f
-                    setPadding(0, 0, pad, 0)
-                    setOnClickListener { player?.let { p ->
-                        // Position innerhalb der Segment-Playlist finden
-                        var rest = c.startMs; var item = 0
-                        for (seg in segments) { if (rest < seg.durationMs) break; rest -= seg.durationMs; item++ }
-                        p.seekTo(item.coerceAtMost(segments.lastIndex), rest); p.play()
-                    } }
-                }
                 fun smallBtn(label: String, onClick: () -> Unit) = android.widget.Button(this, null, android.R.attr.borderlessButtonStyle).apply {
-                    text = label; textSize = 14f; minWidth = 0; minimumWidth = 0
-                    setPadding(pad, 0, pad, 0)
+                    text = label; textSize = 13f; minWidth = 0; minimumWidth = 0; minHeight = 0; minimumHeight = 0
+                    setPadding(pad, pad / 2, pad, pad / 2)
                     setOnClickListener { onClick() }
                 }
-                head.addView(time, android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-                head.addView(smallBtn("◀ 0,25 s") { shiftStart(working, idx, -250); rebuild() })
-                head.addView(smallBtn("0,25 s ▶") { shiftStart(working, idx, +250); rebuild() })
+                fun seekTo(ms: Long) { player?.let { p ->
+                    var rest = ms; var item = 0
+                    for (seg in segments) { if (rest < seg.durationMs) break; rest -= seg.durationMs; item++ }
+                    p.seekTo(item.coerceAtMost(segments.lastIndex), rest); p.play()
+                } }
+                // Zeile 1: Anfang ◀ ▶ | Ende ◀ ▶ | 🗑
+                val head = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.HORIZONTAL; gravity = android.view.Gravity.CENTER_VERTICAL }
+                val startLabel = android.widget.TextView(this).apply {
+                    text = "Anfang ${t(c.startMs)}"; textSize = 12f; alpha = 0.85f
+                    setOnClickListener { seekTo(c.startMs) }
+                }
+                val endLabel = android.widget.TextView(this).apply {
+                    text = "Ende ${t(c.endMs)}"; textSize = 12f; alpha = 0.85f
+                    setOnClickListener { seekTo((c.endMs - 1500).coerceAtLeast(c.startMs)) }
+                }
+                head.addView(startLabel, android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+                head.addView(smallBtn("◀") { shiftStart(working, idx, -250); rebuild() })
+                head.addView(smallBtn("▶") { shiftStart(working, idx, +250); rebuild() })
+                head.addView(endLabel, android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+                head.addView(smallBtn("◀") { shiftEnd(working, idx, -250); rebuild() })
+                head.addView(smallBtn("▶") { shiftEnd(working, idx, +250); rebuild() })
                 head.addView(smallBtn("🗑") { working.removeAt(idx); rebuild() })
                 val edit = android.widget.EditText(this).apply {
                     setText(c.text)
@@ -1294,6 +1301,36 @@ class MainActivity : AppCompatActivity() {
             parts.mapIndexed { i, w -> de.codinix.videoeditor.whisper.Word(c.startMs + i * per, c.startMs + (i + 1) * per - 20, w) }
         }
         return c.copy(text = parts.joinToString(" "), words = words)
+    }
+
+    /**
+     * Nur das ENDE verschieben, Anfang bleibt. Nach hinten: der nächste Block beginnt später,
+     * damit nichts überlappt. Nach vorn: mindestens 0,3 s Anzeige bleiben.
+     */
+    private fun shiftEnd(list: MutableList<de.codinix.videoeditor.whisper.Caption>, idx: Int, deltaMs: Long) {
+        val c = list[idx]
+        var newEnd = c.endMs + deltaMs
+        if (newEnd < c.startMs + 300) newEnd = c.startMs + 300
+        if (newEnd == c.endMs) return
+        val oldDur = (c.endMs - c.startMs).coerceAtLeast(1)
+        val newDur = newEnd - c.startMs
+        val words = c.words.map { w ->
+            val rs = (w.startMs - c.startMs).toDouble() / oldDur
+            val re = (w.endMs - c.startMs).toDouble() / oldDur
+            w.copy(startMs = c.startMs + (rs * newDur).toLong(), endMs = c.startMs + (re * newDur).toLong())
+        }
+        list[idx] = c.copy(endMs = newEnd, words = words)
+        if (deltaMs > 0 && idx + 1 < list.size) {
+            val next = list[idx + 1]
+            if (next.startMs < newEnd + 40) {
+                val nextStart = minOf(newEnd + 40, next.endMs - 300)
+                val nd = (next.endMs - nextStart).coerceAtLeast(1); val od = (next.endMs - next.startMs).coerceAtLeast(1)
+                list[idx + 1] = next.copy(startMs = nextStart, words = next.words.map { w ->
+                    val rs = (w.startMs - next.startMs).toDouble() / od; val re = (w.endMs - next.startMs).toDouble() / od
+                    w.copy(startMs = nextStart + (rs * nd).toLong(), endMs = nextStart + (re * nd).toLong())
+                })
+            }
+        }
     }
 
     private fun startTranscription(language: String?) {
