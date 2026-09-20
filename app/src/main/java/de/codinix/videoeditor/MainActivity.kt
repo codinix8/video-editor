@@ -1659,13 +1659,44 @@ class MainActivity : AppCompatActivity() {
         if (list.isEmpty()) {
             Toast.makeText(this, R.string.no_drafts, Toast.LENGTH_SHORT).show(); return
         }
-        val fmtDate = java.text.SimpleDateFormat("dd.MM. HH:mm", Locale.GERMANY)
-        val labels = list.map {
-            getString(R.string.draft_item, fmtDate.format(it.createdAt), it.segmentCount, fmt(it.durationMs))
-        }.toTypedArray()
+        val fmtDate = java.text.SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.GERMANY)
+        val dp = resources.displayMetrics.density
+        val pad = (12 * dp).toInt()
+        val adapter = object : android.widget.BaseAdapter() {
+            override fun getCount() = list.size
+            override fun getItem(i: Int) = list[i]
+            override fun getItemId(i: Int) = i.toLong()
+            override fun getView(i: Int, convert: android.view.View?, parent: android.view.ViewGroup): android.view.View {
+                val info = list[i]
+                val row = (convert as? android.widget.LinearLayout) ?: android.widget.LinearLayout(this@MainActivity).apply {
+                    orientation = android.widget.LinearLayout.HORIZONTAL
+                    gravity = android.view.Gravity.CENTER_VERTICAL
+                    setPadding(pad, pad / 2, pad, pad / 2)
+                    addView(android.widget.ImageView(this@MainActivity).apply {
+                        scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+                        layoutParams = android.widget.LinearLayout.LayoutParams((54 * dp).toInt(), (96 * dp).toInt())
+                        background = android.graphics.drawable.GradientDrawable().apply { cornerRadius = 8 * dp; setColor(0xFF333340.toInt()) }
+                        clipToOutline = true
+                    })
+                    addView(android.widget.LinearLayout(this@MainActivity).apply {
+                        orientation = android.widget.LinearLayout.VERTICAL
+                        setPadding(pad, 0, 0, 0)
+                        addView(android.widget.TextView(this@MainActivity).apply { textSize = 16f })
+                        addView(android.widget.TextView(this@MainActivity).apply { textSize = 13f; alpha = 0.7f })
+                    })
+                }
+                val img = row.getChildAt(0) as android.widget.ImageView
+                val texts = row.getChildAt(1) as android.widget.LinearLayout
+                if (info.thumb.exists()) img.setImageBitmap(BitmapFactory.decodeFile(info.thumb.absolutePath)) else img.setImageDrawable(null)
+                (texts.getChildAt(0) as android.widget.TextView).text = fmtDate.format(info.createdAt)
+                (texts.getChildAt(1) as android.widget.TextView).text =
+                    resources.getQuantityString(R.plurals.segments, info.segmentCount, info.segmentCount) + " · " + fmt(info.durationMs)
+                return row
+            }
+        }
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.drafts)
-            .setItems(labels) { _, which -> askDraftAction(list[which]) }
+            .setAdapter(adapter) { _, which -> askDraftAction(list[which]) }
             .setNegativeButton(R.string.cancel, null)
             .show()
     }

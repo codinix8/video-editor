@@ -12,8 +12,8 @@ android {
         applicationId = "de.codinix.videoeditor"
         minSdk = 26
         targetSdk = 35
-        versionCode = 34
-        versionName = "1.7-emojis"
+        versionCode = 35
+        versionName = "1.7.1-thumbs"
         ndk { abiFilters += listOf("arm64-v8a") }
     }
 

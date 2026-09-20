@@ -26,7 +26,29 @@ class DraftStore(context: Context) {
         val createdAt: Long,
         val segmentCount: Int,
         val durationMs: Long
-    )
+    ) {
+        val thumb: File get() = File(dir, "thumb.jpg")
+    }
+
+    /**
+     * Vorschaubild aus der Mitte des ersten Segments (bereits fertig gerendert, also inklusive
+     * Overlays), auf ca. 360 px Höhe verkleinert, als JPEG im Entwurfsordner.
+     */
+    private fun writeThumbnail(dir: File, firstSegment: File, durationMs: Long) {
+        try {
+            val mmr = android.media.MediaMetadataRetriever()
+            mmr.setDataSource(firstSegment.absolutePath)
+            val atUs = (durationMs.coerceAtLeast(1) * 1000 / 2)
+            val frame = mmr.getFrameAtTime(atUs, android.media.MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+            mmr.release()
+            if (frame == null) return
+            val scale = 360f / frame.height.coerceAtLeast(1)
+            val small = if (scale < 1f) Bitmap.createScaledBitmap(frame, (frame.width * scale).toInt().coerceAtLeast(1), 360, true) else frame
+            File(dir, "thumb.jpg").outputStream().use { small.compress(Bitmap.CompressFormat.JPEG, 82, it) }
+        } catch (e: Exception) {
+            android.util.Log.w("DraftStore", "Vorschaubild fehlgeschlagen", e)
+        }
+    }
 
     /** Tonspur eines bereits entfernten Video-Overlays. */
     data class AudioTrack(val file: File, val startOffsetMs: Long, val endOffsetMs: Long, val volume: Float, val durationMs: Long,
@@ -140,6 +162,7 @@ class DraftStore(context: Context) {
             .put("captions", de.codinix.videoeditor.whisper.Caption.listToJson(captions))
             .put("captionSettings", captionSettings.toJson())
         File(dir, "meta.json").writeText(meta.toString())
+        segments.firstOrNull()?.let { writeThumbnail(dir, File(dir, "seg_0.mp4"), it.second) }
 
         val dur = segments.sumOf { it.second }
         return Info(id, dir, id.toLong(), segments.size, dur)
@@ -199,6 +222,10 @@ class DraftStore(context: Context) {
             .put("captions", session.optJSONArray("captions") ?: JSONArray())
             .put("captionSettings", session.optJSONObject("captionSettings") ?: JSONObject())
         File(dir, "meta.json").writeText(meta.toString())
+        if (segArr.length() > 0) {
+            val first = segArr.getJSONObject(0)
+            writeThumbnail(dir, File(dir, first.getString("file")), first.getLong("durationMs"))
+        }
         var dur = 0L
         for (i in 0 until segArr.length()) dur += segArr.getJSONObject(i).getLong("durationMs")
         return Info(id, dir, id.toLong(), segArr.length(), dur)
