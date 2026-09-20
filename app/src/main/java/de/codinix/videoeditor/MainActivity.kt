@@ -146,6 +146,16 @@ class MainActivity : AppCompatActivity() {
     private var transcribing = false
     private val whisperExecutor = java.util.concurrent.Executors.newSingleThreadExecutor()
     private var captionSettings = de.codinix.videoeditor.whisper.CaptionSettings()
+
+    /** Zuletzt benutzte Untertitel-Einstellungen als Standard für neue Videos. */
+    private fun loadDefaultCaptionSettings(): de.codinix.videoeditor.whisper.CaptionSettings {
+        val json = prefs.getString("captions_settings", null) ?: return de.codinix.videoeditor.whisper.CaptionSettings()
+        return try { de.codinix.videoeditor.whisper.CaptionSettings.fromJson(org.json.JSONObject(json)) }
+        catch (e: Exception) { de.codinix.videoeditor.whisper.CaptionSettings() }
+    }
+    private fun saveDefaultCaptionSettings() {
+        prefs.edit().putString("captions_settings", captionSettings.toJson().toString()).apply()
+    }
     private val captionModel: de.codinix.videoeditor.whisper.ModelManager.Model
         get() = de.codinix.videoeditor.whisper.ModelManager.Model.values()
             .getOrElse(prefs.getInt("captions_model", 1)) { de.codinix.videoeditor.whisper.ModelManager.Model.BASE }
@@ -193,6 +203,7 @@ class MainActivity : AppCompatActivity() {
         showCrashReportIfAny()
         recoverSessionIfAny()
         prefetchCaptionModel()
+        captionSettings = loadDefaultCaptionSettings()
         cacheDir.listFiles()?.filter { it.name.startsWith("overlay_video_") || it.name.startsWith("export_") }
             ?.forEach { it.delete() }
 
@@ -727,6 +738,8 @@ class MainActivity : AppCompatActivity() {
                 main.post {
                     // Einfügezeitpunkt = fertige Segmente + bereits laufende Aufnahme
                     val total = segments.sumOf { it.durationMs } + liveDurationMs
+                    // Ton im Hintergrund vorab dekodieren, damit Review und Export nicht warten müssen
+                    bgExecutor.execute { try { OverlayAudioRenderer.decode(dest, cacheDir) } catch (e: Exception) { Log.w(TAG, "Vorab-Dekodierung", e) } }
                     val overlay = VideoOverlay(Overlay.newId(), dest, startOffsetMs = total)
                     overlay.isBackground = asBackground
                     overlay.addEvent(total, 1f, true)
@@ -1066,7 +1079,7 @@ class MainActivity : AppCompatActivity() {
                     setOnClickListener {
                         captionSettings.template = idx
                         binding.review.captionView.settings = captionSettings
-                        prefs.edit().putInt("captions_template", idx).apply()
+                        saveDefaultCaptionSettings()
                         persistSession()
                         renderCards()
                     }
@@ -1090,7 +1103,7 @@ class MainActivity : AppCompatActivity() {
                 setOnClickListener {
                     captionSettings.accentColor = c
                     binding.review.captionView.settings = captionSettings
-                    prefs.edit().putInt("captions_accent", c).apply()
+                    saveDefaultCaptionSettings()
                     persistSession(); renderCards()
                     for (i in 0 until accentRow.childCount) {
                         (accentRow.getChildAt(i).background as android.graphics.drawable.GradientDrawable)
@@ -1208,11 +1221,9 @@ class MainActivity : AppCompatActivity() {
         binding.previewView.visibility = android.view.View.INVISIBLE
         binding.gestureView.visibility = android.view.View.GONE
         binding.review.playIcon.visibility = android.view.View.GONE
-        captionSettings.template = prefs.getInt("captions_template", captionSettings.template)
-        captionSettings.accentColor = prefs.getInt("captions_accent", captionSettings.accentColor)
         binding.review.captionView.settings = captionSettings
         binding.review.captionView.captions = captions
-        binding.review.captionView.onSettingsChanged = { persistSession() }
+        binding.review.captionView.onSettingsChanged = { persistSession(); saveDefaultCaptionSettings() }
         buildPlayer()
         if (prefs.getBoolean("captions_auto", false) && captions.isEmpty() && !transcribing) {
             main.postDelayed({ if (inReview) startTranscription(prefs.getString("captions_lang", null)) }, 300)
@@ -1439,6 +1450,7 @@ class MainActivity : AppCompatActivity() {
                 audioHistory.forEach { it.file.delete() }
                 audioHistory.clear()
                 captions.clear()
+                captionSettings = loadDefaultCaptionSettings()
                 clearOverlays()
                 setControlsEnabled(true)
                 if (inReview) exitReview() else refreshUi()
@@ -1483,6 +1495,7 @@ class MainActivity : AppCompatActivity() {
                 audioHistory.forEach { it.file.delete() }
                 audioHistory.clear()
                 captions.clear()
+                captionSettings = loadDefaultCaptionSettings()
                 clearSession()
                 clearOverlays()
                 refreshUi()

@@ -12,8 +12,8 @@ android {
         applicationId = "de.codinix.videoeditor"
         minSdk = 26
         targetSdk = 35
-        versionCode = 32
-        versionName = "1.6.1-loudness"
+        versionCode = 33
+        versionName = "1.6.2-defaults"
         ndk { abiFilters += listOf("arm64-v8a") }
     }
 
