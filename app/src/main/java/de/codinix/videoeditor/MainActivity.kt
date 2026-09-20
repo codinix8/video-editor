@@ -748,7 +748,7 @@ class MainActivity : AppCompatActivity() {
             .setView(android.widget.ScrollView(this).apply { addView(box) })
             .setPositiveButton(R.string.ok) { _, _ ->
                 val layout = (radios.checkedRadioButtonId - 2000).coerceIn(0, de.codinix.videoeditor.overlay.Mosaic.LAYOUT_NAMES.lastIndex)
-                mosaic.setLayout(layout)
+                mosaic.changeLayout(layout)
                 mosaic.gapWhite = gapWhite.isChecked
                 mosaic.rainbowGaps = rainbow.isChecked
                 if (!mosaicActive) mosaic.selected = -1

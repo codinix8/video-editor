@@ -31,7 +31,7 @@ class Mosaic(var layout: Int) {
     var rainbowGaps = false
     var selected: Int = -1
 
-    fun setLayout(newLayout: Int) {
+    fun changeLayout(newLayout: Int) {
         val old = tiles.toList()
         layout = newLayout
         tiles.clear()
