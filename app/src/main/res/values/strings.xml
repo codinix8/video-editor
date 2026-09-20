@@ -129,4 +129,6 @@
     <string name="tile_camera">Kachel zurück auf Kamera</string>
     <string name="tile_fill">Füllfarbe dieser Kachel (schwarz/weiß)</string>
     <string name="mosaic_tip">Kachel antippen, dann die Knöpfe oben links nutzen</string>
+    <string name="tile_video">Video in diese Kachel</string>
+    <string name="tile_video_downscale">Video wird auf 1080p umgerechnet… %1$d %%</string>
 </resources>

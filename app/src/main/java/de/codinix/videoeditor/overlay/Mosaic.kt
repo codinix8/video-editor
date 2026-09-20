@@ -23,10 +23,16 @@ class Mosaic(var layout: Int) {
         var zoom: Float = 1f,
         var fillColor: Int = 0xFF000000.toInt(),
         /** Drehung des Inhalts im Uhrzeigersinn. */
-        var rotationDeg: Float = 0f
+        var rotationDeg: Float = 0f,
+        /** Bei KIND_VIDEO: das Video mit Protokoll, Lautstärke, Datei. */
+        var video: VideoOverlay? = null
     ) {
-        fun snapshot() = TileSnapshot(kind, bitmap, offX, offY, zoom, fillColor, rotationDeg)
+        fun snapshot() = TileSnapshot(kind, bitmap, offX, offY, zoom, fillColor, rotationDeg,
+            video?.id ?: 0L, video?.videoAspect ?: 1f)
     }
+
+    /** Alle Kachelvideos in Kachelreihenfolge. */
+    fun videos(): List<VideoOverlay> = tiles.mapNotNull { if (it.kind == KIND_VIDEO) it.video else null }
 
     val tiles: MutableList<Tile> = MutableList(tileCount(layout)) { Tile() }
     var gapWhite = false
@@ -43,12 +49,20 @@ class Mosaic(var layout: Int) {
 
     fun snapshot() = MosaicSnapshot(layout, tiles.map { it.snapshot() }, gapWhite, rainbowGaps)
 
-    fun toJson(imageFiles: List<String?>): JSONObject {
+    /** [files]: Dateiname/-pfad pro Kachel (Bild-PNG oder Video-MP4), null = keins. */
+    fun toJson(files: List<String?>): JSONObject {
         val arr = JSONArray()
         tiles.forEachIndexed { i, t ->
-            arr.put(JSONObject().put("kind", t.kind).put("offX", t.offX.toDouble()).put("offY", t.offY.toDouble())
+            val o = JSONObject().put("kind", t.kind).put("offX", t.offX.toDouble()).put("offY", t.offY.toDouble())
                 .put("zoom", t.zoom.toDouble()).put("fillColor", t.fillColor).put("rot", t.rotationDeg.toDouble())
-                .put("file", imageFiles.getOrNull(i) ?: JSONObject.NULL))
+                .put("file", files.getOrNull(i) ?: JSONObject.NULL)
+            t.video?.let { v ->
+                o.put("volume", v.volume.toDouble()).put("startOffsetMs", v.startOffsetMs).put("durationMs", v.durationMs)
+                    .put("videoAspect", v.videoAspect.toDouble())
+                val ev = JSONArray(); v.events.forEach { ev.put(JSONObject().put("atMs", it.atMs).put("gain", it.gain.toDouble()).put("playing", it.playing)) }
+                o.put("events", ev)
+            }
+            arr.put(o)
         }
         return JSONObject().put("layout", layout).put("gapWhite", gapWhite).put("rainbow", rainbowGaps).put("tiles", arr)
     }
@@ -83,7 +97,8 @@ class Mosaic(var layout: Int) {
             else -> emptyList()
         }
 
-        fun fromJson(o: JSONObject, loadBitmap: (String) -> Bitmap?): Mosaic {
+        /** [resolveVideo] liefert die (verschobene/kopierte) Videodatei zum gespeicherten Namen. */
+        fun fromJson(o: JSONObject, loadBitmap: (String) -> Bitmap?, resolveVideo: (String) -> java.io.File? = { null }): Mosaic {
             val m = Mosaic(o.optInt("layout", LAYOUT_NONE))
             m.gapWhite = o.optBoolean("gapWhite", false)
             m.rainbowGaps = o.optBoolean("rainbow", false)
@@ -100,6 +115,18 @@ class Mosaic(var layout: Int) {
                     val f = if (t.isNull("file")) null else t.optString("file")
                     tile.bitmap = f?.let(loadBitmap)
                     if (tile.bitmap == null) tile.kind = KIND_CAMERA
+                } else if (tile.kind == KIND_VIDEO) {
+                    val f = if (t.isNull("file")) null else t.optString("file")
+                    val file = f?.let(resolveVideo)
+                    if (file == null) { tile.kind = KIND_CAMERA } else {
+                        val v = VideoOverlay(Overlay.newId(), file, volume = t.optDouble("volume", 1.0).toFloat(),
+                            startOffsetMs = t.optLong("startOffsetMs", 0L))
+                        v.durationMs = t.optLong("durationMs", 0L)
+                        v.videoAspect = t.optDouble("videoAspect", 1.0).toFloat()
+                        val ev = t.optJSONArray("events") ?: JSONArray()
+                        for (k in 0 until ev.length()) { val e = ev.getJSONObject(k); v.events.add(VideoOverlay.Event(e.getLong("atMs"), e.getDouble("gain").toFloat(), e.optBoolean("playing", true))) }
+                        tile.video = v
+                    }
                 }
             }
             return m
@@ -107,5 +134,6 @@ class Mosaic(var layout: Int) {
     }
 }
 
-data class TileSnapshot(val kind: Int, val bitmap: Bitmap?, val offX: Float, val offY: Float, val zoom: Float, val fillColor: Int, val rotationDeg: Float)
+data class TileSnapshot(val kind: Int, val bitmap: Bitmap?, val offX: Float, val offY: Float, val zoom: Float, val fillColor: Int, val rotationDeg: Float,
+                        val videoId: Long = 0L, val videoAspect: Float = 1f)
 data class MosaicSnapshot(val layout: Int, val tiles: List<TileSnapshot>, val gapWhite: Boolean, val rainbowGaps: Boolean)

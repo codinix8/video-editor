@@ -119,7 +119,9 @@ class MainActivity : AppCompatActivity() {
         val current = overlayStore.videoOverlay()?.takeIf { it.soundOn && it.durationMs > 0 }
             ?.let { listOf(Exporter.AudioMix(it.file, it.startOffsetMs, it.durationMs, it.volume, timeline = it.rendererTimeline())) }
             ?: emptyList()
-        return past + current
+        val tiles = tileVideos().filter { it.soundOn && it.durationMs > 0 }
+            .map { Exporter.AudioMix(it.file, it.startOffsetMs, it.durationMs, it.volume, timeline = it.rendererTimeline()) }
+        return past + current + tiles
     }
 
     /** Nach dem Löschen von Segmenten: Spuren hinter dem neuen Ende verwerfen, Rest kürzen. */
@@ -131,10 +133,11 @@ class MainActivity : AppCompatActivity() {
             else if (e.endOffsetMs > totalMs) it.set(e.copy(endOffsetMs = totalMs, timeline = e.timeline.filter { t -> t.fromMs <= totalMs }))
         }
         overlayStore.videoOverlay()?.trimEvents(totalMs)
+        tileVideos().forEach { it.trimEvents(totalMs) }
     }
 
     private fun isFileReferenced(f: File): Boolean =
-        audioHistory.any { it.file == f } || (overlayStore.videoOverlay()?.file == f)
+        audioHistory.any { it.file == f } || (overlayStore.videoOverlay()?.file == f) || tileVideos().any { it.file == f }
 
     // ---- Freistellung ----
     private val greenscreenActive: Boolean get() = overlayStore.videoOverlay()?.isBackground == true
@@ -145,6 +148,14 @@ class MainActivity : AppCompatActivity() {
     private val pickTileImage = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) setTileImage(uri)
     }
+    private val pickTileVideo = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) setTileVideo(uri)
+    }
+    /** Player der Kachelvideos, per Video-ID. */
+    private val tilePlayers = HashMap<Long, ExoPlayer>()
+    private fun tileVideos() = if (mosaicActive) mosaic.videos() else emptyList()
+    /** Alle Videos, die während der Aufnahme laufen (Overlay/Hintergrund + Kacheln). */
+    private fun anyLiveVideo(): Boolean = overlayStore.videoOverlay() != null || tileVideos().isNotEmpty()
 
     // ---- Untertitel ----
     private val captions = mutableListOf<de.codinix.videoeditor.whisper.Caption>()
@@ -246,12 +257,19 @@ class MainActivity : AppCompatActivity() {
         }
         binding.tileCameraButton.setOnClickListener {
             mosaic.tiles.getOrNull(mosaic.selected)?.let { t ->
+                releaseTileVideo(t)
                 t.kind = de.codinix.videoeditor.overlay.Mosaic.KIND_CAMERA; t.bitmap = null; t.zoom = 1f; t.offX = 0f; t.offY = 0f
                 publishMosaic(); updateTileButtons()
             }
         }
         binding.tileFillButton.setOnClickListener {
             mosaic.tiles.getOrNull(mosaic.selected)?.let { t -> showTileFillDialog(t) }
+        }
+        binding.tileVideoButton.setOnClickListener {
+            if (mosaic.selected >= 0) pickTileVideo.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
+        }
+        binding.tileSoundButton.setOnClickListener {
+            mosaic.tiles.getOrNull(mosaic.selected)?.video?.let { showVolumeDialog(it) }
         }
         binding.gestureView.mosaic = mosaic
         binding.gestureView.onMosaicChanged = { publishMosaic() }
@@ -281,6 +299,7 @@ class MainActivity : AppCompatActivity() {
             binding.previewSoundButton.setBackgroundResource(
                 if (previewSoundOn) R.drawable.bg_round_button_accent else R.drawable.bg_round_button)
             overlayStore.videoOverlay()?.let { o -> overlayPlayer?.volume = previewVolume(o) }
+            tileVideos().forEach { v -> tilePlayers[v.id]?.volume = previewVolume(v) }
             Toast.makeText(this, if (previewSoundOn) R.string.preview_sound_on else R.string.preview_sound_off,
                 Toast.LENGTH_LONG).show()
         }
@@ -444,6 +463,7 @@ class MainActivity : AppCompatActivity() {
                 is VideoRecordEvent.Start -> {
                     liveDurationMs = 0
                     if (overlayStore.videoOverlay()?.playing != false) overlayPlayer?.play()
+                    setTileVideosPlaying(true)
                     refreshUi()
                 }
                 is VideoRecordEvent.Status -> {
@@ -476,6 +496,7 @@ class MainActivity : AppCompatActivity() {
         val hitSizeLimit = event.error == VideoRecordEvent.Finalize.ERROR_FILE_SIZE_LIMIT_REACHED
         activeRecording = null
         overlayPlayer?.pause()
+        setTileVideosPlaying(false)
         main.post { persistSession() }
         val durationMs = event.recordingStats.recordedDurationNanos / 1_000_000
         // Auch bei manchen "Fehlern" (z.B. App in den Hintergrund) ist die Datei brauchbar.
@@ -498,7 +519,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun onDeletePressed() {
         if (activeRecording != null) {
-            if (overlayStore.videoOverlay() != null) toggleOverlayPlayPause()
+            if (anyLiveVideo()) toggleOverlayPlayPause()
             return
         }
         if (segments.isEmpty()) {
@@ -717,6 +738,9 @@ class MainActivity : AppCompatActivity() {
         binding.tileMediaButton.visibility = v
         binding.tileCameraButton.visibility = v
         binding.tileFillButton.visibility = v
+        binding.tileVideoButton.visibility = v
+        binding.tileSoundButton.visibility = if (show && mosaic.tiles[mosaic.selected].kind == de.codinix.videoeditor.overlay.Mosaic.KIND_VIDEO)
+            android.view.View.VISIBLE else android.view.View.GONE
         if (show) {
             val t = mosaic.tiles[mosaic.selected]
             binding.tileCameraButton.alpha = if (t.kind == de.codinix.videoeditor.overlay.Mosaic.KIND_CAMERA) 0.4f else 1f
@@ -803,6 +827,7 @@ class MainActivity : AppCompatActivity() {
         try {
             val bmp = loadBitmap(uri, 1920)
             val t = mosaic.tiles[idx]
+            releaseTileVideo(t)
             t.kind = de.codinix.videoeditor.overlay.Mosaic.KIND_IMAGE; t.bitmap = bmp; t.zoom = 1f; t.offX = 0f; t.offY = 0f
             publishMosaic(); updateTileButtons()
         } catch (e: Exception) {
@@ -811,8 +836,120 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** Video in die ausgewählte Kachel: kopieren, ggf. auf 1080p rechnen, Player anlegen. */
+    private fun setTileVideo(uri: Uri) {
+        val idx = mosaic.selected
+        if (idx < 0) return
+        val dialog: AlertDialog = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.tile_video)
+            .setMessage(R.string.video_loading)
+            .setCancelable(false)
+            .show()
+        bgExecutor.execute {
+            try {
+                val raw = File(overlayVideoDir, "tile_${System.currentTimeMillis()}_raw.mp4")
+                contentResolver.openInputStream(uri)?.use { input -> raw.outputStream().use { input.copyTo(it) } }
+                    ?: throw IllegalStateException("Video konnte nicht gelesen werden")
+                main.post {
+                    if (Downscaler.needsDownscale(raw, 1080)) {
+                        val dest = File(overlayVideoDir, "tile_${System.currentTimeMillis()}.mp4")
+                        dialog.setMessage(getString(R.string.tile_video_downscale, 0))
+                        Downscaler.run(this, raw, dest, 1080,
+                            onProgress = { p -> dialog.setMessage(getString(R.string.tile_video_downscale, p)) },
+                            onDone = { out ->
+                                raw.delete()
+                                dialog.dismiss()
+                                if (out != null) installTileVideo(idx, out)
+                                else Toast.makeText(this, getString(R.string.error, "Umrechnung"), Toast.LENGTH_LONG).show()
+                            })
+                    } else {
+                        dialog.dismiss()
+                        installTileVideo(idx, raw)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Kachelvideo laden fehlgeschlagen", e)
+                main.post { dialog.dismiss(); Toast.makeText(this, getString(R.string.error, e.message ?: "Video"), Toast.LENGTH_LONG).show() }
+            }
+        }
+    }
+
+    private fun installTileVideo(idx: Int, file: File) {
+        val t = mosaic.tiles.getOrNull(idx) ?: return
+        releaseTileVideo(t)
+        bgExecutor.execute { try { OverlayAudioRenderer.decode(file, cacheDir) } catch (e: Exception) { Log.w(TAG, "Vorab-Dekodierung", e) } }
+        val total = currentTotalMs()
+        val v = VideoOverlay(Overlay.newId(), file, startOffsetMs = total)
+        v.addEvent(total, 1f, true)
+        t.kind = de.codinix.videoeditor.overlay.Mosaic.KIND_VIDEO; t.bitmap = null; t.video = v
+        t.zoom = 1f; t.offX = 0f; t.offY = 0f
+        attachTileVideo(v)
+        publishMosaic(); updateTileButtons()
+        persistSession()
+    }
+
+    /** Player + GL-Ebene für ein Kachelvideo. */
+    private fun attachTileVideo(v: VideoOverlay) {
+        tilePlayers.remove(v.id)?.release()
+        val p = newLeanPlayer()
+        p.setMediaItem(MediaItem.fromUri(Uri.fromFile(v.file)))
+        p.repeatMode = Player.REPEAT_MODE_ALL
+        p.volume = previewVolume(v)
+        p.addListener(object : Player.Listener {
+            override fun onVideoSizeChanged(videoSize: VideoSize) {
+                if (videoSize.width > 0 && videoSize.height > 0) {
+                    val rot = videoSize.unappliedRotationDegrees
+                    val w = if (rot == 90 || rot == 270) videoSize.height else videoSize.width
+                    val h = if (rot == 90 || rot == 270) videoSize.width else videoSize.height
+                    v.videoAspect = h.toFloat() / w.toFloat()
+                    publishMosaic()
+                }
+            }
+            override fun onPlaybackStateChanged(state: Int) {
+                if (state == Player.STATE_READY && v.durationMs <= 0) {
+                    v.durationMs = p.duration.coerceAtLeast(0)
+                    p.seekTo(v.sourcePositionAt(currentTotalMs()))
+                }
+            }
+        })
+        p.prepare()
+        p.playWhenReady = activeRecording != null && v.playing
+        tilePlayers[v.id] = p
+        compositor.createVideoLayer(v.id) { surface -> main.post { tilePlayers[v.id]?.setVideoSurface(surface) } }
+    }
+
+    /** Kachelvideo entfernen: Ton bis hierher in die Historie, Player und Ebene freigeben. */
+    private fun releaseTileVideo(t: de.codinix.videoeditor.overlay.Mosaic.Tile) {
+        val v = t.video ?: return
+        val end = currentTotalMs()
+        if (v.soundOn && v.durationMs > 0 && end > v.startOffsetMs) {
+            audioHistory.add(AudioTrackEntry(v.file, v.startOffsetMs, end, v.volume, v.durationMs, v.rendererTimeline()))
+        }
+        tilePlayers.remove(v.id)?.release()
+        compositor.releaseVideoLayer(v.id)
+        if (!isFileReferenced(v.file)) v.file.delete()
+        t.video = null
+    }
+
+    private fun setTileVideosPlaying(playing: Boolean) {
+        tileVideos().forEach { v -> tilePlayers[v.id]?.let { if (playing && v.playing) it.play() else it.pause() } }
+    }
+
+    private fun syncTilePlayers() {
+        val total = currentTotalMs()
+        tileVideos().forEach { v -> tilePlayers[v.id]?.let { if (it.playbackState == Player.STATE_IDLE) it.prepare(); it.seekTo(v.sourcePositionAt(total)) } }
+    }
+
     private fun resetMosaic() {
+        tilePlayers.values.forEach { it.release() }; tilePlayers.clear()
+        mosaic.tiles.forEach { t -> t.video?.let { compositor.releaseVideoLayer(it.id) } }
         mosaic = de.codinix.videoeditor.overlay.Mosaic(de.codinix.videoeditor.overlay.Mosaic.LAYOUT_NONE)
+        binding.tileVideoButton.setOnClickListener {
+            if (mosaic.selected >= 0) pickTileVideo.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
+        }
+        binding.tileSoundButton.setOnClickListener {
+            mosaic.tiles.getOrNull(mosaic.selected)?.video?.let { showVolumeDialog(it) }
+        }
         binding.gestureView.mosaic = mosaic
         compositor.mosaic = null
         updateTileButtons()
@@ -1097,6 +1234,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     label.text = getString(R.string.volume_percent, value)
                     overlayPlayer?.volume = previewVolume(o)
+                    tilePlayers[o.id]?.volume = previewVolume(o)
                     updateOverlayButtons(o)
                 }
                 override fun onStartTrackingTouch(sb: android.widget.SeekBar) {}
@@ -1143,11 +1281,12 @@ class MainActivity : AppCompatActivity() {
 
     /** Play/Pause des Overlay-Videos während der Aufnahme – als Protokolleintrag. */
     private fun toggleOverlayPlayPause() {
-        val o = overlayStore.videoOverlay() ?: return
         val now = currentTotalMs()
-        val playing = !o.playing
-        o.addEvent(now, o.volume, playing)
-        if (playing) overlayPlayer?.play() else overlayPlayer?.pause()
+        val o = overlayStore.videoOverlay()
+        val current = o?.playing ?: tileVideos().firstOrNull()?.playing ?: return
+        val playing = !current
+        o?.let { it.addEvent(now, it.volume, playing); if (playing) overlayPlayer?.play() else overlayPlayer?.pause() }
+        tileVideos().forEach { v -> v.addEvent(now, v.volume, playing); tilePlayers[v.id]?.let { if (playing) it.play() else it.pause() } }
         refreshUi()
     }
 
@@ -1581,6 +1720,7 @@ class MainActivity : AppCompatActivity() {
         inReview = true
         cameraProvider?.unbindAll()          // Kamera freigeben, spart Akku und Decoder
         overlayPlayer?.stop()                // Puffer des Vorschau-Overlay-Players freigeben
+        tilePlayers.values.forEach { it.stop() }
         binding.review.root.visibility = android.view.View.VISIBLE
         binding.previewView.visibility = android.view.View.INVISIBLE
         binding.gestureView.visibility = android.view.View.GONE
@@ -1701,6 +1841,7 @@ class MainActivity : AppCompatActivity() {
         bindCamera()
         // Vorschau-Overlay-Player wieder vorbereiten (in der Review gestoppt)
         overlayPlayer?.let { if (it.playbackState == Player.STATE_IDLE) { it.prepare(); syncOverlayPlayer() } }
+        syncTilePlayers()
         refreshUi()
     }
 
@@ -1909,7 +2050,7 @@ class MainActivity : AppCompatActivity() {
                     .put("events", eventsJson(t.timeline.map { VideoOverlay.Event(it.fromMs, it.gain, it.playing) })))
             }
             val mosaicJson = if (mosaicActive) mosaic.toJson(mosaic.tiles.mapIndexed { i, t ->
-                t.bitmap?.let { b ->
+                t.video?.file?.absolutePath ?: t.bitmap?.let { b ->
                     val png = File(sessionImgDir, "tile_${i}_${System.identityHashCode(b)}.png")
                     if (!png.exists()) png.outputStream().use { b.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
                     png.absolutePath
@@ -2081,7 +2222,13 @@ class MainActivity : AppCompatActivity() {
             captions.clear(); captions.addAll(loaded.captions)
             captionSettings = loaded.captionSettings
             mosaic = loaded.mosaic ?: de.codinix.videoeditor.overlay.Mosaic(de.codinix.videoeditor.overlay.Mosaic.LAYOUT_NONE)
-            binding.gestureView.mosaic = mosaic
+            binding.tileVideoButton.setOnClickListener {
+            if (mosaic.selected >= 0) pickTileVideo.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
+        }
+        binding.tileSoundButton.setOnClickListener {
+            mosaic.tiles.getOrNull(mosaic.selected)?.video?.let { showVolumeDialog(it) }
+        }
+        binding.gestureView.mosaic = mosaic
             publishMosaic(); updateTileButtons()
             audioHistory.clear()
             loaded.audioTracks.forEach { audioHistory.add(AudioTrackEntry(it.file, it.startOffsetMs, it.endOffsetMs, it.volume, it.durationMs,
@@ -2142,10 +2289,11 @@ class MainActivity : AppCompatActivity() {
         }
         // Während der Aufnahme wird die Löschtaste zum Play/Pause-Knopf fürs Overlay-Video
         val vo = overlayStore.videoOverlay()
-        if (recording && vo != null) {
+        val anyVideoPlaying = vo?.playing ?: tileVideos().firstOrNull()?.playing
+        if (recording && anyVideoPlaying != null) {
             binding.deleteButton.alpha = 1f
-            binding.deleteButton.setImageResource(if (vo.playing) R.drawable.ic_pause else R.drawable.ic_play_small)
-            binding.deleteButton.contentDescription = getString(if (vo.playing) R.string.overlay_pause else R.string.overlay_play)
+            binding.deleteButton.setImageResource(if (anyVideoPlaying) R.drawable.ic_pause else R.drawable.ic_play_small)
+            binding.deleteButton.contentDescription = getString(if (anyVideoPlaying) R.string.overlay_pause else R.string.overlay_play)
         } else {
             binding.deleteButton.setImageResource(R.drawable.ic_backspace)
             binding.deleteButton.contentDescription = getString(R.string.delete_last)
@@ -2172,6 +2320,8 @@ class MainActivity : AppCompatActivity() {
         activeRecording = null
         player?.pause()
         reviewOverlayPlayer?.pause()
+        overlayPlayer?.pause()
+        tilePlayers.values.forEach { it.pause() }
     }
 
     override fun onStart() {
@@ -2186,6 +2336,7 @@ class MainActivity : AppCompatActivity() {
         reviewOverlayPlayer?.release(); reviewOverlayPlayer = null
         exporter?.release()
         overlayPlayer?.release(); overlayPlayer = null
+        tilePlayers.values.forEach { it.release() }; tilePlayers.clear()
         compositor.release()
         whisperExecutor.shutdown()
         bgExecutor.shutdown()

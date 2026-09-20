@@ -49,6 +49,7 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
     // ---- Mosaik ----
     @Volatile var mosaic: de.codinix.videoeditor.overlay.MosaicSnapshot? = null
     private var imageTileProgram = 0
+    private var videoTileProgram = 0
     private var lineProgram = 0
     private val mosaicTextures = HashMap<Int, Pair<android.graphics.Bitmap, Int>>()
 
@@ -111,6 +112,7 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
             overlayProgram = GlUtil.createProgram(VERTEX_OVERLAY, FRAGMENT_OVERLAY)
             tileProgram = GlUtil.createProgram(VERTEX_TILE, FRAGMENT_TILE)
             imageTileProgram = GlUtil.createProgram(VERTEX_TILE, FRAGMENT_TILE_IMAGE)
+            videoTileProgram = GlUtil.createProgram(VERTEX_TILE, FRAGMENT_TILE_VIDEO)
             lineProgram = GlUtil.createProgram(VERTEX_TILE, FRAGMENT_LINE)
             cameraTexId = GlUtil.createExternalTexture()
         } catch (e: Exception) {
@@ -344,6 +346,7 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
             // Zuschnitt: Inhalt formatfüllend × Zoom, verschoben
             val contentAspect = when (t.kind) {
                 de.codinix.videoeditor.overlay.Mosaic.KIND_IMAGE -> t.bitmap?.let { it.height.toFloat() / it.width } ?: 1f
+                de.codinix.videoeditor.overlay.Mosaic.KIND_VIDEO -> t.videoAspect
                 else -> 1f / dispAspect
             }
             var cropW = 1f; var cropH = 1f
@@ -355,7 +358,11 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
             val fc = t.fillColor
             val fill = floatArrayOf(((fc shr 16) and 0xFF) / 255f, ((fc shr 8) and 0xFF) / 255f, (fc and 0xFF) / 255f, 1f)
 
-            val program = if (t.kind == de.codinix.videoeditor.overlay.Mosaic.KIND_IMAGE) imageTileProgram else tileProgram
+            val program = when (t.kind) {
+                de.codinix.videoeditor.overlay.Mosaic.KIND_IMAGE -> imageTileProgram
+                de.codinix.videoeditor.overlay.Mosaic.KIND_VIDEO -> videoTileProgram
+                else -> tileProgram
+            }
             GLES20.glUseProgram(program)
             val aPos = GLES20.glGetAttribLocation(program, "aPosition")
             GLES20.glEnableVertexAttribArray(aPos)
@@ -370,6 +377,17 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
                 val tex = mosaicTextures[i]?.second ?: return@forEachIndexed
                 GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
                 GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, tex)
+                GLES20.glUniform1i(GLES20.glGetUniformLocation(program, "sTexture"), 0)
+            } else if (t.kind == de.codinix.videoeditor.overlay.Mosaic.KIND_VIDEO) {
+                val layer = videoLayers[t.videoId]
+                if (layer == null || !layer.hasFrame) {
+                    // Noch kein Bild: Kachel bleibt in der Grundfarbe
+                    GLES20.glDisableVertexAttribArray(aPos)
+                    return@forEachIndexed
+                }
+                GLES20.glUniformMatrix4fv(GLES20.glGetUniformLocation(program, "uTexMatrix"), 1, false, layer.matrix, 0)
+                GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
+                GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, layer.texId)
                 GLES20.glUniform1i(GLES20.glGetUniformLocation(program, "sTexture"), 0)
             } else {
                 GLES20.glUniformMatrix4fv(GLES20.glGetUniformLocation(program, "uPre"), 1, false, tmp, 0)
@@ -745,6 +763,30 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
                 vec2 disp = uCrop.xy + vec2(local01.x, 1.0 - local01.y) * uCrop.zw;
                 if (disp.x < 0.0 || disp.x > 1.0 || disp.y < 0.0 || disp.y > 1.0) { gl_FragColor = uFill; return; }
                 vec4 c = texture2D(sTexture, disp);
+                gl_FragColor = vec4(c.rgb, 1.0);
+            }
+        """
+        /** Video in einer Mosaik-Kachel (externe Textur mit SurfaceTexture-Matrix). */
+        private const val FRAGMENT_TILE_VIDEO = """
+            #extension GL_OES_EGL_image_external : require
+            precision mediump float;
+            varying vec2 vLocal;
+            uniform samplerExternalOES sTexture;
+            uniform mat4 uTexMatrix;
+            uniform vec2 uHalfQuad;
+            uniform vec2 uHalfTile;
+            uniform vec4 uCrop;
+            uniform vec4 uFill;
+            uniform float uRot;
+            void main() {
+                vec2 p = vLocal * uHalfQuad;
+                float cr = cos(uRot), sr = sin(uRot);
+                vec2 pr = vec2(p.x * cr - p.y * sr, p.x * sr + p.y * cr);
+                vec2 local01 = (pr / uHalfTile + 1.0) * 0.5;
+                vec2 disp = uCrop.xy + vec2(local01.x, 1.0 - local01.y) * uCrop.zw;
+                if (disp.x < 0.0 || disp.x > 1.0 || disp.y < 0.0 || disp.y > 1.0) { gl_FragColor = uFill; return; }
+                vec2 tc = (uTexMatrix * vec4(disp.x, 1.0 - disp.y, 0.0, 1.0)).xy;
+                vec4 c = texture2D(sTexture, tc);
                 gl_FragColor = vec4(c.rgb, 1.0);
             }
         """

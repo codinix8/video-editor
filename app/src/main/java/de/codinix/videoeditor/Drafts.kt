@@ -165,7 +165,11 @@ class DraftStore(context: Context) {
             .put("captionSettings", captionSettings.toJson())
         if (mosaic != null) {
             val files = mosaic.tiles.mapIndexed { i, t ->
-                t.bitmap?.let { b ->
+                t.video?.let { v ->
+                    val dest = File(dir, "tile_$i.mp4")
+                    if (!v.file.renameTo(dest)) { v.file.copyTo(dest, overwrite = true); v.file.delete() }
+                    dest.name
+                } ?: t.bitmap?.let { b ->
                     val png = File(dir, "tile_$i.png")
                     png.outputStream().use { b.compress(Bitmap.CompressFormat.PNG, 100, it) }
                     png.name
@@ -239,8 +243,12 @@ class DraftStore(context: Context) {
                 val t = tiles.getJSONObject(i)
                 if (!t.isNull("file")) {
                     val src = File(t.getString("file"))
-                    if (src.exists()) { val dest = File(dir, "tile_$i.png"); src.copyTo(dest, overwrite = true); t.put("file", dest.name) }
-                    else t.put("file", JSONObject.NULL)
+                    val ext = if (t.optInt("kind", 0) == de.codinix.videoeditor.overlay.Mosaic.KIND_VIDEO) "mp4" else "png"
+                    if (src.exists()) {
+                        val dest = File(dir, "tile_$i.$ext")
+                        if (!src.renameTo(dest)) src.copyTo(dest, overwrite = true)
+                        t.put("file", dest.name)
+                    } else t.put("file", JSONObject.NULL)
                 }
             }
             meta.put("mosaic", mj)
@@ -313,7 +321,17 @@ class DraftStore(context: Context) {
                 t.getDouble("volume").toFloat(), t.getLong("durationMs"), eventsFromJson(t.optJSONArray("events"))))
         }
         val mosaic = j.optJSONObject("mosaic")?.let { mj ->
-            de.codinix.videoeditor.overlay.Mosaic.fromJson(mj) { name -> BitmapFactory.decodeFile(File(info.dir, name).absolutePath) }
+            de.codinix.videoeditor.overlay.Mosaic.fromJson(mj,
+                loadBitmap = { name -> BitmapFactory.decodeFile(File(info.dir, name).absolutePath) },
+                resolveVideo = { name ->
+                    val src = File(info.dir, name)
+                    if (!src.exists()) null else {
+                        val dest = File(targetDir.parentFile ?: targetDir, "overlay_videos/tile_${System.currentTimeMillis()}_${name}")
+                        dest.parentFile?.mkdirs()
+                        if (!src.renameTo(dest)) src.copyTo(dest, overwrite = true)
+                        dest
+                    }
+                })
         }
         val loaded = Loaded(segments, overlays, j.getInt("lensFacing"), quality, tracks,
             de.codinix.videoeditor.whisper.Caption.listFromJson(j.optJSONArray("captions")),

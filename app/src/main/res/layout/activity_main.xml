@@ -271,6 +271,32 @@
         app:layout_constraintTop_toBottomOf="@id/statusText" />
 
     <ImageButton
+        android:id="@+id/tileVideoButton"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="240dp"
+        android:background="@drawable/bg_round_button"
+        android:contentDescription="@string/tile_video"
+        android:src="@drawable/ic_add_video"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/statusText" />
+
+    <ImageButton
+        android:id="@+id/tileSoundButton"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="294dp"
+        android:background="@drawable/bg_round_button"
+        android:contentDescription="@string/mute"
+        android:src="@drawable/ic_overlay_volume"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/statusText" />
+
+    <ImageButton
         android:id="@+id/editTextButton"
         android:layout_width="44dp"
         android:layout_height="44dp"
