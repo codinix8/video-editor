@@ -110,4 +110,5 @@
     <string name="tile_bg_volume">Hintergrundvideo</string>
     <string name="tile_mic_volume">Meine Stimme (Mikrofon)</string>
     <string name="tile_volume_hint">Prozent = empfundene Lautstärke: 50 % klingt halb so laut, 0 % ist still.</string>
+    <string name="captions_emojis">Emojis einblenden (z. B. Iran 🇮🇷, Explosion 💥)</string>
 </resources>

@@ -24,14 +24,17 @@ data class CaptionSettings(
     var scale: Float = 1f,
     /** Drehung im Uhrzeigersinn. */
     var rotationDeg: Float = 0f,
-    var accentColor: Int = 0xFFFFD60A.toInt()
+    var accentColor: Int = 0xFFFFD60A.toInt(),
+    /** Emojis aus dem Wörterbuch hinter passende Wörter setzen. */
+    var emojis: Boolean = false
 ) {
     fun toJson() = JSONObject().put("template", template).put("cx", cxFrac.toDouble()).put("cy", cyFrac.toDouble())
-        .put("scale", scale.toDouble()).put("rot", rotationDeg.toDouble()).put("accent", accentColor)
+        .put("scale", scale.toDouble()).put("rot", rotationDeg.toDouble()).put("accent", accentColor).put("emojis", emojis)
     companion object {
         fun fromJson(o: JSONObject?): CaptionSettings = if (o == null) CaptionSettings() else CaptionSettings(
             o.optInt("template", 0), o.optDouble("cx", 0.5).toFloat(), o.optDouble("cy", 0.8).toFloat(),
-            o.optDouble("scale", 1.0).toFloat(), o.optDouble("rot", 0.0).toFloat(), o.optInt("accent", 0xFFFFD60A.toInt()))
+            o.optDouble("scale", 1.0).toFloat(), o.optDouble("rot", 0.0).toFloat(), o.optInt("accent", 0xFFFFD60A.toInt()),
+            o.optBoolean("emojis", false))
     }
 }
 
@@ -106,7 +109,15 @@ object CaptionStyle {
 
     private fun usedWidth(l: StaticLayout): Float { var w = 0f; for (i in 0 until l.lineCount) w = maxOf(w, l.getLineWidth(i)); return w }
 
-    fun renderBlock(c: Caption, timeMs: Long, s: CaptionSettings, frameW: Int, frameH: Int): Bitmap {
+    /** Wörter mit Emoji-Anhang (wenn eingeschaltet), Zeiten bleiben. */
+    fun decorate(c: Caption, s: CaptionSettings): Caption {
+        if (!s.emojis) return c
+        val words = c.words.map { w -> EmojiDict.forWord(w.text)?.let { e -> w.copy(text = w.text + " " + e) } ?: w }
+        return c.copy(words = words, text = words.joinToString(" ") { it.text })
+    }
+
+    fun renderBlock(c0: Caption, timeMs: Long, s: CaptionSettings, frameW: Int, frameH: Int): Bitmap {
+        val c = decorate(c0, s)
         val base = frameH * TEXT_FRAC * s.scale
         val maxWidth = (frameW * WIDTH_FRAC).toInt()
         val active = activeWordIndex(c, timeMs)
@@ -247,7 +258,7 @@ object CaptionStyle {
         val words = listOf("Dein", "Text", "sieht", "so", "aus")
         val ws = words.mapIndexed { i, w -> Word(i * 400L, i * 400L + 380, w) }
         val c = Caption(0, 2000, words.joinToString(" "), ws)
-        val s = CaptionSettings(template = template, accentColor = accent, scale = 1f)
+        val s = CaptionSettings(template = template, accentColor = accent, scale = 1f, emojis = false)
         return renderBlock(c, 1100, s, frameW, frameH)   // Zeitpunkt: drittes Wort aktiv
     }
 }

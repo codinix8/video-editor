@@ -31,7 +31,8 @@ Auf dem Handy: Datei öffnen → „Aus dieser Quelle installieren" erlauben →
 | 4 | Farbfilter | offen |
 | 5a | Untertitel: Whisper on-device, Sprache wählbar, automatisch in Review optional, Einbrennen beim Export | ✅ Build 33 |
 | 5b | Base als Standard (Tiny/Small wählbar), Modell-Vorabladen beim Start, 5 Vorlagen, verschieb-/skalierbar | ✅ Build 34 |
-| 5c | 11 Vorlagen mit Vorschaukarten, Akzentfarbe, Untertitel frei verschieb- und drehbar | in Test |
+| 5c | 11 Vorlagen mit Vorschaukarten, Akzentfarbe, Untertitel frei verschieb- und drehbar | ✅ Build 35 |
+| 5d | Emoji-Wörterbuch (DE/EN, ~300 Stämme, Flaggen), Schalter im CC-Dialog | in Test |
 
 ## Technik
 

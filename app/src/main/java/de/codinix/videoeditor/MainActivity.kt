@@ -1119,6 +1119,16 @@ class MainActivity : AppCompatActivity() {
                 models.map { it.label + if (modelManager.isAvailable(it)) "" else " · ${it.approxMb} MB Download" })
             setSelection(prefs.getInt("captions_model", 1))
         }
+        val emojiSwitch = com.google.android.material.materialswitch.MaterialSwitch(this).apply {
+            text = getString(R.string.captions_emojis)
+            isChecked = captionSettings.emojis
+            setPadding(0, pad / 2, 0, 0)
+            setOnCheckedChangeListener { _, on ->
+                captionSettings.emojis = on
+                binding.review.captionView.settings = captionSettings
+                saveDefaultCaptionSettings(); persistSession()
+            }
+        }
         val auto = android.widget.CheckBox(this).apply {
             text = getString(R.string.captions_always)
             isChecked = prefs.getBoolean("captions_auto", false)
@@ -1132,6 +1142,7 @@ class MainActivity : AppCompatActivity() {
             addView(android.widget.TextView(this@MainActivity).apply { text = getString(R.string.captions_template) })
             addView(cardScroll)
             addView(android.widget.HorizontalScrollView(this@MainActivity).apply { addView(accentRow); isHorizontalScrollBarEnabled = false })
+            addView(emojiSwitch)
             addView(android.widget.TextView(this@MainActivity).apply { text = getString(R.string.captions_language); setPadding(0, pad / 2, 0, 0) })
             addView(spinner)
             addView(android.widget.TextView(this@MainActivity).apply { text = getString(R.string.captions_model); setPadding(0, pad / 2, 0, 0) })
