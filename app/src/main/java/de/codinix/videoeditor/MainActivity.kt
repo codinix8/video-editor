@@ -842,17 +842,17 @@ class MainActivity : AppCompatActivity() {
         if (idx < 0) return
         val dialog: AlertDialog = MaterialAlertDialogBuilder(this)
             .setTitle(R.string.tile_video)
-            .setMessage(R.string.video_loading)
+            .setMessage(R.string.video_copying)
             .setCancelable(false)
             .show()
         bgExecutor.execute {
             try {
-                val raw = File(overlayVideoDir, "tile_${System.currentTimeMillis()}_raw.mp4")
+                val raw = File(cacheDir, "tile_${System.currentTimeMillis()}_raw.mp4")
                 contentResolver.openInputStream(uri)?.use { input -> raw.outputStream().use { input.copyTo(it) } }
                     ?: throw IllegalStateException("Video konnte nicht gelesen werden")
                 main.post {
                     if (Downscaler.needsDownscale(raw, 1080)) {
-                        val dest = File(overlayVideoDir, "tile_${System.currentTimeMillis()}.mp4")
+                        val dest = File(cacheDir, "tile_${System.currentTimeMillis()}.mp4")
                         dialog.setMessage(getString(R.string.tile_video_downscale, 0))
                         Downscaler.run(this, raw, dest, 1080,
                             onProgress = { p -> dialog.setMessage(getString(R.string.tile_video_downscale, p)) },
