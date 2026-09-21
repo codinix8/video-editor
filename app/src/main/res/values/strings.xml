@@ -131,4 +131,8 @@
     <string name="mosaic_tip">Kachel antippen, dann die Knöpfe oben links nutzen</string>
     <string name="tile_video">Video in diese Kachel</string>
     <string name="tile_video_downscale">Video wird auf 1080p umgerechnet… %1$d %%</string>
+    <string name="segment_moved">Segment verschoben</string>
+    <string name="segment_last_keep">Das letzte Segment kann hier nicht gelöscht werden – Aufnahme verwerfen stattdessen.</string>
+    <string name="delete_segment_title">Segment löschen?</string>
+    <string name="delete_segment_msg">Segment %1$d (%2$s) wird entfernt. Untertitel und Overlay-Ton werden angepasst.</string>
 </resources>

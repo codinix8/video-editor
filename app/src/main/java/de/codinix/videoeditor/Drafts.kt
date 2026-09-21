@@ -56,7 +56,7 @@ class DraftStore(context: Context) {
 
     private fun eventsToJson(events: List<VideoOverlay.Event>): JSONArray {
         val a = JSONArray()
-        events.forEach { a.put(JSONObject().put("atMs", it.atMs).put("gain", it.gain.toDouble()).put("playing", it.playing)) }
+        events.forEach { a.put(JSONObject().put("atMs", it.atMs).put("gain", it.gain.toDouble()).put("playing", it.playing).put("seek", it.seekMs ?: JSONObject.NULL)) }
         return a
     }
     private fun eventsFromJson(a: JSONArray?): List<VideoOverlay.Event> {
@@ -64,7 +64,7 @@ class DraftStore(context: Context) {
         val out = ArrayList<VideoOverlay.Event>()
         for (i in 0 until a.length()) {
             val e = a.getJSONObject(i)
-            out.add(VideoOverlay.Event(e.getLong("atMs"), e.getDouble("gain").toFloat(), e.optBoolean("playing", true)))
+            out.add(VideoOverlay.Event(e.getLong("atMs"), e.getDouble("gain").toFloat(), e.optBoolean("playing", true), if (e.isNull("seek")) null else e.getLong("seek")))
         }
         return out
     }

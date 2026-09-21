@@ -26,6 +26,44 @@ class ScrubBarView @JvmOverloads constructor(context: Context, attrs: AttributeS
     var onScrub: ((Long) -> Unit)? = null
     var onScrubStart: (() -> Unit)? = null
     var onScrubEnd: ((Long) -> Unit)? = null
+    /** Segment [from] vor Position [to] einordnen (Indizes der alten Liste). */
+    var onReorder: ((Int, Int) -> Unit)? = null
+    var onDelete: ((Int) -> Unit)? = null
+
+    private var dragging = -1          // Index des angehobenen Segments
+    private var dragX = 0f
+    private var dragY = 0f
+    private var downX = 0f
+    private var downY = 0f
+    private var longPressPending = false
+    private val longPress = Runnable {
+        val idx = segmentAt(downX)
+        if (idx >= 0) {
+            dragging = idx; dragX = downX; dragY = downY; scrubbing = false
+            performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
+            onScrubEnd?.invoke(positionMs)
+            invalidate()
+        }
+    }
+    private val trashPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFFF3B4E.toInt() }
+
+    private fun segmentAt(x: Float): Int {
+        var acc = 0f
+        segmentsMs.forEachIndexed { i, ms -> val len = ms.toFloat() / total * width; if (x >= acc && x < acc + len) return i; acc += len }
+        return -1
+    }
+
+    /** Einfügeposition (0..n) für die aktuelle Zieh-X. */
+    private fun insertIndexAt(x: Float): Int {
+        var acc = 0f
+        segmentsMs.forEachIndexed { i, ms ->
+            val len = ms.toFloat() / total * width
+            if (x < acc + len / 2) return i
+            acc += len
+        }
+        return segmentsMs.size
+    }
+    private val inTrash: Boolean get() = dragging >= 0 && dragY > height * 1.1f
 
     private val trackPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x66FFFFFF }
     private val segPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xCCFFFFFF.toInt() }
@@ -50,6 +88,7 @@ class ScrubBarView @JvmOverloads constructor(context: Context, attrs: AttributeS
     override fun onDraw(canvas: Canvas) {
         val w = width.toFloat()
         val pos = if (scrubbing) scrubPos else positionMs
+        if (dragging >= 0) { drawReorder(canvas); return }
         val r = (barBottom - barTop) / 2
         rect.set(0f, barTop, w, barBottom)
         canvas.drawRoundRect(rect, r, r, trackPaint)
@@ -88,6 +127,31 @@ class ScrubBarView @JvmOverloads constructor(context: Context, attrs: AttributeS
         }
     }
 
+    private fun drawReorder(canvas: Canvas) {
+        val w = width.toFloat()
+        val r = (barBottom - barTop) / 2
+        val gap = 3f * resources.displayMetrics.density
+        val dragLen = segmentsMs[dragging].toFloat() / total * w
+        val insert = insertIndexAt(dragX)
+        var x = 0f
+        var placed = false
+        segmentsMs.forEachIndexed { i, ms ->
+            if (i == dragging) return@forEachIndexed
+            if (!placed && i >= insert) { x += dragLen; placed = true }   // Lücke für das angehobene Segment
+            val len = ms.toFloat() / total * w
+            rect.set(x, barTop, (x + len - gap).coerceAtLeast(x + 1f), barBottom)
+            canvas.drawRoundRect(rect, r, r, segPaint)
+            x += len
+        }
+        // Angehobenes Segment unter dem Finger, leicht vergrößert
+        val lift = 10f * resources.displayMetrics.density
+        rect.set(dragX - dragLen / 2, barTop - lift, dragX + dragLen / 2, barBottom - lift)
+        canvas.drawRoundRect(rect, r, r, if (inTrash) trashPaint else playedPaint)
+        val hint = if (inTrash) "Loslassen zum Löschen" else "Verschieben · nach unten ziehen zum Löschen"
+        val y = barTop - 8f * resources.displayMetrics.density - lift
+        canvas.drawText(hint, (w - textPaint.measureText(hint)) / 2, y, textPaint)
+    }
+
     private fun fmt(ms: Long): String {
         val s = ms / 1000
         return String.format(Locale.GERMANY, "%d:%02d.%d", s / 60, s % 60, (ms % 1000) / 100)
@@ -96,6 +160,8 @@ class ScrubBarView @JvmOverloads constructor(context: Context, attrs: AttributeS
     override fun onTouchEvent(e: MotionEvent): Boolean {
         when (e.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
+                downX = e.x; downY = e.y; dragging = -1
+                if (segmentsMs.size >= 1) { longPressPending = true; postDelayed(longPress, 450) }
                 scrubbing = true; fine = 1f; lastX = e.x; lastMoveAt = System.currentTimeMillis()
                 scrubPos = (e.x / width * total).toLong().coerceIn(0, total - 1)
                 onScrubStart?.invoke(); onScrub?.invoke(scrubPos); invalidate()
@@ -103,6 +169,10 @@ class ScrubBarView @JvmOverloads constructor(context: Context, attrs: AttributeS
                 return true
             }
             MotionEvent.ACTION_MOVE -> {
+                if (dragging >= 0) { dragX = e.x; dragY = e.y; invalidate(); return true }
+                if (longPressPending && (kotlin.math.abs(e.x - downX) > 12f || kotlin.math.abs(e.y - downY) > 12f)) {
+                    longPressPending = false; removeCallbacks(longPress)
+                }
                 val now = System.currentTimeMillis()
                 // Lange still gehalten → feiner
                 if (now - lastMoveAt > 600 && fine > 0.2f) fine = if (fine > 0.5f) 0.35f else 0.15f
@@ -115,6 +185,16 @@ class ScrubBarView @JvmOverloads constructor(context: Context, attrs: AttributeS
                 return true
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                longPressPending = false; removeCallbacks(longPress)
+                if (dragging >= 0) {
+                    val from = dragging; dragging = -1
+                    if (e.actionMasked == MotionEvent.ACTION_UP) {
+                        if (inTrash || dragY > height * 1.1f) onDelete?.invoke(from)
+                        else { val to = insertIndexAt(e.x); if (to != from && to != from + 1) onReorder?.invoke(from, to) }
+                    }
+                    invalidate()
+                    return true
+                }
                 scrubbing = false
                 positionMs = scrubPos
                 onScrubEnd?.invoke(scrubPos)

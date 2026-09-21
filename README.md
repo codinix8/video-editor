@@ -37,7 +37,8 @@ Auf dem Handy: Datei öffnen → „Aus dieser Quelle installieren" erlauben →
 | 5e | Untertitel-Editor: Text ändern, löschen, Anfang/Ende verschieben, Sprung zum Block; CC-Knopf rechts | ✅ Build 42 |
 | 1d | Spulleiste in der Review, 5-Minuten-Limit, Speicherplatz-Warnung, Segmentteilung bei 3,5 GB, feste Export-Bitraten mit Größenschätzung, Cache-Grenzen | ✅ Build 44 |
 | 3b | Mosaik: 5 Raster, Kamera/Bilder in Kacheln, Zoom/Verschieben/Drehen, Füllfarbe, Trennlinien (Regenbogen optional) | ✅ Build 48 |
-| 3c | Videos in Kacheln: 1080p-Umrechnung, gemeinsames Play/Pause, Lautstärke je Kachel, Protokoll, Ton-Mix, Entwürfe | in Test |
+| 3c | Videos in Kacheln: 1080p-Umrechnung, gemeinsames Play/Pause, Lautstärke je Kachel, Protokoll, Ton-Mix, Entwürfe | ✅ Build 53 |
+| 6 | Schnitt in der Review: Segmente per langem Drücken umordnen oder löschen; Zeitachsen-Umbau für Untertitel und Ton (mit Quell-Sprüngen) | in Test |
 
 ## Technik
 

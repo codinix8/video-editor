@@ -59,7 +59,7 @@ class Mosaic(var layout: Int) {
             t.video?.let { v ->
                 o.put("volume", v.volume.toDouble()).put("startOffsetMs", v.startOffsetMs).put("durationMs", v.durationMs)
                     .put("videoAspect", v.videoAspect.toDouble())
-                val ev = JSONArray(); v.events.forEach { ev.put(JSONObject().put("atMs", it.atMs).put("gain", it.gain.toDouble()).put("playing", it.playing)) }
+                val ev = JSONArray(); v.events.forEach { ev.put(JSONObject().put("atMs", it.atMs).put("gain", it.gain.toDouble()).put("playing", it.playing).put("seek", it.seekMs ?: JSONObject.NULL)) }
                 o.put("events", ev)
             }
             arr.put(o)
@@ -124,7 +124,7 @@ class Mosaic(var layout: Int) {
                         v.durationMs = t.optLong("durationMs", 0L)
                         v.videoAspect = t.optDouble("videoAspect", 1.0).toFloat()
                         val ev = t.optJSONArray("events") ?: JSONArray()
-                        for (k in 0 until ev.length()) { val e = ev.getJSONObject(k); v.events.add(VideoOverlay.Event(e.getLong("atMs"), e.getDouble("gain").toFloat(), e.optBoolean("playing", true))) }
+                        for (k in 0 until ev.length()) { val e = ev.getJSONObject(k); v.events.add(VideoOverlay.Event(e.getLong("atMs"), e.getDouble("gain").toFloat(), e.optBoolean("playing", true), if (e.isNull("seek")) null else e.getLong("seek"))) }
                         tile.video = v
                     }
                 }

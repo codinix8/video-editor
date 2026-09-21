@@ -123,7 +123,8 @@ class VideoOverlay(
     override val aspect: Float get() = videoAspect
 
     /** Ein Ereignis im Protokoll: ab [atMs] (Aufnahmezeit) gilt [gain]; läuft das Video? */
-    data class Event(val atMs: Long, val gain: Float, val playing: Boolean)
+    /** [seekMs]: Quellposition, an die das Video bei diesem Ereignis springt (nach Umordnen von Segmenten). */
+    data class Event(val atMs: Long, val gain: Float, val playing: Boolean, val seekMs: Long? = null)
 
     /**
      * Protokoll der Aufnahme: Einfügen, Lautstärkeänderungen, Pause/Weiter.
@@ -162,6 +163,7 @@ class VideoOverlay(
         for (i in tl.indices) {
             val from = tl[i].atMs
             if (from >= atMs) break
+            tl[i].seekMs?.let { pos = it }
             val to = if (i + 1 < tl.size) minOf(tl[i + 1].atMs, atMs) else atMs
             if (tl[i].playing && to > from) pos += to - from
         }

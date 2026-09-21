@@ -22,7 +22,7 @@ object OverlayAudioRenderer {
     private const val TAG = "OverlayAudio"
 
     /** Ein Abschnitt der Zeitleiste: ab [fromMs] gilt [gain]; [playing]=false bedeutet Stille. */
-    data class Segment(val fromMs: Long, val gain: Float, val playing: Boolean)
+    data class Segment(val fromMs: Long, val gain: Float, val playing: Boolean, val seekMs: Long? = null)
 
     class Decoded(val pcm: File, val sampleRate: Int, val channels: Int) {
         val bytesPerFrame get() = channels * 2
@@ -146,9 +146,15 @@ object OverlayAudioRenderer {
             val srcCh = t.decoded.channels
             val step = srcRate.toDouble() / sr     // Quell-Frames pro Ausgabe-Frame
             var buf = ByteArray(0)
+            var segIdx = -1
             fun segAt(ms: Long): Segment? {
-                var s: Segment? = null
-                for (x in t.timeline) if (x.fromMs <= ms) s = x else break
+                var s: Segment? = null; var idx = -1
+                for (i in t.timeline.indices) if (t.timeline[i].fromMs <= ms) { s = t.timeline[i]; idx = i } else break
+                if (idx != segIdx) {
+                    segIdx = idx
+                    // Neuer Abschnitt: ggf. an definierte Quellposition springen
+                    s?.seekMs?.let { srcPos = it.toDouble() * srcRate / 1000.0 }
+                }
                 return s
             }
         }

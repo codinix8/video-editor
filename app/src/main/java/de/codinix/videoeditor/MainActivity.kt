@@ -105,7 +105,7 @@ class MainActivity : AppCompatActivity() {
         val timeline: List<OverlayAudioRenderer.Segment> = emptyList()
     )
 
-    private fun VideoOverlay.rendererTimeline() = timeline().map { OverlayAudioRenderer.Segment(it.atMs, it.gain, it.playing) }
+    private fun VideoOverlay.rendererTimeline() = timeline().map { OverlayAudioRenderer.Segment(it.atMs, it.gain, it.playing, it.seekMs) }
     private val audioHistory = mutableListOf<AudioTrackEntry>()
 
     private fun currentTotalMs() = segments.sumOf { it.durationMs } + liveDurationMs
@@ -326,6 +326,8 @@ class MainActivity : AppCompatActivity() {
         binding.review.scrubBar.onScrubStart = { player?.pause(); reviewOverlayPlayer?.pause() }
         binding.review.scrubBar.onScrub = { ms -> seekReviewTo(ms, play = false) }
         binding.review.scrubBar.onScrubEnd = { ms -> seekReviewTo(ms, play = true) }
+        binding.review.scrubBar.onReorder = { from, to -> reorderSegments(from, to) }
+        binding.review.scrubBar.onDelete = { idx -> confirmDeleteSegment(idx) }
         binding.draftsButton.setOnClickListener { showDrafts() }
         binding.review.playerView.setOnClickListener { togglePlayback() }
 
@@ -1701,6 +1703,76 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // ---------------------------------------------------------------- Segmente umordnen / löschen
+
+    private fun reorderSegments(from: Int, to: Int) {
+        val order = (0 until segments.size).toMutableList()
+        val item = order.removeAt(from)
+        val insertAt = if (to > from) to - 1 else to
+        order.add(insertAt.coerceIn(0, order.size), item)
+        applySegmentOrder(order)
+        Toast.makeText(this, R.string.segment_moved, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun confirmDeleteSegment(idx: Int) {
+        if (segments.size <= 1) {
+            Toast.makeText(this, R.string.segment_last_keep, Toast.LENGTH_SHORT).show(); return
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.delete_segment_title)
+            .setMessage(getString(R.string.delete_segment_msg, idx + 1, fmt(segments[idx].durationMs)))
+            .setPositiveButton(R.string.delete) { _, _ ->
+                val order = (0 until segments.size).filter { it != idx }
+                val removed = segments[idx]
+                applySegmentOrder(order)
+                removed.file.delete()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    /**
+     * Neue Segmentreihenfolge anwenden (fehlende Indizes = gelöscht) und alles, was an der
+     * Zeitachse hängt, umrechnen: Untertitel, Ton-Protokolle der Overlay- und Kachelvideos,
+     * Ton-Historie. Danach Review neu aufbauen.
+     */
+    private fun applySegmentOrder(newOrder: List<Int>) {
+        val remap = TimelineRemap(segments.map { it.durationMs }, newOrder)
+        val reordered = newOrder.map { segments[it] }
+        segments.clear(); segments.addAll(reordered)
+        val total = remap.totalMs
+
+        val newCaptions = remap.captions(captions)
+        captions.clear(); captions.addAll(newCaptions)
+
+        fun remapVideo(v: VideoOverlay) {
+            val ev = remap.timeline(v.timeline(), v.durationMs, null)
+            v.events.clear(); v.events.addAll(ev)
+            v.startOffsetMs = ev.firstOrNull()?.atMs ?: total
+            if (ev.isEmpty()) v.addEvent(total, v.volume, true)   // erst ab jetzt wieder aktiv
+        }
+        overlayStore.videoOverlay()?.let { remapVideo(it) }
+        tileVideos().forEach { remapVideo(it) }
+
+        val newHistory = audioHistory.mapNotNull { e ->
+            val base = e.timeline.takeIf { it.isNotEmpty() }?.map { VideoOverlay.Event(it.fromMs, it.gain, it.playing, it.seekMs) }
+                ?: listOf(VideoOverlay.Event(e.startOffsetMs, e.volume, true))
+            val ev = remap.timeline(base, e.durationMs, e.endOffsetMs)
+            if (ev.none { it.playing }) { if (!isFileReferenced(e.file)) e.file.delete(); null }
+            else e.copy(startOffsetMs = ev.first().atMs, endOffsetMs = total,
+                timeline = ev.map { OverlayAudioRenderer.Segment(it.atMs, it.gain, it.playing, it.seekMs) })
+        }
+        audioHistory.clear(); audioHistory.addAll(newHistory)
+
+        // Review neu aufbauen
+        main.removeCallbacks(playbackTicker)
+        reviewOverlayPlayer?.release(); reviewOverlayPlayer = null
+        buildPlayer()
+        main.post(playbackTicker)
+        refreshCaptionUi()
+        persistSession()
+    }
+
     /** Review an Gesamtposition [ms] setzen (Segment und Position in der Playlist berechnen). */
     private fun seekReviewTo(ms: Long, play: Boolean) {
         val p = player ?: return
@@ -2056,7 +2128,7 @@ class MainActivity : AppCompatActivity() {
                 tracks.put(org.json.JSONObject().put("path", t.file.absolutePath)
                     .put("startOffsetMs", t.startOffsetMs).put("endOffsetMs", t.endOffsetMs)
                     .put("volume", t.volume.toDouble()).put("durationMs", t.durationMs)
-                    .put("events", eventsJson(t.timeline.map { VideoOverlay.Event(it.fromMs, it.gain, it.playing) })))
+                    .put("events", eventsJson(t.timeline.map { VideoOverlay.Event(it.fromMs, it.gain, it.playing, it.seekMs) })))
             }
             val mosaicJson = if (mosaicActive) mosaic.toJson(mosaic.tiles.mapIndexed { i, t ->
                 t.video?.file?.absolutePath ?: t.bitmap?.let { b ->
@@ -2078,7 +2150,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun eventsJson(events: List<VideoOverlay.Event>): org.json.JSONArray {
         val a = org.json.JSONArray()
-        events.forEach { a.put(org.json.JSONObject().put("atMs", it.atMs).put("gain", it.gain.toDouble()).put("playing", it.playing)) }
+        events.forEach { a.put(org.json.JSONObject().put("atMs", it.atMs).put("gain", it.gain.toDouble()).put("playing", it.playing).put("seek", it.seekMs ?: org.json.JSONObject.NULL)) }
         return a
     }
 
@@ -2137,7 +2209,7 @@ class MainActivity : AppCompatActivity() {
                 lensFacing,
                 preferredQuality?.let { label(it) },
                 audioHistory.map { DraftStore.AudioTrack(it.file, it.startOffsetMs, it.endOffsetMs, it.volume, it.durationMs,
-                    it.timeline.map { t -> VideoOverlay.Event(t.fromMs, t.gain, t.playing) }) },
+                    it.timeline.map { t -> VideoOverlay.Event(t.fromMs, t.gain, t.playing, t.seekMs) }) },
                 captions.toList(), captionSettings,
                 if (mosaicActive) mosaic else null
             )
@@ -2241,7 +2313,7 @@ class MainActivity : AppCompatActivity() {
             publishMosaic(); updateTileButtons()
             audioHistory.clear()
             loaded.audioTracks.forEach { audioHistory.add(AudioTrackEntry(it.file, it.startOffsetMs, it.endOffsetMs, it.volume, it.durationMs,
-                it.events.map { e -> OverlayAudioRenderer.Segment(e.atMs, e.gain, e.playing) })) }
+                it.events.map { e -> OverlayAudioRenderer.Segment(e.atMs, e.gain, e.playing, e.seekMs) })) }
             overlayStore.selectedId = null
             overlayStore.videoOverlay()?.let { attachVideoOverlay(it) }
             applyGreenscreenState()
