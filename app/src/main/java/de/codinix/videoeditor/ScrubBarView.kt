@@ -63,7 +63,8 @@ class ScrubBarView @JvmOverloads constructor(context: Context, attrs: AttributeS
         }
         return segmentsMs.size
     }
-    private val inTrash: Boolean get() = dragging >= 0 && dragY > height * 1.1f
+    private val inTrash: Boolean get() = dragging >= 0 &&
+        kotlin.math.hypot(dragX - trashCx, dragY - trashCy) < trashR * 1.6f
 
     private val trackPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x66FFFFFF }
     private val segPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xCCFFFFFF.toInt() }
@@ -82,8 +83,13 @@ class ScrubBarView @JvmOverloads constructor(context: Context, attrs: AttributeS
     private var lastMoveAt = 0L
 
     private val total get() = segmentsMs.sum().coerceAtLeast(1)
-    private val barTop get() = height * 0.42f
-    private val barBottom get() = height * 0.78f
+    private val dp get() = resources.displayMetrics.density
+    /** Die Leiste liegt in den unteren 56 dp; darüber ist Platz für Ziehen und Papierkorb. */
+    private val barTop get() = height - 32f * dp
+    private val barBottom get() = height - 12f * dp
+    private val trashCx get() = width / 2f
+    private val trashCy get() = 40f * dp
+    private val trashR get() = 26f * dp
 
     override fun onDraw(canvas: Canvas) {
         val w = width.toFloat()
@@ -130,7 +136,7 @@ class ScrubBarView @JvmOverloads constructor(context: Context, attrs: AttributeS
     private fun drawReorder(canvas: Canvas) {
         val w = width.toFloat()
         val r = (barBottom - barTop) / 2
-        val gap = 3f * resources.displayMetrics.density
+        val gap = 3f * dp
         val dragLen = segmentsMs[dragging].toFloat() / total * w
         val insert = insertIndexAt(dragX)
         var x = 0f
@@ -143,13 +149,30 @@ class ScrubBarView @JvmOverloads constructor(context: Context, attrs: AttributeS
             canvas.drawRoundRect(rect, r, r, segPaint)
             x += len
         }
-        // Angehobenes Segment unter dem Finger, leicht vergrößert
-        val lift = 10f * resources.displayMetrics.density
-        rect.set(dragX - dragLen / 2, barTop - lift, dragX + dragLen / 2, barBottom - lift)
-        canvas.drawRoundRect(rect, r, r, if (inTrash) trashPaint else playedPaint)
-        val hint = if (inTrash) "Loslassen zum Löschen" else "Verschieben · nach unten ziehen zum Löschen"
-        val y = barTop - 8f * resources.displayMetrics.density - lift
-        canvas.drawText(hint, (w - textPaint.measureText(hint)) / 2, y, textPaint)
+        // Papierkorb oben mit Abstand zur Leiste
+        val over = inTrash
+        canvas.drawCircle(trashCx, trashCy, trashR * (if (over) 1.2f else 1f), Paint(Paint.ANTI_ALIAS_FLAG).apply { color = if (over) 0xFFFF3B4E.toInt() else 0x99000000.toInt() })
+        drawTrashIcon(canvas, trashCx, trashCy, trashR * 0.55f)
+        // Angehobenes Segment folgt dem Finger, deutlich vergrößert
+        val hh = (barBottom - barTop) * 0.9f
+        val len = dragLen.coerceAtLeast(40f * dp)
+        rect.set(dragX - len / 2, dragY - hh, dragX + len / 2, dragY + hh)
+        canvas.drawRoundRect(rect, hh, hh, if (over) trashPaint else playedPaint)
+        val hint = if (over) "Loslassen zum Löschen" else "Seitlich einordnen · oben auf den Papierkorb zum Löschen"
+        canvas.drawText(hint, (w - textPaint.measureText(hint)) / 2, barTop - 10f * dp, textPaint)
+    }
+
+    private fun drawTrashIcon(canvas: Canvas, cx: Float, cy: Float, s: Float) {
+        val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.WHITE; style = Paint.Style.STROKE; strokeWidth = 2.2f * dp; strokeCap = Paint.Cap.ROUND }
+        // Deckel, Körper, Streifen
+        canvas.drawLine(cx - s, cy - s * 0.65f, cx + s, cy - s * 0.65f, p)
+        canvas.drawLine(cx - s * 0.35f, cy - s * 0.65f, cx - s * 0.25f, cy - s * 0.95f, p)
+        canvas.drawLine(cx + s * 0.35f, cy - s * 0.65f, cx + s * 0.25f, cy - s * 0.95f, p)
+        canvas.drawLine(cx - s * 0.25f, cy - s * 0.95f, cx + s * 0.25f, cy - s * 0.95f, p)
+        val body = RectF(cx - s * 0.75f, cy - s * 0.65f, cx + s * 0.75f, cy + s)
+        canvas.drawRoundRect(body, s * 0.2f, s * 0.2f, p)
+        canvas.drawLine(cx - s * 0.3f, cy - s * 0.3f, cx - s * 0.3f, cy + s * 0.7f, p)
+        canvas.drawLine(cx + s * 0.3f, cy - s * 0.3f, cx + s * 0.3f, cy + s * 0.7f, p)
     }
 
     private fun fmt(ms: Long): String {
@@ -160,6 +183,7 @@ class ScrubBarView @JvmOverloads constructor(context: Context, attrs: AttributeS
     override fun onTouchEvent(e: MotionEvent): Boolean {
         when (e.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
+                if (e.y < barTop - 16f * dp) return false   // oberer Bereich gehört dem Video (Play/Pause)
                 downX = e.x; downY = e.y; dragging = -1
                 if (segmentsMs.size >= 1) { longPressPending = true; postDelayed(longPress, 450) }
                 scrubbing = true; fine = 1f; lastX = e.x; lastMoveAt = System.currentTimeMillis()
@@ -189,7 +213,7 @@ class ScrubBarView @JvmOverloads constructor(context: Context, attrs: AttributeS
                 if (dragging >= 0) {
                     val from = dragging; dragging = -1
                     if (e.actionMasked == MotionEvent.ACTION_UP) {
-                        if (inTrash || dragY > height * 1.1f) onDelete?.invoke(from)
+                        if (inTrash) onDelete?.invoke(from)
                         else { val to = insertIndexAt(e.x); if (to != from && to != from + 1) onReorder?.invoke(from, to) }
                     }
                     invalidate()

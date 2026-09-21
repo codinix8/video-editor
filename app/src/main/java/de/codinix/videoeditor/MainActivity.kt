@@ -1679,7 +1679,8 @@ class MainActivity : AppCompatActivity() {
                 val result = engine.transcribe(pcm, language, object : de.codinix.videoeditor.whisper.WhisperEngine.Progress {
                     override fun onProgress(percent: Int) { main.post { dialog.setMessage(getString(R.string.captions_running, percent)) } }
                 })
-                val chunks = de.codinix.videoeditor.whisper.Caption.chunk(result.words)
+                val chunks = de.codinix.videoeditor.whisper.Caption.chunkSentences(
+                    result.rawSegments.map { it.words }, sentenceStarts = result.rawSegments.map { it.startMs })
                 main.post {
                     dialog.dismiss()
                     transcribing = false
@@ -1714,21 +1715,58 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, R.string.segment_moved, Toast.LENGTH_SHORT).show()
     }
 
+    /** Zustand vor einem Löschen – für „Rückgängig“ (15 s). */
+    private class UndoState(
+        val segments: List<Segment>,
+        val captions: List<de.codinix.videoeditor.whisper.Caption>,
+        val history: List<AudioTrackEntry>,
+        val overlayEvents: Pair<Long, List<VideoOverlay.Event>>?,
+        val tileEvents: Map<Long, Pair<Long, List<VideoOverlay.Event>>>,
+        val removedFile: File
+    )
+    private var undoState: UndoState? = null
+    private val undoExpire = Runnable {
+        undoState?.removedFile?.delete()
+        undoState = null
+        binding.review.undoButton.visibility = android.view.View.GONE
+    }
+
     private fun confirmDeleteSegment(idx: Int) {
         if (segments.size <= 1) {
             Toast.makeText(this, R.string.segment_last_keep, Toast.LENGTH_SHORT).show(); return
         }
-        MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.delete_segment_title)
-            .setMessage(getString(R.string.delete_segment_msg, idx + 1, fmt(segments[idx].durationMs)))
-            .setPositiveButton(R.string.delete) { _, _ ->
-                val order = (0 until segments.size).filter { it != idx }
-                val removed = segments[idx]
-                applySegmentOrder(order)
-                removed.file.delete()
-            }
-            .setNegativeButton(R.string.cancel, null)
-            .show()
+        // Vorherigen Undo-Zustand endgültig machen
+        main.removeCallbacks(undoExpire); undoExpire.run()
+        undoState = UndoState(
+            segments.toList(), captions.toList(), audioHistory.toList(),
+            overlayStore.videoOverlay()?.let { it.startOffsetMs to it.events.toList() },
+            tileVideos().associate { it.id to (it.startOffsetMs to it.events.toList()) },
+            segments[idx].file
+        )
+        val order = (0 until segments.size).filter { it != idx }
+        applySegmentOrder(order)
+        binding.review.undoButton.visibility = android.view.View.VISIBLE
+        binding.review.undoButton.setOnClickListener { undoDelete() }
+        main.postDelayed(undoExpire, 15_000)
+        Toast.makeText(this, R.string.segment_deleted, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun undoDelete() {
+        val u = undoState ?: return
+        main.removeCallbacks(undoExpire)
+        undoState = null
+        binding.review.undoButton.visibility = android.view.View.GONE
+        segments.clear(); segments.addAll(u.segments)
+        captions.clear(); captions.addAll(u.captions)
+        audioHistory.clear(); audioHistory.addAll(u.history)
+        overlayStore.videoOverlay()?.let { v -> u.overlayEvents?.let { (so, ev) -> v.startOffsetMs = so; v.events.clear(); v.events.addAll(ev) } }
+        tileVideos().forEach { v -> u.tileEvents[v.id]?.let { (so, ev) -> v.startOffsetMs = so; v.events.clear(); v.events.addAll(ev) } }
+        main.removeCallbacks(playbackTicker)
+        reviewOverlayPlayer?.release(); reviewOverlayPlayer = null
+        buildPlayer()
+        main.post(playbackTicker)
+        refreshCaptionUi()
+        persistSession()
     }
 
     /**
@@ -1910,6 +1948,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun exitReview() {
+        main.removeCallbacks(undoExpire); undoExpire.run()
         inReview = false
         main.removeCallbacks(playbackTicker)
         player?.release(); player = null

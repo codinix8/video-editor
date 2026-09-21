@@ -33,7 +33,16 @@ data class Caption(val startMs: Long, val endMs: Long, val text: String, val wor
          * Whisper-Sätze in Untertitel-Blöcke schneiden: höchstens [maxWords] Wörter bzw.
          * [maxMs] Millisekunden pro Block, damit die Einblendungen lesbar kurz bleiben.
          */
-        fun chunk(words: List<Word>, maxWords: Int = 6, maxMs: Long = 3500, maxChars: Int = 38): List<Caption> {
+        fun chunk(words: List<Word>, maxWords: Int = 6, maxMs: Long = 3500, maxChars: Int = 38): List<Caption> =
+            chunkSentences(listOf(words), maxWords, maxMs, maxChars)
+
+        /**
+         * Wie [chunk], aber mit Satzgrenzen der Spracherkennung: Jeder Satz (Whisper-Segment) beginnt
+         * einen neuen Block, ebenso nach Punkt, Frage- oder Ausrufezeichen. Der Start des ersten Wortes
+         * eines Satzes wird auf den Satzanfang geklemmt – Whisper setzt ihn gern in den Satz davor.
+         */
+        fun chunkSentences(sentences: List<List<Word>>, maxWords: Int = 6, maxMs: Long = 3500, maxChars: Int = 38,
+                           sentenceStarts: List<Long>? = null): List<Caption> {
             val out = ArrayList<Caption>()
             var cur = ArrayList<Word>()
             fun flush() {
@@ -41,10 +50,19 @@ data class Caption(val startMs: Long, val endMs: Long, val text: String, val wor
                 out.add(Caption(cur.first().startMs, cur.last().endMs, cur.joinToString(" ") { it.text }, cur.toList()))
                 cur = ArrayList()
             }
-            for (w in words) {
-                val nextChars = cur.sumOf { it.text.length + 1 } + w.text.length
-                if (cur.isNotEmpty() && (cur.size >= maxWords || w.endMs - cur.first().startMs > maxMs || nextChars > maxChars)) flush()
-                cur.add(w)
+            sentences.forEachIndexed { si, sentence ->
+                if (sentence.isEmpty()) return@forEachIndexed
+                val sentStart = sentenceStarts?.getOrNull(si)
+                sentence.forEachIndexed { wi, w0 ->
+                    var w = w0
+                    // Erstes Wort nicht vor dem Satzanfang beginnen lassen
+                    if (wi == 0 && sentStart != null && w.startMs < sentStart) w = w.copy(startMs = sentStart, endMs = maxOf(w.endMs, sentStart + 120))
+                    val nextChars = cur.sumOf { it.text.length + 1 } + w.text.length
+                    if (cur.isNotEmpty() && (cur.size >= maxWords || w.endMs - cur.first().startMs > maxMs || nextChars > maxChars)) flush()
+                    cur.add(w)
+                    if (w.text.trimEnd().lastOrNull() in listOf('.', '!', '?')) flush()
+                }
+                flush()   // Satzende = Blockende
             }
             flush()
             // Lücken schließen: Block bleibt bis kurz vor dem nächsten stehen (max. 1,5 s)
