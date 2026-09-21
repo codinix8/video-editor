@@ -12,8 +12,8 @@ android {
         applicationId = "de.codinix.videoeditor"
         minSdk = 26
         targetSdk = 35
-        versionCode = 47
-        versionName = "2.2.1-trash-undo"
+        versionCode = 48
+        versionName = "2.2.2-fixes"
         ndk { abiFilters += listOf("arm64-v8a") }
     }
 

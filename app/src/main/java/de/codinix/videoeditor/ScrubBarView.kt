@@ -211,9 +211,10 @@ class ScrubBarView @JvmOverloads constructor(context: Context, attrs: AttributeS
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 longPressPending = false; removeCallbacks(longPress)
                 if (dragging >= 0) {
+                    val wasInTrash = inTrash          // vor dem Zurücksetzen prüfen!
                     val from = dragging; dragging = -1
                     if (e.actionMasked == MotionEvent.ACTION_UP) {
-                        if (inTrash) onDelete?.invoke(from)
+                        if (wasInTrash) onDelete?.invoke(from)
                         else { val to = insertIndexAt(e.x); if (to != from && to != from + 1) onReorder?.invoke(from, to) }
                     }
                     invalidate()

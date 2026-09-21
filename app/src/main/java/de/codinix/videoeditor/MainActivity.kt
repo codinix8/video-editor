@@ -1679,8 +1679,11 @@ class MainActivity : AppCompatActivity() {
                 val result = engine.transcribe(pcm, language, object : de.codinix.videoeditor.whisper.WhisperEngine.Progress {
                     override fun onProgress(percent: Int) { main.post { dialog.setMessage(getString(R.string.captions_running, percent)) } }
                 })
+                val boundaries = ArrayList<Long>(); var acc = 0L
+                segs.forEach { acc += it.second; boundaries.add(acc) }
                 val chunks = de.codinix.videoeditor.whisper.Caption.chunkSentences(
-                    result.rawSegments.map { it.words }, sentenceStarts = result.rawSegments.map { it.startMs })
+                    result.rawSegments.map { it.words }, sentenceStarts = result.rawSegments.map { it.startMs },
+                    boundariesMs = boundaries.dropLast(1))
                 main.post {
                     dialog.dismiss()
                     transcribing = false
