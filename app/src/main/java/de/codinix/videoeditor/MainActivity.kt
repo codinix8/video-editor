@@ -1676,14 +1676,42 @@ class MainActivity : AppCompatActivity() {
                 }
                 main.post { dialog.setMessage(getString(R.string.captions_running, 0)) }
                 engine = de.codinix.videoeditor.whisper.WhisperEngine.load(modelManager.file(model))
-                val result = engine.transcribe(pcm, language, object : de.codinix.videoeditor.whisper.WhisperEngine.Progress {
-                    override fun onProgress(percent: Int) { main.post { dialog.setMessage(getString(R.string.captions_running, percent)) } }
-                })
+
+                // Jedes Segment einzeln erkennen: Whisper kann so kein Wort in ein Nachbarsegment legen.
+                val rate = de.codinix.videoeditor.whisper.AudioPrep.RATE
+                val sentences = ArrayList<List<de.codinix.videoeditor.whisper.Word>>()
+                val sentenceStarts = ArrayList<Long>()
+                var detected = "?"
+                var lang = language
+                var offsetMs = 0L
+                var frameOffset = 0
+                val totalFrames = pcm.size
+                segs.forEachIndexed { si, (_, durMs) ->
+                    val frames = (durMs * rate / 1000).toInt().coerceAtMost(totalFrames - frameOffset).coerceAtLeast(0)
+                    if (frames > rate / 2) {   // unter 0,5 s lohnt keine Erkennung
+                        val slice = pcm.copyOfRange(frameOffset, frameOffset + frames)
+                        val base = si * 100 / segs.size; val span = 100 / segs.size
+                        val r = engine.transcribe(slice, lang, object : de.codinix.videoeditor.whisper.WhisperEngine.Progress {
+                            override fun onProgress(percent: Int) { main.post { dialog.setMessage(getString(R.string.captions_running, base + percent * span / 100)) } }
+                        })
+                        if (si == 0 || detected == "?") { detected = r.language; if (lang == null && r.language != "?" && r.language != "auto") lang = r.language }
+                        val segEnd = offsetMs + durMs
+                        r.rawSegments.forEach { seg ->
+                            val ws = seg.words.map { w ->
+                                de.codinix.videoeditor.whisper.Word((w.startMs + offsetMs).coerceIn(offsetMs, segEnd - 1),
+                                    (w.endMs + offsetMs).coerceIn(offsetMs + 1, segEnd), w.text)
+                            }
+                            if (ws.isNotEmpty()) { sentences.add(ws); sentenceStarts.add((seg.startMs + offsetMs).coerceIn(offsetMs, segEnd - 1)) }
+                        }
+                    }
+                    frameOffset += frames
+                    offsetMs += durMs
+                }
                 val boundaries = ArrayList<Long>(); var acc = 0L
                 segs.forEach { acc += it.second; boundaries.add(acc) }
                 val chunks = de.codinix.videoeditor.whisper.Caption.chunkSentences(
-                    result.rawSegments.map { it.words }, sentenceStarts = result.rawSegments.map { it.startMs },
-                    boundariesMs = boundaries.dropLast(1))
+                    sentences, sentenceStarts = sentenceStarts, boundariesMs = boundaries.dropLast(1))
+                val result = object { val language = detected }
                 main.post {
                     dialog.dismiss()
                     transcribing = false

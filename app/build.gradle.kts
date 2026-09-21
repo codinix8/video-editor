@@ -12,8 +12,8 @@ android {
         applicationId = "de.codinix.videoeditor"
         minSdk = 26
         targetSdk = 35
-        versionCode = 48
-        versionName = "2.2.2-fixes"
+        versionCode = 49
+        versionName = "2.2.3-per-segment"
         ndk { abiFilters += listOf("arm64-v8a") }
     }
 
