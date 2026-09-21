@@ -1528,8 +1528,9 @@ class MainActivity : AppCompatActivity() {
                 } }
                 // Zeile 1: Anfang ◀ ▶ | Ende ◀ ▶ | 🗑
                 val head = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.HORIZONTAL; gravity = android.view.Gravity.CENTER_VERTICAL }
+                val segNo = run { var acc = 0L; var n = 1; for (seg in segments) { if (c.startMs < acc + seg.durationMs) break; acc += seg.durationMs; n++ }; n }
                 val startLabel = android.widget.TextView(this).apply {
-                    text = "Anfang ${t(c.startMs)}"; textSize = 12f; alpha = 0.85f
+                    text = "S$segNo · Anfang ${t(c.startMs)}"; textSize = 12f; alpha = 0.85f
                     setOnClickListener { seekTo(c.startMs) }
                 }
                 val endLabel = android.widget.TextView(this).apply {

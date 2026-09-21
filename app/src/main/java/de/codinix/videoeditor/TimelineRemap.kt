@@ -38,9 +38,13 @@ class TimelineRemap(oldDurations: List<Long>, private val newOrder: List<Int>) {
     }
 
     fun captions(list: List<Caption>): List<Caption> = list.mapNotNull { c ->
-        val ns = map(c.startMs) ?: return@mapNotNull null
-        val d = ns - c.startMs
-        c.copy(startMs = ns, endMs = c.endMs + d, words = c.words.map { it.copy(startMs = it.startMs + d, endMs = it.endMs + d) })
+        val sp = spans.firstOrNull { c.startMs >= it.oldStart && c.startMs < it.oldEnd } ?: return@mapNotNull null
+        val d = sp.newStart - sp.oldStart
+        // Block bleibt in seinem Segment: Ende höchstens am neuen Segmentende
+        val segEndNew = sp.newStart + (sp.oldEnd - sp.oldStart)
+        val newEnd = minOf(c.endMs + d, segEndNew - 20).coerceAtLeast(c.startMs + d + 300)
+        c.copy(startMs = c.startMs + d, endMs = newEnd,
+            words = c.words.map { it.copy(startMs = it.startMs + d, endMs = minOf(it.endMs + d, newEnd)) })
     }.sortedBy { it.startMs }
 
     /**
