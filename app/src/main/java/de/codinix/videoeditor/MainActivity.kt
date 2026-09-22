@@ -811,77 +811,86 @@ class MainActivity : AppCompatActivity() {
         binding.mosaicButton.setBackgroundResource(if (mosaicActive) R.drawable.bg_round_button_accent else R.drawable.bg_round_button)
     }
 
+    private var mosaicPopup: android.widget.PopupWindow? = null
+
+    /** TikTok-artiges Panel neben dem Knopf: „Aus“ + fünf Raster-Symbole, aktives weiß hinterlegt. */
     private fun showMosaicDialog() {
         if (activeRecording != null) return
         if (greenscreenActive || overlayStore.cameraOverlay() != null) { Toast.makeText(this, R.string.mosaic_conflict, Toast.LENGTH_SHORT).show(); return }
-        val pad = (16 * resources.displayMetrics.density).toInt()
-        val radios = android.widget.RadioGroup(this)
-        de.codinix.videoeditor.overlay.Mosaic.LAYOUT_NAMES.forEachIndexed { i, name ->
-            radios.addView(android.widget.RadioButton(this).apply { id = 2000 + i; text = name; isChecked = i == mosaic.layout })
+        mosaicPopup?.dismiss()
+        val dp = resources.displayMetrics.density
+        val pad = (8 * dp).toInt()
+        val col = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            gravity = android.view.Gravity.CENTER_HORIZONTAL
+            background = getDrawable(R.drawable.bg_panel)
+            setPadding(pad, pad, pad, pad)
         }
+        lateinit var popup: android.widget.PopupWindow
+        val icons = listOf(0, R.drawable.ic_layout_2rows, R.drawable.ic_layout_2cols, R.drawable.ic_layout_3rows, R.drawable.ic_layout_3cols, R.drawable.ic_layout_2x2)
+        fun pick(layout: Int) {
+            mosaic.changeLayout(layout)
+            if (!mosaicActive) mosaic.selected = -1
+            publishMosaic(); updateTileButtons()
+            if (mosaicActive) showTip(getString(R.string.mosaic_tip))
+            popup.dismiss()
+        }
+        icons.forEachIndexed { idx, res ->
+            val selected = idx == mosaic.layout
+            val item: android.view.View = if (idx == 0) android.widget.TextView(this).apply {
+                text = "Aus"; textSize = 15f; setTextColor(if (selected) 0xFF000000.toInt() else 0xFFFFFFFF.toInt())
+                gravity = android.view.Gravity.CENTER
+            } else android.widget.ImageView(this).apply {
+                setImageResource(res)
+                if (selected) setColorFilter(0xFF000000.toInt())
+            }
+            item.layoutParams = android.widget.LinearLayout.LayoutParams((56 * dp).toInt(), (48 * dp).toInt()).apply { setMargins(0, pad / 2, 0, pad / 2) }
+            item.setPadding(pad, pad, pad, pad)
+            if (selected) item.background = getDrawable(R.drawable.bg_panel_selected)
+            item.setOnClickListener { pick(idx) }
+            col.addView(item)
+        }
+        // Trennlinien-Optionen
+        col.addView(android.widget.ImageView(this).apply {
+            setImageResource(R.drawable.ic_border)
+            alpha = if (mosaic.rainbowGaps || mosaic.gapWhite) 1f else 0.6f
+            layoutParams = android.widget.LinearLayout.LayoutParams((56 * dp).toInt(), (44 * dp).toInt()).apply { setMargins(0, pad, 0, 0) }
+            setPadding(pad + 4, pad, pad + 4, pad)
+            setOnClickListener { popup.dismiss(); showMosaicLineOptions() }
+        })
+        popup = android.widget.PopupWindow(col, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, true).apply {
+            elevation = 8 * dp
+            isOutsideTouchable = true
+        }
+        mosaicPopup = popup
+        // Links neben dem Knopf, vertikal am Knopf ausgerichtet
+        val anchor = binding.mosaicButton
+        col.measure(android.view.View.MeasureSpec.UNSPECIFIED, android.view.View.MeasureSpec.UNSPECIFIED)
+        popup.showAsDropDown(anchor, -(col.measuredWidth + (8 * dp).toInt()), -(anchor.height + col.measuredHeight / 2 - anchor.height / 2).coerceAtLeast(0) * 0 - anchor.height, android.view.Gravity.START)
+    }
+
+    private fun showMosaicLineOptions() {
+        val pad = (16 * resources.displayMetrics.density).toInt()
         val gapWhite = com.google.android.material.materialswitch.MaterialSwitch(this).apply {
-            text = getString(R.string.mosaic_gap_white); isChecked = mosaic.gapWhite; setPadding(0, pad / 2, 0, 0)
+            text = getString(R.string.mosaic_gap_white); isChecked = mosaic.gapWhite
         }
         val rainbow = com.google.android.material.materialswitch.MaterialSwitch(this).apply {
-            text = getString(R.string.mosaic_rainbow); isChecked = mosaic.rainbowGaps
+            text = getString(R.string.mosaic_rainbow); isChecked = mosaic.rainbowGaps; setPadding(0, pad / 2, 0, 0)
         }
         val box = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(pad, pad / 2, pad, 0)
-            addView(radios); addView(gapWhite); addView(rainbow)
+            orientation = android.widget.LinearLayout.VERTICAL; setPadding(pad, pad / 2, pad, 0)
+            addView(gapWhite); addView(rainbow)
         }
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.mosaic_title)
-            .setView(android.widget.ScrollView(this).apply { addView(box) })
+            .setView(box)
             .setPositiveButton(R.string.ok) { _, _ ->
-                val layout = (radios.checkedRadioButtonId - 2000).coerceIn(0, de.codinix.videoeditor.overlay.Mosaic.LAYOUT_NAMES.lastIndex)
-                mosaic.changeLayout(layout)
-                mosaic.gapWhite = gapWhite.isChecked
-                mosaic.rainbowGaps = rainbow.isChecked
-                if (!mosaicActive) mosaic.selected = -1
-                publishMosaic(); updateTileButtons()
-                if (mosaicActive) showTip(getString(R.string.mosaic_tip))
+                mosaic.gapWhite = gapWhite.isChecked; mosaic.rainbowGaps = rainbow.isChecked
+                publishMosaic()
             }
             .setNegativeButton(R.string.cancel, null)
             .show()
-    }
-
-    private fun showTileFillDialog(t: de.codinix.videoeditor.overlay.Mosaic.Tile) {
-        val dp = resources.displayMetrics.density
-        val pad = (16 * dp).toInt()
-        val row = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.HORIZONTAL; setPadding(pad, pad, pad, pad) }
-        lateinit var dlg: AlertDialog
-        TextRenderer.COLORS.forEach { c ->
-            val size = (36 * dp).toInt()
-            row.addView(android.view.View(this).apply {
-                layoutParams = android.widget.LinearLayout.LayoutParams(size, size).apply { setMargins(pad / 3, 0, pad / 3, 0) }
-                background = android.graphics.drawable.GradientDrawable().apply {
-                    shape = android.graphics.drawable.GradientDrawable.OVAL; setColor(c)
-                    setStroke((if (c == t.fillColor) 4 else 1) * dp.toInt().coerceAtLeast(1), 0xFFFFFFFF.toInt())
-                }
-                setOnClickListener { t.fillColor = c; publishMosaic(); dlg.dismiss() }
-            })
-        }
-        dlg = MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.tile_fill)
-            .setView(android.widget.HorizontalScrollView(this).apply { addView(row); isHorizontalScrollBarEnabled = false })
-            .setNegativeButton(R.string.cancel, null)
-            .create()
-        dlg.show()
-    }
-
-    /** Kurzer, halbtransparenter Hinweis oben im Bild, verschwindet nach [ms]. */
-    private fun showTip(text: String, ms: Long = 5000, gesture: Boolean = true) {
-        val card = binding.tipCard
-        binding.tipText.text = text
-        binding.tipGesture.visibility = if (gesture) android.view.View.VISIBLE else android.view.View.GONE
-        card.alpha = 0f; card.visibility = android.view.View.VISIBLE
-        card.animate().alpha(1f).setDuration(250).start()
-        main.removeCallbacks(hideTip)
-        main.postDelayed(hideTip, ms)
-    }
-    private val hideTip = Runnable {
-        binding.tipCard.animate().alpha(0f).setDuration(400).withEndAction { binding.tipCard.visibility = android.view.View.GONE }.start()
     }
 
     private fun setTileImage(uri: Uri) {
