@@ -74,12 +74,24 @@
             android:layout_marginTop="4dp" />
     </LinearLayout>
 
+    <ImageButton
+        android:id="@+id/settingsButton"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/bg_round_button"
+        android:contentDescription="@string/settings"
+        android:src="@drawable/ic_settings"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/statusText" />
+
     <!-- Rechte Seitenleiste (scrollbar) -->
     <ScrollView
         android:id="@+id/rightBar"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="6dp"
         android:layout_marginEnd="12dp"
         android:layout_marginBottom="8dp"
         android:scrollbars="none"
@@ -88,7 +100,7 @@
         android:fadingEdgeLength="24dp"
         app:layout_constraintBottom_toTopOf="@id/recordButton"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/statusText">
+        app:layout_constraintTop_toBottomOf="@id/settingsButton">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -191,14 +203,6 @@
             android:contentDescription="@string/preview_sound"
             android:src="@drawable/ic_headphones" />
 
-            <ImageButton
-                android:id="@+id/settingsButton"
-                android:layout_width="52dp"
-                android:layout_marginBottom="10dp"
-                android:layout_height="52dp"
-                android:background="@drawable/bg_round_button"
-                android:contentDescription="@string/settings"
-                android:src="@drawable/ic_settings" />
         </LinearLayout>
     </ScrollView>
     
