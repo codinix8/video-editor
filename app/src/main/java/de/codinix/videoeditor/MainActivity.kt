@@ -864,10 +864,17 @@ class MainActivity : AppCompatActivity() {
             isOutsideTouchable = true
         }
         mosaicPopup = popup
-        // Links neben dem Knopf, vertikal am Knopf ausgerichtet
+        // Links neben dem Knopf; vertikal am Knopf zentriert, aber immer komplett im Bild
         val anchor = binding.mosaicButton
         col.measure(android.view.View.MeasureSpec.UNSPECIFIED, android.view.View.MeasureSpec.UNSPECIFIED)
-        popup.showAsDropDown(anchor, -(col.measuredWidth + (8 * dp).toInt()), -(anchor.height + col.measuredHeight / 2 - anchor.height / 2).coerceAtLeast(0) * 0 - anchor.height, android.view.Gravity.START)
+        val loc = IntArray(2); anchor.getLocationOnScreen(loc)
+        val rootLoc = IntArray(2); binding.root.getLocationOnScreen(rootLoc)
+        val screenH = binding.root.height
+        val x = loc[0] - col.measuredWidth - (8 * dp).toInt()
+        val anchorCenterY = loc[1] - rootLoc[1] + anchor.height / 2
+        val minY = (24 * dp).toInt(); val maxY = screenH - col.measuredHeight - (24 * dp).toInt()
+        val y = (anchorCenterY - col.measuredHeight / 2).coerceIn(minY, maxOf(minY, maxY)) + rootLoc[1]
+        popup.showAtLocation(binding.root, android.view.Gravity.NO_GRAVITY, x, y)
     }
 
     private fun showMosaicLineOptions() {
