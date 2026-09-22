@@ -893,6 +893,44 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
+    private fun showTileFillDialog(t: de.codinix.videoeditor.overlay.Mosaic.Tile) {
+        val dp = resources.displayMetrics.density
+        val pad = (16 * dp).toInt()
+        val row = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.HORIZONTAL; setPadding(pad, pad, pad, pad) }
+        lateinit var dlg: AlertDialog
+        TextRenderer.COLORS.forEach { c ->
+            val size = (36 * dp).toInt()
+            row.addView(android.view.View(this).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(size, size).apply { setMargins(pad / 3, 0, pad / 3, 0) }
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    shape = android.graphics.drawable.GradientDrawable.OVAL; setColor(c)
+                    setStroke((if (c == t.fillColor) 4 else 1) * dp.toInt().coerceAtLeast(1), 0xFFFFFFFF.toInt())
+                }
+                setOnClickListener { t.fillColor = c; publishMosaic(); dlg.dismiss() }
+            })
+        }
+        dlg = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.tile_fill)
+            .setView(android.widget.HorizontalScrollView(this).apply { addView(row); isHorizontalScrollBarEnabled = false })
+            .setNegativeButton(R.string.cancel, null)
+            .create()
+        dlg.show()
+    }
+
+    /** Kurzer, halbtransparenter Hinweis oben im Bild mit Gesten-Animation, verschwindet nach [ms]. */
+    private fun showTip(text: String, ms: Long = 5000, gesture: Boolean = true) {
+        val card = binding.tipCard
+        binding.tipText.text = text
+        binding.tipGesture.visibility = if (gesture) android.view.View.VISIBLE else android.view.View.GONE
+        card.alpha = 0f; card.visibility = android.view.View.VISIBLE
+        card.animate().alpha(1f).setDuration(250).start()
+        main.removeCallbacks(hideTip)
+        main.postDelayed(hideTip, ms)
+    }
+    private val hideTip = Runnable {
+        binding.tipCard.animate().alpha(0f).setDuration(400).withEndAction { binding.tipCard.visibility = android.view.View.GONE }.start()
+    }
+
     private fun setTileImage(uri: Uri) {
         val idx = mosaic.selected
         if (idx < 0) return
