@@ -277,6 +277,7 @@ class MainActivity : AppCompatActivity() {
         binding.gestureView.mosaic = mosaic
         binding.gestureView.onMosaicChanged = { publishMosaic() }
         binding.gestureView.onMosaicTileSelected = { updateTileButtons() }
+        binding.gestureView.onVideoTap = { vo, tileIdx, bg -> onVideoTapped(vo, tileIdx, bg) }
         binding.shapeButton.setOnClickListener {
             (overlayStore.selected() as? de.codinix.videoeditor.overlay.CameraOverlay)?.let { c ->
                 c.shape = (c.shape + 1) % 3
@@ -523,10 +524,7 @@ class MainActivity : AppCompatActivity() {
     // ---------------------------------------------------------------- Löschen / Fertig
 
     private fun onDeletePressed() {
-        if (activeRecording != null) {
-            if (anyLiveVideo()) toggleOverlayPlayPause()
-            return
-        }
+        if (activeRecording != null) return
         if (segments.isEmpty()) {
             Toast.makeText(this, R.string.no_segments, Toast.LENGTH_SHORT).show(); return
         }
@@ -1399,6 +1397,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     /** Play/Pause des Overlay-Videos während der Aufnahme – als Protokolleintrag. */
+    /** Tipp auf ein Video: nur dieses Video umschalten, Symbol in seiner Mitte einblenden. */
+    private fun onVideoTapped(vo: VideoOverlay?, tileIdx: Int, background: Boolean) {
+        val video: VideoOverlay = vo ?: (if (tileIdx >= 0) mosaic.tiles.getOrNull(tileIdx)?.video else null)
+            ?: (if (background) overlayStore.videoOverlay()?.takeIf { it.isBackground } else null) ?: return
+        val now = currentTotalMs()
+        val playing = !video.playing
+        video.addEvent(now, video.volume, playing)
+        val player = if (vo != null || background) overlayPlayer else tilePlayers[video.id]
+        if (activeRecording != null) { if (playing) player?.play() else player?.pause() }
+        val rect = binding.gestureView.rectOf(if (background) null else vo, if (vo == null && !background) tileIdx else -1)
+        binding.gestureView.showPlayIcon(rect, playing)
+        persistSession()
+        refreshUi()
+    }
+
     private fun toggleOverlayPlayPause() {
         val now = currentTotalMs()
         val o = overlayStore.videoOverlay()
@@ -2550,15 +2563,8 @@ class MainActivity : AppCompatActivity() {
         }
         // Während der Aufnahme wird die Löschtaste zum Play/Pause-Knopf fürs Overlay-Video
         val vo = overlayStore.videoOverlay()
-        val anyVideoPlaying = vo?.playing ?: tileVideos().firstOrNull()?.playing
-        if (recording && anyVideoPlaying != null) {
-            binding.deleteButton.alpha = 1f
-            binding.deleteButton.setImageResource(if (anyVideoPlaying) R.drawable.ic_pause else R.drawable.ic_play_small)
-            binding.deleteButton.contentDescription = getString(if (anyVideoPlaying) R.string.overlay_pause else R.string.overlay_play)
-        } else {
-            binding.deleteButton.setImageResource(R.drawable.ic_backspace)
-            binding.deleteButton.contentDescription = getString(R.string.delete_last)
-        }
+        binding.deleteButton.setImageResource(R.drawable.ic_backspace)
+        binding.deleteButton.contentDescription = getString(R.string.delete_last)
     }
 
     private fun fmt(ms: Long): String {

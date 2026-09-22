@@ -34,6 +34,37 @@ class OverlayGestureView @JvmOverloads constructor(
     var mosaic: Mosaic? = null
     var onMosaicChanged: (() -> Unit)? = null
     var onMosaicTileSelected: ((Int) -> Unit)? = null
+    /** Kurzer Tipp ohne Ziehen auf ein Video (Overlay-ID) bzw. eine Kachel (Index) bzw. den Hintergrund. */
+    var onVideoTap: ((overlay: VideoOverlay?, tileIndex: Int, background: Boolean) -> Unit)? = null
+
+    // Eingeblendetes Play/Pause-Symbol
+    private var iconRect = RectF()
+    private var iconPlaying = true
+    private var iconShownAt = 0L
+    private val iconPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.WHITE }
+    private val iconBg = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x55000000 }
+
+    /** Symbol in der Mitte von [rect] (Pixel) zeigen; blendet über 3 s aus. */
+    fun showPlayIcon(rect: RectF, playing: Boolean) {
+        iconRect.set(rect); iconPlaying = playing; iconShownAt = System.currentTimeMillis()
+        invalidate()
+    }
+
+    /** Pixelrechteck eines Overlays (ohne Drehung) bzw. einer Kachel bzw. des ganzen Frames. */
+    fun rectOf(o: Overlay?, tileIndex: Int): RectF {
+        computeFrameRect()
+        if (o != null) {
+            val cx = toPxX(o.cx); val cy = toPxY(o.cy)
+            val hw = o.widthFrac * frameRect.width() / 2f; val hh = hw * o.aspect
+            return RectF(cx - hw, cy - hh, cx + hw, cy + hh)
+        }
+        val m = mosaic
+        if (tileIndex >= 0 && m != null && m.layout != Mosaic.LAYOUT_NONE) {
+            val r = Mosaic.rects(m.layout)[tileIndex]
+            return RectF(toPxX(r.left), toPxY(r.top), toPxX(r.right), toPxY(r.bottom))
+        }
+        return RectF(frameRect)
+    }
     private var mosaicTile = -1
     private var mosaicStartZoom = 1f
     private var mosaicStartRot = 0f
@@ -197,6 +228,13 @@ class OverlayGestureView @JvmOverloads constructor(
                     val tile = if (active == null) mosaicTile else -1
                     if (m.selected != tile) { m.selected = tile; onMosaicTileSelected?.invoke(tile) }
                 }
+                // Kurzer Tipp ohne Ziehen: Play/Pause des getroffenen Videos
+                if (!moved && e.actionMasked == MotionEvent.ACTION_UP && e.pointerCount == 1) {
+                    val vo = active as? VideoOverlay
+                    val tileHasVideo = mosaicTile >= 0 && mosaic?.tiles?.getOrNull(mosaicTile)?.kind == Mosaic.KIND_VIDEO
+                    val bg = active == null && mosaicTile < 0 && store.videoOverlay()?.isBackground == true
+                    if (vo != null || tileHasVideo || bg) onVideoTap?.invoke(vo, if (tileHasVideo) mosaicTile else -1, bg)
+                }
                 if (store.selectedId != newSel) {
                     store.selectedId = newSel
                     onSelectionChanged?.invoke(active)
@@ -209,6 +247,27 @@ class OverlayGestureView @JvmOverloads constructor(
         return super.onTouchEvent(e)
     }
 
+    private fun drawPlayIcon(canvas: Canvas) {
+        if (iconShownAt == 0L) return
+        val age = System.currentTimeMillis() - iconShownAt
+        if (age > 3000) { iconShownAt = 0L; return }
+        val alpha = if (age < 2200) 1f else 1f - (age - 2200) / 800f
+        val cx = iconRect.centerX(); val cy = iconRect.centerY()
+        val r = (minOf(iconRect.width(), iconRect.height()) * 0.16f).coerceIn(28f, 72f)
+        iconBg.alpha = (0x55 * alpha).toInt(); iconPaint.alpha = (230 * alpha).toInt()
+        canvas.drawCircle(cx, cy, r, iconBg)
+        if (iconPlaying) {
+            // Dreieck
+            val p = android.graphics.Path()
+            p.moveTo(cx - r * 0.35f, cy - r * 0.5f); p.lineTo(cx + r * 0.55f, cy); p.lineTo(cx - r * 0.35f, cy + r * 0.5f); p.close()
+            canvas.drawPath(p, iconPaint)
+        } else {
+            canvas.drawRoundRect(cx - r * 0.45f, cy - r * 0.5f, cx - r * 0.12f, cy + r * 0.5f, 4f, 4f, iconPaint)
+            canvas.drawRoundRect(cx + r * 0.12f, cy - r * 0.5f, cx + r * 0.45f, cy + r * 0.5f, 4f, 4f, iconPaint)
+        }
+        postInvalidateDelayed(40)
+    }
+
     private fun dist(e: MotionEvent) = hypot(e.getX(1) - e.getX(0), e.getY(1) - e.getY(0))
     private fun angle(e: MotionEvent) =
         Math.toDegrees(atan2((e.getY(1) - e.getY(0)).toDouble(), (e.getX(1) - e.getX(0)).toDouble())).toFloat()
@@ -219,6 +278,7 @@ class OverlayGestureView @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         computeFrameRect()
+        drawPlayIcon(canvas)
         mosaic?.let { m ->
             if (m.selected >= 0 && m.layout != Mosaic.LAYOUT_NONE) {
                 val r = Mosaic.rects(m.layout)[m.selected]
