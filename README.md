@@ -1,4 +1,4 @@
-# VideoEditor
+# Babacut
 
 Persönlicher Video-Editor für Android, gebaut in Zusammenarbeit mit Claude.
 TikTok-artige Segment-Aufnahme, Overlays, Mosaik-Layouts, Freistellung, Farbfilter.

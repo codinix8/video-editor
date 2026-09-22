@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">VideoEditor</string>
+    <string name="app_name">Babacut</string>
     <string name="record">Aufnahme starten</string>
     <string name="stop">Aufnahme pausieren</string>
     <string name="flip_camera">Kamera wechseln</string>
@@ -77,7 +77,7 @@
     <string name="bg_color">Hintergrundfarbe</string>
     <string name="bg_opacity">Hintergrund-Deckkraft</string>
     <string name="greenscreen">Kachel-Modus: Hintergrundvideo</string>
-    <string name="greenscreen_on">Kachel-Modus: Dein Bild als Kachel vor dem Hintergrundvideo. Kachel antippen für Form und Rahmen.</string>
+    <string name="greenscreen_on">Kachel-Modus: Frontkamera aktiv – mit ↻ wechseln. Links: Form und Baba Regenbogen.</string>
     <string name="greenscreen_remove_title">Kachel-Modus beenden?</string>
     <string name="greenscreen_remove_msg">Das Hintergrundvideo wird entfernt; sein Ton bleibt bis hierher erhalten.</string>
     <string name="remove">Entfernen</string>
@@ -86,7 +86,7 @@
     <string name="shape_square">Quadrat</string>
     <string name="shape_portrait">Rechteck (3:4)</string>
     <string name="shape_circle">Kreis</string>
-    <string name="border_toggle">Signatur-Rahmen an/aus</string>
+    <string name="border_toggle">Baba Regenbogen an/aus</string>
     <string name="captions">Untertitel</string>
     <string name="captions_title">Untertitel per Spracherkennung</string>
     <string name="captions_language">Sprache</string>
@@ -102,7 +102,7 @@
     <string name="captions_none">Keine Sprache erkannt</string>
     <string name="captions_export_note">Untertitel werden beim Speichern eingebrannt (Neukodierung).</string>
     <string name="captions_template">Vorlage</string>
-    <string name="captions_model">Modell</string>
+    <string name="captions_model">Erkennung</string>
     <string name="captions_prefetch">Sprachmodell wird im Hintergrund geladen (einmalig, ca. %1$d MB)</string>
     <string name="captions_prefetch_done">Sprachmodell bereit</string>
     <string name="captions_hint">Untertitel: Ziehen zum Verschieben, zwei Finger für Größe und Drehung</string>
@@ -122,7 +122,7 @@
     <string name="mosaic">Mosaik</string>
     <string name="mosaic_title">Mosaik-Raster</string>
     <string name="mosaic_gap_white">Trennlinien und Füllung weiß (sonst schwarz)</string>
-    <string name="mosaic_rainbow">Trennlinien als Signatur-Regenbogen</string>
+    <string name="mosaic_rainbow">Trennlinien als Baba Regenbogen</string>
     <string name="mosaic_hint">Kachel antippen: Medium wählen, Kamera, Füllfarbe · Ziehen verschiebt, zwei Finger zoomen</string>
     <string name="mosaic_conflict">Erst den Kachel-Modus beenden.</string>
     <string name="tile_media">Bild in diese Kachel</string>

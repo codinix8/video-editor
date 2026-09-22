@@ -282,7 +282,7 @@ class MainActivity : AppCompatActivity() {
         binding.gestureView.onMosaicTileSelected = { updateTileButtons() }
         binding.gestureView.onVideoTap = { vo, tileIdx, bg -> onVideoTapped(vo, tileIdx, bg) }
         binding.shapeButton.setOnClickListener {
-            (overlayStore.selected() as? de.codinix.videoeditor.overlay.CameraOverlay)?.let { c ->
+            ((overlayStore.selected() as? de.codinix.videoeditor.overlay.CameraOverlay) ?: overlayStore.cameraOverlay())?.let { c ->
                 c.shape = (c.shape + 1) % 3
                 overlayStore.publish(); binding.gestureView.invalidate(); updateOverlayButtons(c); persistSession()
                 Toast.makeText(this, when (c.shape) {
@@ -292,7 +292,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         binding.borderButton.setOnClickListener {
-            (overlayStore.selected() as? de.codinix.videoeditor.overlay.CameraOverlay)?.let { c ->
+            ((overlayStore.selected() as? de.codinix.videoeditor.overlay.CameraOverlay) ?: overlayStore.cameraOverlay())?.let { c ->
                 c.border = !c.border
                 overlayStore.publish(); binding.gestureView.invalidate(); updateOverlayButtons(c); persistSession()
             }
@@ -1227,16 +1227,23 @@ class MainActivity : AppCompatActivity() {
         if (on && overlayStore.cameraOverlay() == null) {
             overlayStore.add(de.codinix.videoeditor.overlay.CameraOverlay(Overlay.newId()))
             overlayStore.selectedId = null
+            // Kachel-Modus ist für Reaktionen gedacht: automatisch Frontkamera
+            if (lensFacing != CameraSelector.LENS_FACING_FRONT && activeRecording == null) {
+                lensFacing = CameraSelector.LENS_FACING_FRONT
+                bindCamera()
+            }
+            showTip(getString(R.string.greenscreen_on), 6000, gesture = false)
         }
         if (!on) overlayStore.cameraOverlay()?.let { overlayStore.remove(it.id) }
         binding.gestureView.invalidate()
+        updateOverlayButtons(overlayStore.selected())
     }
 
     private fun updateOverlayButtons(sel: Overlay?) {
         if (mosaicActive && mosaic.selected >= 0) return   // Kachel hat Vorrang, siehe updateTileButtons
         binding.removeOverlayButton.visibility = if (sel != null) android.view.View.VISIBLE else android.view.View.GONE
         binding.editTextButton.visibility = if (sel is TextOverlay) android.view.View.VISIBLE else android.view.View.GONE
-        val cam = sel as? de.codinix.videoeditor.overlay.CameraOverlay
+        val cam = (sel as? de.codinix.videoeditor.overlay.CameraOverlay) ?: overlayStore.cameraOverlay()
         binding.shapeButton.visibility = if (cam != null) android.view.View.VISIBLE else android.view.View.GONE
         binding.borderButton.visibility = if (cam != null) android.view.View.VISIBLE else android.view.View.GONE
         cam?.let { binding.borderButton.alpha = if (it.border) 1f else 0.5f }
@@ -1303,7 +1310,6 @@ class MainActivity : AppCompatActivity() {
                         overlayStore.selectedId = null
                         updateOverlayButtons(null)
                         applyGreenscreenState()
-                        Toast.makeText(this, R.string.greenscreen_on, Toast.LENGTH_LONG).show()
                     } else {
                         updateOverlayButtons(overlay)
                         Toast.makeText(this, R.string.overlay_hint, Toast.LENGTH_SHORT).show()

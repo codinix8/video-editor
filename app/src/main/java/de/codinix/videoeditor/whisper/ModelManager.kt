@@ -10,9 +10,9 @@ class ModelManager(context: Context) {
     private val dir = File(context.filesDir, "models").apply { mkdirs() }
 
     enum class Model(val fileName: String, val label: String, val approxMb: Int) {
-        TINY("ggml-tiny.bin", "Tiny (schnell)", 75),
-        BASE("ggml-base.bin", "Base (genauer)", 142),
-        SMALL("ggml-small.bin", "Small (am genauesten, langsam)", 466);
+        TINY("ggml-tiny.bin", "Top (schnell)", 75),
+        BASE("ggml-base.bin", "Ali (ausgewogen)", 142),
+        SMALL("ggml-small.bin", "Baba (am genauesten, langsam)", 466);
 
         val url get() = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/$fileName"
     }
