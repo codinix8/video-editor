@@ -28,7 +28,6 @@ Auf dem Handy: Datei öffnen → „Aus dieser Quelle installieren" erlauben →
 | 4a | Text- und Emoji-Overlays: Farbe, Hintergrund, Deckkraft, bearbeiten | ✅ Build 26 |
 | 3a | Kachel-Modus: Kamerabild als Kachel (Quadrat/Rechteck 3:4/Kreis) mit Signatur-Rahmen vor Hintergrundvideo (KI-Freistellung verworfen) | ✅ Build 29 |
 | 3 | Freistellung (Person vor Video-Hintergrund), Mosaik-Layouts | offen |
-| 4 | Farbfilter | offen |
 | 5a | Untertitel: Whisper on-device, Sprache wählbar, automatisch in Review optional, Einbrennen beim Export | ✅ Build 33 |
 | 5b | Base als Standard (Tiny/Small wählbar), Modell-Vorabladen beim Start, 5 Vorlagen, verschieb-/skalierbar | ✅ Build 34 |
 | 5c | 11 Vorlagen mit Vorschaukarten, Akzentfarbe, Untertitel frei verschieb- und drehbar | ✅ Build 35 |
@@ -38,7 +37,8 @@ Auf dem Handy: Datei öffnen → „Aus dieser Quelle installieren" erlauben →
 | 1d | Spulleiste in der Review, 5-Minuten-Limit, Speicherplatz-Warnung, Segmentteilung bei 3,5 GB, feste Export-Bitraten mit Größenschätzung, Cache-Grenzen | ✅ Build 44 |
 | 3b | Mosaik: 5 Raster, Kamera/Bilder in Kacheln, Zoom/Verschieben/Drehen, Füllfarbe, Trennlinien (Regenbogen optional) | ✅ Build 48 |
 | 3c | Videos in Kacheln: 1080p-Umrechnung, gemeinsames Play/Pause, Lautstärke je Kachel, Protokoll, Ton-Mix, Entwürfe | ✅ Build 53 |
-| 6 | Schnitt in der Review: Segmente per langem Drücken umordnen oder löschen; Zeitachsen-Umbau für Untertitel und Ton (mit Quell-Sprüngen) | in Test |
+| 6 | Schnitt in der Review: Segmente per langem Drücken umordnen oder löschen, Papierkorb, Rückgängig; Zeitachsen-Umbau für Untertitel und Ton | ✅ Build 58 |
+| 4b | Farbfilter (9 Looks) für das Kamerabild, live umschaltbar, eingebrannt; rechte Knopfspalte scrollbar | in Test |
 
 ## Technik
 

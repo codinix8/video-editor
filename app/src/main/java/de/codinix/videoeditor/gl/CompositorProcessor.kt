@@ -46,6 +46,9 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
     }
     private val outputs = mutableListOf<Output>()
 
+    // ---- Farbfilter (nur Kamerabild) ----
+    @Volatile var colorFilter: Int = 0
+
     // ---- Mosaik ----
     @Volatile var mosaic: de.codinix.videoeditor.overlay.MosaicSnapshot? = null
     private var imageTileProgram = 0
@@ -292,7 +295,7 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
 
     private fun drawCamera(transform: FloatArray) {
         GLES20.glDisable(GLES20.GL_BLEND)
-        drawExternal(cameraTexId, transform, identity)
+        drawExternal(cameraTexId, transform, identity, colorFilter)
     }
 
     /** Hintergrundvideo formatfüllend hinter die freigestellte Person. */
@@ -397,6 +400,7 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
                 GLES20.glUniform1f(GLES20.glGetUniformLocation(program, "uGlow"), 0f)
                 GLES20.glUniform1f(GLES20.glGetUniformLocation(program, "uRadius"), 0f)
                 GLES20.glUniform1f(GLES20.glGetUniformLocation(program, "uTime"), 0f)
+                GLES20.glUniform1i(GLES20.glGetUniformLocation(program, "uFilter"), colorFilter)
                 GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
                 GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, cameraTexId)
                 GLES20.glUniform1i(GLES20.glGetUniformLocation(program, "sTexture"), 0)
@@ -488,6 +492,7 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
         GLES20.glUniform1f(GLES20.glGetUniformLocation(tileProgram, "uRadius"), 0.14f)
         GLES20.glUniform4f(GLES20.glGetUniformLocation(tileProgram, "uFill"), 0f, 0f, 0f, 1f)
         GLES20.glUniform1f(GLES20.glGetUniformLocation(tileProgram, "uRot"), 0f)
+        GLES20.glUniform1i(GLES20.glGetUniformLocation(tileProgram, "uFilter"), colorFilter)
         val t = ((System.nanoTime() - startNanos) / 1_000_000_000.0).toFloat()
         GLES20.glUniform1f(GLES20.glGetUniformLocation(tileProgram, "uTime"), t)
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
@@ -501,8 +506,9 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
     }
 
     /** Zeichnet eine externe (OES-)Textur mit Textur-Transform und Modellmatrix. */
-    private fun drawExternal(texId: Int, texTransform: FloatArray, modelMatrix: FloatArray) {
+    private fun drawExternal(texId: Int, texTransform: FloatArray, modelMatrix: FloatArray, filter: Int = 0) {
         GLES20.glUseProgram(cameraProgram)
+        GLES20.glUniform1i(GLES20.glGetUniformLocation(cameraProgram, "uFilter"), filter)
         val aPos = GLES20.glGetAttribLocation(cameraProgram, "aPosition")
         val aTex = GLES20.glGetAttribLocation(cameraProgram, "aTexCoord")
         val uMat = GLES20.glGetUniformLocation(cameraProgram, "uTexMatrix")
@@ -659,13 +665,16 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
                 vTexCoord = (uTexMatrix * aTexCoord).xy;
             }
         """
-        private const val FRAGMENT_CAMERA = """
+        private val FRAGMENT_CAMERA = """
             #extension GL_OES_EGL_image_external : require
             precision mediump float;
             varying vec2 vTexCoord;
             uniform samplerExternalOES sTexture;
+            uniform int uFilter;
+            ${ColorFilters.GLSL}
             void main() {
-                gl_FragColor = texture2D(sTexture, vTexCoord);
+                vec4 c = texture2D(sTexture, vTexCoord);
+                gl_FragColor = vec4(grade(c.rgb, uFilter), c.a);
             }
         """
         private const val VERTEX_TILE = """
@@ -681,7 +690,7 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
          * Kachel: Form per Abstandsfunktion, Kamerabild mittig zugeschnitten, Rahmen als
          * wandernder Regenbogen (Farbton = Winkel + Zeit), außen weiches Leuchten.
          */
-        private const val FRAGMENT_TILE = """
+        private val FRAGMENT_TILE = """
             #extension GL_OES_EGL_image_external : require
             precision mediump float;
             varying vec2 vLocal;
@@ -698,6 +707,8 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
             uniform float uTime;
             uniform vec4 uFill;
             uniform float uRot;
+            uniform int uFilter;
+            ${ColorFilters.GLSL}
 
             vec3 hsv(float h) {
                 vec3 p = abs(fract(vec3(h) + vec3(0.0, 2.0/3.0, 1.0/3.0)) * 6.0 - 3.0);
@@ -722,6 +733,7 @@ class CompositorProcessor(private val overlays: OverlayStore) : SurfaceProcessor
                 vec2 tb = (bufNdc + 1.0) * 0.5;
                 vec2 cam = (uTexMatrix * vec4(tb, 0.0, 1.0)).xy;
                 vec4 c = texture2D(sTexture, cam);
+                c = vec4(grade(c.rgb, uFilter), c.a);
                 if (disp.x < 0.0 || disp.x > 1.0 || disp.y < 0.0 || disp.y > 1.0) c = uFill;   // Inhalt kleiner als Kachel
 
                 float angle = atan(p.y, p.x) / 6.2831853;

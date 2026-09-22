@@ -252,6 +252,9 @@ class MainActivity : AppCompatActivity() {
         binding.addTextButton.setOnClickListener { showTextDialog(null) }
         binding.greenscreenButton.setOnClickListener { onGreenscreenPressed() }
         binding.mosaicButton.setOnClickListener { showMosaicDialog() }
+        binding.filterButton.setOnClickListener { showFilterDialog() }
+        compositor.colorFilter = prefs.getInt("color_filter", 0)
+        updateFilterButton()
         binding.tileMediaButton.setOnClickListener {
             if (mosaic.selected >= 0) pickTileImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         }
@@ -724,6 +727,57 @@ class MainActivity : AppCompatActivity() {
         textDialog.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         textDialog.show()
         input.requestFocus()
+    }
+
+    // ---------------------------------------------------------------- Farbfilter
+
+    private fun updateFilterButton() {
+        binding.filterButton.setBackgroundResource(if (compositor.colorFilter != 0) R.drawable.bg_round_button_accent else R.drawable.bg_round_button)
+    }
+
+    /** Filter-Auswahl als Vorschaukarten; wirkt sofort in Vorschau und Aufnahme (auch mitten im Segment). */
+    private fun showFilterDialog() {
+        val dp = resources.displayMetrics.density
+        val pad = (12 * dp).toInt()
+        val cardW = (104 * dp).toInt(); val cardH = (74 * dp).toInt()
+        val row = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.HORIZONTAL; setPadding(pad, pad, pad, 0) }
+        lateinit var dlg: AlertDialog
+        fun render() {
+            row.removeAllViews()
+            de.codinix.videoeditor.gl.ColorFilters.NAMES.forEachIndexed { idx, name ->
+                val img = android.widget.ImageView(this).apply {
+                    scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+                    setImageBitmap(de.codinix.videoeditor.gl.ColorFilters.preview(idx, 96, 68))
+                    clipToOutline = true
+                    background = android.graphics.drawable.GradientDrawable().apply { cornerRadius = 8 * dp }
+                }
+                val label = android.widget.TextView(this).apply { text = name; textSize = 11f; gravity = android.view.Gravity.CENTER; setPadding(0, pad / 3, 0, 0) }
+                val card = android.widget.LinearLayout(this).apply {
+                    orientation = android.widget.LinearLayout.VERTICAL
+                    layoutParams = android.widget.LinearLayout.LayoutParams(cardW, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT).apply { setMargins(pad / 3, 0, pad / 3, 0) }
+                    background = android.graphics.drawable.GradientDrawable().apply {
+                        cornerRadius = 10 * dp; setColor(0xFF2A2A34.toInt())
+                        setStroke((2.5f * dp).toInt(), if (idx == compositor.colorFilter) 0xFFFF3B4E.toInt() else 0x00000000)
+                    }
+                    setPadding(pad / 2, pad / 2, pad / 2, pad / 2)
+                    addView(img, android.widget.LinearLayout.LayoutParams(cardW - pad, cardH))
+                    addView(label)
+                    setOnClickListener {
+                        compositor.colorFilter = idx
+                        prefs.edit().putInt("color_filter", idx).apply()
+                        updateFilterButton(); persistSession(); render()
+                    }
+                }
+                row.addView(card)
+            }
+        }
+        render()
+        dlg = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.filter)
+            .setView(android.widget.HorizontalScrollView(this).apply { addView(row); isHorizontalScrollBarEnabled = false })
+            .setPositiveButton(R.string.ok, null)
+            .create()
+        dlg.show()
     }
 
     // ---------------------------------------------------------------- Mosaik
@@ -2210,6 +2264,7 @@ class MainActivity : AppCompatActivity() {
             }) else null
             val root = org.json.JSONObject()
                 .put("segments", segs).put("overlays", ovs).put("audioTracks", tracks)
+                .put("colorFilter", compositor.colorFilter)
                 .put("mosaic", mosaicJson ?: org.json.JSONObject.NULL)
                 .put("captions", de.codinix.videoeditor.whisper.Caption.listToJson(captions))
                 .put("captionSettings", captionSettings.toJson())

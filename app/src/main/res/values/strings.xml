@@ -136,4 +136,5 @@
     <string name="delete_segment_title">Segment löschen?</string>
     <string name="delete_segment_msg">Segment %1$d (%2$s) wird entfernt. Untertitel und Overlay-Ton werden angepasst.</string>
     <string name="undo_delete">Rückgängig</string>
+    <string name="filter">Farbfilter</string>
 </resources>

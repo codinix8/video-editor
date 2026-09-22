@@ -74,78 +74,135 @@
             android:layout_marginTop="4dp" />
     </LinearLayout>
 
-    <!-- Rechte Seitenleiste -->
-    <ImageButton
-        android:id="@+id/flipButton"
-        android:layout_width="52dp"
-        android:layout_height="52dp"
+    <!-- Rechte Seitenleiste (scrollbar) -->
+    <ScrollView
+        android:id="@+id/rightBar"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="12dp"
-        android:background="@drawable/bg_round_button"
-        android:contentDescription="@string/flip_camera"
-        android:src="@drawable/ic_flip_camera"
+        android:layout_marginBottom="8dp"
+        android:scrollbars="none"
+        android:overScrollMode="never"
+        android:requiresFadingEdge="vertical"
+        android:fadingEdgeLength="24dp"
+        app:layout_constraintBottom_toTopOf="@id/recordButton"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/statusText" />
+        app:layout_constraintTop_toBottomOf="@id/statusText">
 
-    <TextView
-        android:id="@+id/qualityButton"
-        android:layout_width="52dp"
-        android:layout_height="52dp"
-        android:layout_marginTop="10dp"
-        android:background="@drawable/bg_round_button"
-        android:contentDescription="@string/quality"
-        android:gravity="center"
-        android:text="…"
-        android:textColor="#FFFFFF"
-        android:textSize="13sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="@id/flipButton"
-        app:layout_constraintTop_toBottomOf="@id/flipButton" />
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="end">
 
-    <ImageButton
-        android:id="@+id/addImageButton"
-        android:layout_width="52dp"
-        android:layout_height="52dp"
-        android:layout_marginTop="10dp"
-        android:background="@drawable/bg_round_button"
-        android:contentDescription="@string/add_image"
-        android:src="@drawable/ic_add_image"
-        app:layout_constraintEnd_toEndOf="@id/flipButton"
-        app:layout_constraintTop_toBottomOf="@id/qualityButton" />
+            <ImageButton
+            android:id="@+id/flipButton"
+            android:layout_width="52dp"
+            android:layout_marginBottom="10dp"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_round_button"
+            android:contentDescription="@string/flip_camera"
+            android:src="@drawable/ic_flip_camera" />
 
-    <ImageButton
-        android:id="@+id/addVideoButton"
-        android:layout_width="52dp"
-        android:layout_height="52dp"
-        android:layout_marginTop="10dp"
-        android:background="@drawable/bg_round_button"
-        android:contentDescription="@string/add_video"
-        android:src="@drawable/ic_add_video"
-        app:layout_constraintEnd_toEndOf="@id/flipButton"
-        app:layout_constraintTop_toBottomOf="@id/addImageButton" />
+            <TextView
+            android:id="@+id/qualityButton"
+            android:layout_width="52dp"
+            android:layout_marginBottom="10dp"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_round_button"
+            android:contentDescription="@string/quality"
+            android:gravity="center"
+            android:text="…"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:textStyle="bold" />
 
-    <ImageButton
-        android:id="@+id/micButton"
-        android:layout_width="52dp"
-        android:layout_height="52dp"
-        android:layout_marginTop="10dp"
-        android:background="@drawable/bg_round_button"
-        android:contentDescription="@string/mic_volume"
-        android:src="@drawable/ic_mic"
-        app:layout_constraintEnd_toEndOf="@id/flipButton"
-        app:layout_constraintTop_toBottomOf="@id/addVideoButton" />
+            <ImageButton
+            android:id="@+id/filterButton"
+            android:layout_width="52dp"
+            android:layout_marginBottom="10dp"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_round_button"
+            android:contentDescription="@string/filter"
+            android:src="@drawable/ic_filter" />
 
-    <ImageButton
-        android:id="@+id/previewSoundButton"
-        android:layout_width="52dp"
-        android:layout_height="52dp"
-        android:layout_marginTop="10dp"
-        android:alpha="0.5"
-        android:background="@drawable/bg_round_button"
-        android:contentDescription="@string/preview_sound"
-        android:src="@drawable/ic_headphones"
-        app:layout_constraintEnd_toEndOf="@id/flipButton"
-        app:layout_constraintTop_toBottomOf="@id/micButton" />
+            <ImageButton
+            android:id="@+id/addImageButton"
+            android:layout_width="52dp"
+            android:layout_marginBottom="10dp"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_round_button"
+            android:contentDescription="@string/add_image"
+            android:src="@drawable/ic_add_image" />
+
+            <ImageButton
+            android:id="@+id/addVideoButton"
+            android:layout_width="52dp"
+            android:layout_marginBottom="10dp"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_round_button"
+            android:contentDescription="@string/add_video"
+            android:src="@drawable/ic_add_video" />
+
+            <ImageButton
+            android:id="@+id/addTextButton"
+            android:layout_width="52dp"
+            android:layout_marginBottom="10dp"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_round_button"
+            android:contentDescription="@string/add_text"
+            android:src="@drawable/ic_text" />
+
+            <ImageButton
+            android:id="@+id/greenscreenButton"
+            android:layout_width="52dp"
+            android:layout_marginBottom="10dp"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_round_button"
+            android:contentDescription="@string/greenscreen"
+            android:src="@drawable/ic_person_bg" />
+
+            <ImageButton
+            android:id="@+id/mosaicButton"
+            android:layout_width="52dp"
+            android:layout_marginBottom="10dp"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_round_button"
+            android:contentDescription="@string/mosaic"
+            android:src="@drawable/ic_mosaic" />
+
+            <ImageButton
+            android:id="@+id/micButton"
+            android:layout_width="52dp"
+            android:layout_marginBottom="10dp"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_round_button"
+            android:contentDescription="@string/mic_volume"
+            android:src="@drawable/ic_mic" />
+
+            <ImageButton
+            android:id="@+id/previewSoundButton"
+            android:layout_width="52dp"
+            android:layout_marginBottom="10dp"
+            android:layout_height="52dp"
+            android:alpha="0.5"
+            android:background="@drawable/bg_round_button"
+            android:contentDescription="@string/preview_sound"
+            android:src="@drawable/ic_headphones" />
+        </LinearLayout>
+    </ScrollView>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
 
     <ImageButton
         android:id="@+id/soundButton"
@@ -172,27 +229,9 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/statusText" />
 
-    <ImageButton
-        android:id="@+id/addTextButton"
-        android:layout_width="52dp"
-        android:layout_height="52dp"
-        android:layout_marginTop="10dp"
-        android:background="@drawable/bg_round_button"
-        android:contentDescription="@string/add_text"
-        android:src="@drawable/ic_text"
-        app:layout_constraintEnd_toEndOf="@id/flipButton"
-        app:layout_constraintTop_toBottomOf="@id/previewSoundButton" />
+    
 
-    <ImageButton
-        android:id="@+id/greenscreenButton"
-        android:layout_width="52dp"
-        android:layout_height="52dp"
-        android:layout_marginTop="10dp"
-        android:background="@drawable/bg_round_button"
-        android:contentDescription="@string/greenscreen"
-        android:src="@drawable/ic_person_bg"
-        app:layout_constraintEnd_toEndOf="@id/flipButton"
-        app:layout_constraintTop_toBottomOf="@id/addTextButton" />
+    
 
     <ImageButton
         android:id="@+id/shapeButton"
@@ -220,16 +259,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/statusText" />
 
-    <ImageButton
-        android:id="@+id/mosaicButton"
-        android:layout_width="52dp"
-        android:layout_height="52dp"
-        android:layout_marginTop="10dp"
-        android:background="@drawable/bg_round_button"
-        android:contentDescription="@string/mosaic"
-        android:src="@drawable/ic_mosaic"
-        app:layout_constraintEnd_toEndOf="@id/flipButton"
-        app:layout_constraintTop_toBottomOf="@id/greenscreenButton" />
+    
 
     <ImageButton
         android:id="@+id/tileMediaButton"
