@@ -224,6 +224,7 @@ class MainActivity : AppCompatActivity() {
         recoverSessionIfAny()
         prefetchCaptionModel()
         captionSettings = loadDefaultCaptionSettings()
+        prefs.getString("default_quality", null)?.let { q -> preferredQuality = QUALITY_ORDER.firstOrNull { label(it) == q } }
         cacheDir.listFiles()?.filter { it.name.startsWith("overlay_video_") || it.name.startsWith("export_") }
             ?.forEach { it.delete() }
 
@@ -253,6 +254,8 @@ class MainActivity : AppCompatActivity() {
         binding.greenscreenButton.setOnClickListener { onGreenscreenPressed() }
         binding.mosaicButton.setOnClickListener { showMosaicDialog() }
         binding.filterButton.setOnClickListener { showFilterDialog() }
+        binding.settingsButton.setOnClickListener { showSettings() }
+        if (!prefs.getBoolean("tips_shown", false)) { main.postDelayed({ showFirstRunTips() }, 1200) }
         compositor.colorFilter = prefs.getInt("color_filter", 0)
         updateFilterButton()
         binding.tileMediaButton.setOnClickListener {
@@ -300,6 +303,7 @@ class MainActivity : AppCompatActivity() {
         binding.previewSoundButton.setOnClickListener {
             previewSoundOn = !previewSoundOn
             binding.previewSoundButton.alpha = if (previewSoundOn) 1f else 0.5f
+            onVideoPresenceChanged()
             binding.previewSoundButton.setBackgroundResource(
                 if (previewSoundOn) R.drawable.bg_round_button_accent else R.drawable.bg_round_button)
             overlayStore.videoOverlay()?.let { o -> overlayPlayer?.volume = previewVolume(o) }
@@ -727,6 +731,127 @@ class MainActivity : AppCompatActivity() {
         input.requestFocus()
     }
 
+    // ---------------------------------------------------------------- Einstellungen & Tipps
+
+    private fun showSettings() {
+        val dp = resources.displayMetrics.density
+        val pad = (16 * dp).toInt()
+        fun header(res: Int) = android.widget.TextView(this).apply { text = getString(res); textSize = 13f; alpha = 0.7f; setPadding(0, pad, 0, pad / 4) }
+        val box = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.VERTICAL; setPadding(pad, 0, pad, pad) }
+
+        // Untertitel
+        box.addView(header(R.string.settings_captions))
+        val auto = com.google.android.material.materialswitch.MaterialSwitch(this).apply {
+            text = getString(R.string.captions_always); isChecked = prefs.getBoolean("captions_auto", false)
+            setOnCheckedChangeListener { _, on -> prefs.edit().putBoolean("captions_auto", on).apply() }
+        }
+        box.addView(auto)
+        val langSpinner = android.widget.Spinner(this).apply {
+            adapter = android.widget.ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, captionLanguages.map { it.second })
+            setSelection(captionLanguages.indexOfFirst { it.first == prefs.getString("captions_lang", null) }.coerceAtLeast(0))
+            onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(p: android.widget.AdapterView<*>?, v: android.view.View?, pos: Int, id: Long) { prefs.edit().putString("captions_lang", captionLanguages[pos].first).apply() }
+                override fun onNothingSelected(p: android.widget.AdapterView<*>?) {}
+            }
+        }
+        box.addView(android.widget.TextView(this).apply { text = getString(R.string.captions_language); textSize = 12f; alpha = 0.7f })
+        box.addView(langSpinner)
+        val models = de.codinix.videoeditor.whisper.ModelManager.Model.values()
+        val modelSpinner = android.widget.Spinner(this).apply {
+            adapter = android.widget.ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
+                models.map { it.label + if (modelManager.isAvailable(it)) "" else " · ${it.approxMb} MB Download" })
+            setSelection(prefs.getInt("captions_model", 1))
+            onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(p: android.widget.AdapterView<*>?, v: android.view.View?, pos: Int, id: Long) {
+                    if (prefs.getInt("captions_model", 1) != pos) { prefs.edit().putInt("captions_model", pos).apply(); prefetchCaptionModel() }
+                }
+                override fun onNothingSelected(p: android.widget.AdapterView<*>?) {}
+            }
+        }
+        box.addView(android.widget.TextView(this).apply { text = getString(R.string.captions_model); textSize = 12f; alpha = 0.7f; setPadding(0, pad / 2, 0, 0) })
+        box.addView(modelSpinner)
+
+        // Aufnahme
+        box.addView(header(R.string.settings_recording))
+        val qualities = listOf<Quality?>(null) + QUALITY_ORDER
+        val qualitySpinner = android.widget.Spinner(this).apply {
+            adapter = android.widget.ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
+                qualities.map { q -> if (q == null) getString(R.string.settings_default_quality_highest) else label(q) })
+            setSelection(qualities.indexOfFirst { q -> (q?.let { label(it) }) == prefs.getString("default_quality", null) }.coerceAtLeast(0))
+            onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(p: android.widget.AdapterView<*>?, v: android.view.View?, pos: Int, id: Long) {
+                    val q = qualities[pos]
+                    prefs.edit().putString("default_quality", q?.let { label(it) }).apply()
+                    if (segments.isEmpty() && activeRecording == null) { preferredQuality = q; bindCamera() }
+                }
+                override fun onNothingSelected(p: android.widget.AdapterView<*>?) {}
+            }
+        }
+        box.addView(android.widget.TextView(this).apply { text = getString(R.string.settings_default_quality); textSize = 12f; alpha = 0.7f })
+        box.addView(qualitySpinner)
+        val previewSound = com.google.android.material.materialswitch.MaterialSwitch(this).apply {
+            text = getString(R.string.preview_sound); isChecked = previewSoundOn; setPadding(0, pad / 2, 0, 0)
+            setOnCheckedChangeListener { _, on -> if (on != previewSoundOn) binding.previewSoundButton.performClick() }
+        }
+        box.addView(previewSound)
+
+        // Mosaik
+        box.addView(header(R.string.settings_mosaic))
+        box.addView(com.google.android.material.materialswitch.MaterialSwitch(this).apply {
+            text = getString(R.string.mosaic_gap_white); isChecked = prefs.getBoolean("mosaic_gap_white", false)
+            setOnCheckedChangeListener { _, on -> prefs.edit().putBoolean("mosaic_gap_white", on).apply(); mosaic.gapWhite = on; publishMosaic() }
+        })
+        box.addView(com.google.android.material.materialswitch.MaterialSwitch(this).apply {
+            text = getString(R.string.mosaic_rainbow); isChecked = prefs.getBoolean("mosaic_rainbow", false)
+            setOnCheckedChangeListener { _, on -> prefs.edit().putBoolean("mosaic_rainbow", on).apply(); mosaic.rainbowGaps = on; publishMosaic() }
+        })
+
+        // Hilfe
+        box.addView(header(R.string.settings_help))
+        box.addView(android.widget.Button(this, null, android.R.attr.borderlessButtonStyle).apply {
+            text = getString(R.string.settings_show_tips)
+            setOnClickListener { prefs.edit().putBoolean("tips_shown", false).putBoolean("tip_headphones_shown", false).apply(); showFirstRunTips() }
+        })
+        box.addView(android.widget.Button(this, null, android.R.attr.borderlessButtonStyle).apply {
+            text = getString(R.string.settings_crash)
+            setOnClickListener {
+                val rep = CrashLog.previous(this@MainActivity)
+                if (rep == null) Toast.makeText(this@MainActivity, R.string.settings_no_crash, Toast.LENGTH_SHORT).show()
+                else MaterialAlertDialogBuilder(this@MainActivity).setTitle(R.string.settings_crash)
+                    .setView(android.widget.ScrollView(this@MainActivity).apply { addView(android.widget.TextView(this@MainActivity).apply { text = rep; textSize = 11f; typeface = android.graphics.Typeface.MONOSPACE; setTextIsSelectable(true); setPadding(pad, 0, pad, 0) }) })
+                    .setPositiveButton(R.string.copy) { _, _ ->
+                        getSystemService(android.content.ClipboardManager::class.java).setPrimaryClip(android.content.ClipData.newPlainText("crash", rep))
+                        Toast.makeText(this@MainActivity, R.string.copied, Toast.LENGTH_SHORT).show()
+                    }.setNegativeButton(R.string.ok, null).show()
+            }
+        })
+        box.addView(android.widget.TextView(this).apply { text = getString(R.string.settings_version, BuildConfig.VERSION_NAME); textSize = 12f; alpha = 0.6f; setPadding(0, pad, 0, 0) })
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.settings)
+            .setView(android.widget.ScrollView(this).apply { addView(box) })
+            .setPositiveButton(R.string.ok, null)
+            .show()
+    }
+
+    /** Drei kurze Tipp-Karten beim ersten Öffnen, nacheinander. */
+    private fun showFirstRunTips() {
+        prefs.edit().putBoolean("tips_shown", true).apply()
+        showTip(getString(R.string.tip_record), 4500, gesture = false)
+        main.postDelayed({ showTip(getString(R.string.tip_toolbar), 4500, gesture = false) }, 5000)
+        main.postDelayed({ showTip(getString(R.string.tip_overlays), 5500, gesture = true) }, 10_000)
+    }
+
+    /** Einmaliger Hinweis beim ersten Video im Bild; Punkt am Kopfhörer-Knopf, solange Ton nur mit Kopfhörern hörbar wäre. */
+    private fun onVideoPresenceChanged() {
+        val hasVideo = anyLiveVideo()
+        binding.previewSoundButton.setImageResource(if (hasVideo && !previewSoundOn) R.drawable.ic_headphones_dot else R.drawable.ic_headphones)
+        if (hasVideo && !prefs.getBoolean("tip_headphones_shown", false)) {
+            prefs.edit().putBoolean("tip_headphones_shown", true).apply()
+            showTip(getString(R.string.tip_headphones), 7000, gesture = false)
+        }
+    }
+
     // ---------------------------------------------------------------- Farbfilter
 
     private fun updateFilterButton() {
@@ -787,6 +912,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateTileButtons() {
+        onVideoPresenceChanged()
         val show = mosaicActive && mosaic.selected >= 0
         if (show) {
             // Overlay-Knopfspalte ausblenden, solange eine Kachel ausgewählt ist
@@ -1001,6 +1127,7 @@ class MainActivity : AppCompatActivity() {
         attachTileVideo(v)
         publishMosaic(); updateTileButtons()
         persistSession()
+        onVideoPresenceChanged()
     }
 
     /** Player + GL-Ebene für ein Kachelvideo. */
@@ -1058,7 +1185,9 @@ class MainActivity : AppCompatActivity() {
     private fun resetMosaic() {
         tilePlayers.values.forEach { it.release() }; tilePlayers.clear()
         mosaic.tiles.forEach { t -> t.video?.let { compositor.releaseVideoLayer(it.id) } }
-        mosaic = de.codinix.videoeditor.overlay.Mosaic(de.codinix.videoeditor.overlay.Mosaic.LAYOUT_NONE)
+        mosaic = de.codinix.videoeditor.overlay.Mosaic(de.codinix.videoeditor.overlay.Mosaic.LAYOUT_NONE).apply {
+            gapWhite = prefs.getBoolean("mosaic_gap_white", false); rainbowGaps = prefs.getBoolean("mosaic_rainbow", false)
+        }
         binding.tileVideoButton.setOnClickListener {
             if (mosaic.selected >= 0) pickTileVideo.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
         }
@@ -1169,6 +1298,7 @@ class MainActivity : AppCompatActivity() {
                     overlay.addEvent(total, 1f, true)
                     overlayStore.add(overlay)
                     attachVideoOverlay(overlay)
+                    onVideoPresenceChanged()
                     if (asBackground) {
                         overlayStore.selectedId = null
                         updateOverlayButtons(null)

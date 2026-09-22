@@ -33,12 +33,15 @@ object CrashLog {
         }
     }
 
-    /** Liefert den letzten Absturzbericht und löscht ihn. */
+    /** Liefert den letzten Absturzbericht und löscht ihn (eine Kopie bleibt für die Einstellungen). */
     fun takeLast(context: Context): String? {
         val f = file(context)
         if (!f.exists()) return null
         val text = f.readText()
+        File(context.filesDir, "crash_prev.txt").writeText(text)
         f.delete()
         return text
     }
+
+    fun previous(context: Context): String? = File(context.filesDir, "crash_prev.txt").takeIf { it.exists() }?.readText()
 }

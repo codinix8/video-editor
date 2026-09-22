@@ -137,4 +137,19 @@
     <string name="delete_segment_msg">Segment %1$d (%2$s) wird entfernt. Untertitel und Overlay-Ton werden angepasst.</string>
     <string name="undo_delete">Rückgängig</string>
     <string name="filter">Farbfilter</string>
+    <string name="settings">Einstellungen</string>
+    <string name="settings_captions">Untertitel</string>
+    <string name="settings_recording">Aufnahme</string>
+    <string name="settings_default_quality">Standard-Auflösung</string>
+    <string name="settings_default_quality_highest">Höchste der Kamera</string>
+    <string name="settings_mosaic">Mosaik</string>
+    <string name="settings_help">Hilfe</string>
+    <string name="settings_show_tips">Tipps beim nächsten Start erneut zeigen</string>
+    <string name="settings_crash">Letzten Absturzbericht anzeigen</string>
+    <string name="settings_no_crash">Kein Absturzbericht vorhanden</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="tip_record">Roter Knopf: Aufnahme starten, nochmal Tippen pausiert. Das letzte Segment löschst du unten links.</string>
+    <string name="tip_toolbar">Rechte Leiste: Filter, Bilder, Videos, Text, Kachel-Modus und Mosaik – sie lässt sich scrollen.</string>
+    <string name="tip_overlays">Overlays antippen, ziehen, mit zwei Fingern zoomen und drehen. Häkchen: Vorschau und Speichern.</string>
+    <string name="tip_headphones">Den Ton dieses Videos hörst du in der Vorschau nur mit Kopfhörern (Schalter rechts) – so bleibt dein Mikrofon sauber. Im fertigen Video ist er immer dabei.</string>
 </resources>
