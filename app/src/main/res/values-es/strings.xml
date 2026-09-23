@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Babacut</string>
+    <string name="record">Iniciar grabación</string>
+    <string name="stop">Pausar grabación</string>
+    <string name="flip_camera">Cambiar cámara</string>
+    <string name="delete_last">Borrar último segmento</string>
+    <string name="finish">Finalizar</string>
+    <string name="quality">Resolución</string>
+    <string name="permission_needed">Se necesita acceso a la cámara y al micrófono.</string>
+    <string name="saved">Vídeo guardado en la galería</string>
+    <string name="error">Error: %1$s</string>
+    <string name="ready">Listo – pulsa el botón para grabar</string>
+    <string name="recording">Grabando… %1$s</string>
+    <string name="paused">Pausa · %1$d segmentos · %2$s</string>
+    <string name="tap_again_delete">Toca otra vez para borrar el último segmento</string>
+    <string name="segment_deleted">Segmento borrado</string>
+    <string name="no_segments">Aún no hay grabación</string>
+    <string name="export_title">Guardar vídeo</string>
+    <string name="export_resolution">Resolución de exportación</string>
+    <string name="export_original">Original (rápido, sin recodificar)</string>
+    <string name="export_running">Uniendo el vídeo… %1$d %%</string>
+    <string name="discard_title">¿Descartar la grabación?</string>
+    <string name="discard_msg">Se perderán %1$d segmentos.</string>
+    <string name="discard">Descartar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="save">Guardar</string>
+    <string name="quality_title">Resolución de grabación</string>
+    <string name="back_to_record">Volver a grabar</string>
+    <string name="review_hint">Toca: pausa/continuar · En bucle</string>
+    <string name="review_position">%1$s / %2$s · %3$d segmentos</string>
+    <string name="add_image">Añadir imagen de la galería</string>
+    <string name="remove_overlay">Quitar superposición</string>
+    <string name="overlay_hint">Arrastra para mover · dos dedos: tamaño/rotación</string>
+    <string name="drafts">Borradores</string>
+    <string name="save_draft">Guardar como borrador</string>
+    <string name="draft_saved">Borrador guardado</string>
+    <string name="draft_loaded">Borrador cargado</string>
+    <string name="no_drafts">No hay borradores</string>
+    <string name="draft_item">%1$s · %2$d segmentos · %3$s</string>
+    <string name="open">Abrir</string>
+    <string name="delete">Borrar</string>
+    <string name="add_video">Añadir vídeo de la galería</string>
+    <string name="video_copying">Preparando el vídeo…</string>
+    <string name="only_one_video">Solo una superposición de vídeo a la vez – quita primero la actual</string>
+    <string name="sound_on">Sonido de la superposición: activado</string>
+    <string name="sound_off">Sonido de la superposición: desactivado</string>
+    <string name="overlay_volume_title">Volumen del vídeo superpuesto</string>
+    <string name="volume_percent">%1$d %%</string>
+    <string name="volume_hint">Se aplica a la exportación y la revisión. En la vista previa solo se oye con el interruptor de auriculares.</string>
+    <string name="mic_volume">Volumen del micrófono</string>
+    <string name="headphones_on">Auriculares detectados – sonido de superposición en la vista previa</string>
+    <string name="share">Compartir</string>
+    <string name="saved_title">Vídeo guardado</string>
+    <string name="saved_msg">El vídeo está en la galería en Movies/VideoEditor.</string>
+    <string name="export_running_mix">Renderizando (con sonido de superposición)… %1$d %%</string>
+    <string name="ok">OK</string>
+    <string name="mic_volume_title">Volumen del micrófono</string>
+    <string name="mic_hint">Se aplica a tu grabación al exportar. 100 %% = sin cambios, 50 %% suena la mitad.</string>
+    <string name="crash_title">La app se cerró inesperadamente</string>
+    <string name="crash_msg">Copia el informe y envíaselo al desarrollador.</string>
+    <string name="copy">Copiar todo</string>
+    <string name="copied">Copiado al portapapeles</string>
+    <string name="recovered">Grabación restaurada como borrador tras el cierre</string>
+    <string name="preview_sound">Sonido de superposición en la vista previa (¡solo con auriculares!)</string>
+    <string name="preview_sound_on">Sonido de vista previa ACTIVADO – úsalo solo con auriculares, si no el micrófono lo captará</string>
+    <string name="preview_sound_off">Sonido de vista previa desactivado</string>
+    <string name="preparing_audio">Preparando el audio…</string>
+    <string name="overlay_pause">Pausar vídeo superpuesto</string>
+    <string name="overlay_play">Reanudar vídeo superpuesto</string>
+    <string name="add_text">Añadir texto</string>
+    <string name="edit_text">Editar texto</string>
+    <string name="text_dialog_title">Texto</string>
+    <string name="text_hint">Escribe texto o emojis…</string>
+    <string name="text_background">Fondo</string>
+    <string name="text_color">Color</string>
+    <string name="text_opacity">Opacidad del texto</string>
+    <string name="bg_color">Color de fondo</string>
+    <string name="bg_opacity">Opacidad del fondo</string>
+    <string name="greenscreen">Modo mosaico: vídeo de fondo</string>
+    <string name="greenscreen_on">Modo mosaico: cámara frontal activa – cambia con ↻. Izquierda: forma y Arcoíris Baba.</string>
+    <string name="greenscreen_remove_title">¿Salir del modo mosaico?</string>
+    <string name="greenscreen_remove_msg">Se quita el vídeo de fondo; su sonido se conserva hasta aquí.</string>
+    <string name="remove">Quitar</string>
+    <string name="greenscreen_conflict">Quita primero el vídeo en miniatura – solo puede reproducirse un vídeo a la vez.</string>
+    <string name="shape">Forma del recuadro</string>
+    <string name="shape_square">Cuadrado</string>
+    <string name="shape_portrait">Rectángulo (3:4)</string>
+    <string name="shape_circle">Círculo</string>
+    <string name="border_toggle">Arcoíris Baba sí/no</string>
+    <string name="captions">Subtítulos</string>
+    <string name="captions_title">Subtítulos por reconocimiento de voz</string>
+    <string name="captions_language">Idioma</string>
+    <string name="captions_auto">Detectar automáticamente</string>
+    <string name="captions_always">Generar siempre al abrir la revisión</string>
+    <string name="captions_generate">Generar</string>
+    <string name="captions_regenerate">Regenerar</string>
+    <string name="captions_remove">Quitar</string>
+    <string name="captions_model_download">Descargando modelo de voz (una vez, aprox. %1$d MB)… %2$d %%</string>
+    <string name="captions_preparing">Preparando el audio… %1$d %%</string>
+    <string name="captions_running">Reconocimiento de voz… %1$d %%</string>
+    <string name="captions_done">%1$d subtítulos creados (idioma: %2$s)</string>
+    <string name="captions_none">No se detectó voz</string>
+    <string name="captions_export_note">Los subtítulos se incrustan al guardar (recodificación).</string>
+    <string name="captions_template">Estilo</string>
+    <string name="captions_model">Reconocimiento</string>
+    <string name="captions_prefetch">El modelo de voz se descarga en segundo plano (una vez, aprox. %1$d MB)</string>
+    <string name="captions_prefetch_done">Modelo de voz listo</string>
+    <string name="captions_hint">Subtítulos: arrastra para mover, dos dedos para tamaño y rotación</string>
+    <string name="tile_volume_title">Volumen en modo mosaico</string>
+    <string name="tile_bg_volume">Vídeo de fondo</string>
+    <string name="tile_mic_volume">Mi voz (micrófono)</string>
+    <string name="tile_volume_hint">Porcentaje = sonoridad percibida: 50 %% suena la mitad, 0 %% es silencio.</string>
+    <string name="captions_emojis">Mostrar emojis (p. ej. Irán 🇮🇷, explosión 💥)</string>
+    <string name="captions_edit">Editar</string>
+    <string name="captions_edit_title">Editar subtítulos</string>
+    <string name="limit_reached">Límite de 5 minutos alcanzado – borra segmentos para seguir grabando</string>
+    <string name="low_space">Poco espacio: solo %1$.1f GB libres</string>
+    <string name="mosaic">Mosaico</string>
+    <string name="mosaic_title">Cuadrícula del mosaico</string>
+    <string name="mosaic_gap_white">Separadores y relleno en blanco (si no, negro)</string>
+    <string name="mosaic_rainbow">Separadores como Arcoíris Baba</string>
+    <string name="mosaic_hint">Toca un recuadro: medio, cámara, color de relleno · arrastra para mover, dos dedos para zoom</string>
+    <string name="mosaic_conflict">Sal primero del modo mosaico.</string>
+    <string name="tile_media">Imagen en este recuadro</string>
+    <string name="tile_camera">Recuadro de vuelta a la cámara</string>
+    <string name="tile_fill">Color de relleno de este recuadro</string>
+    <string name="mosaic_tip">Toca un recuadro y usa los botones de arriba a la izquierda</string>
+    <string name="tile_video">Vídeo en este recuadro</string>
+    <string name="tile_video_downscale">Convirtiendo el vídeo a 1080p… %1$d %%</string>
+    <string name="segment_moved">Segmento movido</string>
+    <string name="segment_last_keep">El último segmento no se puede borrar aquí – descarta la grabación.</string>
+    <string name="delete_segment_title">¿Borrar segmento?</string>
+    <string name="delete_segment_msg">Se quitará el segmento %1$d (%2$s). Subtítulos y sonido se ajustan.</string>
+    <string name="undo_delete">Deshacer</string>
+    <string name="filter">Filtro de color</string>
+    <string name="settings">Ajustes</string>
+    <string name="settings_captions">Subtítulos</string>
+    <string name="settings_recording">Grabación</string>
+    <string name="settings_default_quality">Resolución predeterminada</string>
+    <string name="settings_default_quality_highest">La máxima de la cámara</string>
+    <string name="settings_mosaic">Mosaico</string>
+    <string name="settings_help">Ayuda</string>
+    <string name="settings_show_tips">Mostrar los consejos de nuevo al iniciar</string>
+    <string name="settings_crash">Mostrar último informe de cierre</string>
+    <string name="settings_no_crash">No hay informe de cierre</string>
+    <string name="settings_version">Versión %1$s</string>
+    <string name="tip_record">Botón rojo: empieza a grabar, toca otra vez para pausar. Borra el último segmento abajo a la izquierda.</string>
+    <string name="tip_toolbar">Barra derecha: filtros, imágenes, vídeos, texto, modo mosaico y cuadrícula – se desplaza.</string>
+    <string name="tip_overlays">Toca las superposiciones, arrástralas, zoom y rotación con dos dedos. Marca: vista previa y guardar.</string>
+    <string name="tip_headphones">El sonido de este vídeo solo se oye en la vista previa con auriculares (interruptor a la derecha) – así tu micrófono queda limpio. En el vídeo final siempre está.</string>
+    <string name="off">No</string>
+    <string name="seg_label">S%1$d</string>
+    <string name="start_label">Inicio %1$s</string>
+    <string name="end_label">Fin %1$s</string>
+    <string name="fine_scrub">Ajuste fino</string>
+    <string name="drop_delete">Suelta para borrar</string>
+    <string name="drag_hint">Suelta entre segmentos · en la papelera de arriba para borrar</string>
+    <string name="mosaic_first_off">Desactiva primero el mosaico.</string>
+    <string name="export_levels">Exportación: %1$d pista(s) de superposición %2$s, micrófono %3$d %%</string>
+    <string name="caption_preview_words">Así se ve tu texto</string>
+    <string name="settings_language">Idioma de la app</string>
+    <string name="language_system">Idioma del sistema</string>
+    <string-array name="filter_names">
+        <item>Original</item>
+        <item>Cálido</item>
+        <item>Frío</item>
+        <item>Blanco y negro</item>
+        <item>Vintage</item>
+        <item>Vivo</item>
+        <item>Mate</item>
+        <item>Cine</item>
+        <item>Pastel</item>
+    </string-array>
+    <string-array name="caption_templates">
+        <item>Clásico</item>
+        <item>Barra</item>
+        <item>Karaoke</item>
+        <item>Palabra a palabra</item>
+        <item>Acento</item>
+        <item>Neón</item>
+        <item>Caja resaltada</item>
+        <item>Sombra</item>
+        <item>Bicolor</item>
+        <item>Máquina de escribir</item>
+        <item>Grande y pequeño</item>
+    </string-array>
+    <string-array name="model_labels">
+        <item>Top (rápido)</item>
+        <item>Ali (equilibrado)</item>
+        <item>Baba (el más preciso, lento)</item>
+    </string-array>
+    <plurals name="segments">
+        <item quantity="one">%d segmento</item>
+        <item quantity="other">%d segmentos</item>
+    </plurals>
+</resources>

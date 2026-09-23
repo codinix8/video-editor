@@ -739,6 +739,27 @@ class MainActivity : AppCompatActivity() {
         fun header(res: Int) = android.widget.TextView(this).apply { text = getString(res); textSize = 13f; alpha = 0.7f; setPadding(0, pad, 0, pad / 4) }
         val box = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.VERTICAL; setPadding(pad, 0, pad, pad) }
 
+        // App-Sprache
+        box.addView(header(R.string.settings_language))
+        val langTags = listOf("", "en", "de", "tr", "es", "fr", "fa", "ar")
+        val langNames = listOf(getString(R.string.language_system), "English", "Deutsch", "Türkçe", "Español", "Français", "فارسی", "العربية")
+        val current = androidx.appcompat.app.AppCompatDelegate.getApplicationLocales().toLanguageTags()
+        box.addView(android.widget.Spinner(this).apply {
+            adapter = android.widget.ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, langNames)
+            setSelection(langTags.indexOfFirst { it.isNotEmpty() && current.startsWith(it) }.coerceAtLeast(0))
+            onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+                var first = true
+                override fun onItemSelected(p: android.widget.AdapterView<*>?, v: android.view.View?, pos: Int, id: Long) {
+                    if (first) { first = false; return }
+                    val tag = langTags[pos]
+                    androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(
+                        if (tag.isEmpty()) androidx.core.os.LocaleListCompat.getEmptyLocaleList()
+                        else androidx.core.os.LocaleListCompat.forLanguageTags(tag))
+                }
+                override fun onNothingSelected(p: android.widget.AdapterView<*>?) {}
+            }
+        })
+
         // Untertitel
         box.addView(header(R.string.settings_captions))
         val auto = com.google.android.material.materialswitch.MaterialSwitch(this).apply {
@@ -759,7 +780,7 @@ class MainActivity : AppCompatActivity() {
         val models = de.codinix.videoeditor.whisper.ModelManager.Model.values()
         val modelSpinner = android.widget.Spinner(this).apply {
             adapter = android.widget.ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
-                models.map { it.label + if (modelManager.isAvailable(it)) "" else " · ${it.approxMb} MB Download" })
+                models.mapIndexed { i, it -> resources.getStringArray(R.array.model_labels)[i] + if (modelManager.isAvailable(it)) "" else " · ${it.approxMb} MB" })
             setSelection(prefs.getInt("captions_model", 1))
             onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(p: android.widget.AdapterView<*>?, v: android.view.View?, pos: Int, id: Long) {
@@ -867,7 +888,7 @@ class MainActivity : AppCompatActivity() {
         lateinit var dlg: AlertDialog
         fun render() {
             row.removeAllViews()
-            de.codinix.videoeditor.gl.ColorFilters.NAMES.forEachIndexed { idx, name ->
+            resources.getStringArray(R.array.filter_names).forEachIndexed { idx, name ->
                 val img = android.widget.ImageView(this).apply {
                     scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
                     setImageBitmap(de.codinix.videoeditor.gl.ColorFilters.preview(idx, 96, 68))
@@ -962,7 +983,7 @@ class MainActivity : AppCompatActivity() {
         icons.forEachIndexed { idx, res ->
             val selected = idx == mosaic.layout
             val item: android.view.View = if (idx == 0) android.widget.TextView(this).apply {
-                text = "Aus"; textSize = 15f; setTextColor(if (selected) 0xFF000000.toInt() else 0xFFFFFFFF.toInt())
+                text = getString(R.string.off); textSize = 15f; setTextColor(if (selected) 0xFF000000.toInt() else 0xFFFFFFFF.toInt())
                 gravity = android.view.Gravity.CENTER
             } else android.widget.ImageView(this).apply {
                 setImageResource(res)
@@ -1201,7 +1222,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun onGreenscreenPressed() {
         if (activeRecording != null) return
-        if (mosaicActive) { Toast.makeText(this, "Erst das Mosaik ausschalten.", Toast.LENGTH_SHORT).show(); return }
+        if (mosaicActive) { Toast.makeText(this, R.string.mosaic_first_off, Toast.LENGTH_SHORT).show(); return }
         val bg = overlayStore.videoOverlay()?.takeIf { it.isBackground }
         if (bg == null) {
             pickBackground.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
@@ -1285,7 +1306,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun addVideoOverlay(uri: Uri, asBackground: Boolean = false) {
-        if (asBackground && mosaicActive) { Toast.makeText(this, "Erst das Mosaik ausschalten.", Toast.LENGTH_SHORT).show(); return }
+        if (asBackground && mosaicActive) { Toast.makeText(this, R.string.mosaic_first_off, Toast.LENGTH_SHORT).show(); return }
         if (overlayStore.videoOverlay() != null) {
             Toast.makeText(this, if (asBackground) R.string.greenscreen_conflict else R.string.only_one_video, Toast.LENGTH_LONG).show(); return
         }
@@ -1600,10 +1621,10 @@ class MainActivity : AppCompatActivity() {
 
     // ---------------------------------------------------------------- Untertitel
 
-    private val captionLanguages = listOf(
-        null to "Automatisch erkennen", "de" to "Deutsch", "en" to "English", "tr" to "Türkçe",
+    private val captionLanguages by lazy { listOf(
+        null to getString(R.string.captions_auto), "de" to "Deutsch", "en" to "English", "tr" to "Türkçe",
         "fr" to "Français", "es" to "Español", "it" to "Italiano", "ru" to "Русский", "ar" to "العربية", "pl" to "Polski"
-    )
+    ) }
 
     /** Sprachmodell einmalig im Hintergrund laden, damit die erste Erkennung nicht warten muss. */
     private fun prefetchCaptionModel() {
@@ -1636,11 +1657,11 @@ class MainActivity : AppCompatActivity() {
         val cards = ArrayList<android.view.View>()
         fun renderCards() {
             cardRow.removeAllViews(); cards.clear()
-            de.codinix.videoeditor.whisper.CaptionStyle.TEMPLATE_NAMES.forEachIndexed { idx, name ->
+            resources.getStringArray(R.array.caption_templates).forEachIndexed { idx, name ->
                 val img = android.widget.ImageView(this).apply {
                     scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
                     setPadding(pad / 2, pad / 2, pad / 2, pad / 2)
-                    setImageBitmap(de.codinix.videoeditor.whisper.CaptionStyle.preview(idx, captionSettings.accentColor, 720, 720))
+                    setImageBitmap(de.codinix.videoeditor.whisper.CaptionStyle.preview(idx, captionSettings.accentColor, 720, 720, getString(R.string.caption_preview_words)))
                 }
                 val label = android.widget.TextView(this).apply { text = name; textSize = 11f; gravity = android.view.Gravity.CENTER }
                 val card = android.widget.LinearLayout(this).apply {
@@ -1693,7 +1714,7 @@ class MainActivity : AppCompatActivity() {
         val models = de.codinix.videoeditor.whisper.ModelManager.Model.values()
         val modelSpinner = android.widget.Spinner(this).apply {
             adapter = android.widget.ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
-                models.map { it.label + if (modelManager.isAvailable(it)) "" else " · ${it.approxMb} MB Download" })
+                models.mapIndexed { i, it -> resources.getStringArray(R.array.model_labels)[i] + if (modelManager.isAvailable(it)) "" else " · ${it.approxMb} MB" })
             setSelection(prefs.getInt("captions_model", 1))
         }
         val emojiSwitch = com.google.android.material.materialswitch.MaterialSwitch(this).apply {
@@ -1787,11 +1808,11 @@ class MainActivity : AppCompatActivity() {
                 val head = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.HORIZONTAL; gravity = android.view.Gravity.CENTER_VERTICAL }
                 val segNo = run { var acc = 0L; var n = 1; for (seg in segments) { if (c.startMs < acc + seg.durationMs) break; acc += seg.durationMs; n++ }; n }
                 val startLabel = android.widget.TextView(this).apply {
-                    text = "S$segNo · Anfang ${t(c.startMs)}"; textSize = 12f; alpha = 0.85f
+                    text = getString(R.string.seg_label, segNo) + " · " + getString(R.string.start_label, t(c.startMs)); textSize = 12f; alpha = 0.85f
                     setOnClickListener { seekTo(c.startMs) }
                 }
                 val endLabel = android.widget.TextView(this).apply {
-                    text = "Ende ${t(c.endMs)}"; textSize = 12f; alpha = 0.85f
+                    text = getString(R.string.end_label, t(c.endMs)); textSize = 12f; alpha = 0.85f
                     setOnClickListener { seekTo((c.endMs - 1500).coerceAtLeast(c.startMs)) }
                 }
                 head.addView(startLabel, android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
@@ -2291,7 +2312,7 @@ class MainActivity : AppCompatActivity() {
         val recordedHeight = if (info.rotation == 90 || info.rotation == 270) info.width else info.height
         val totalSec = segments.sumOf { it.durationMs } / 1000.0
         val needsReencode = allAudioMixes().isNotEmpty() || captions.isNotEmpty() || kotlin.math.abs(micGain - 1f) >= 0.01f
-        fun sizeText(bytes: Double) = if (bytes >= 1e9) "≈ %.1f GB".format(Locale.GERMANY, bytes / 1e9) else "≈ %.0f MB".format(Locale.GERMANY, bytes / 1e6)
+        fun sizeText(bytes: Double) = if (bytes >= 1e9) "≈ %.1f GB".format(Locale.getDefault(), bytes / 1e9) else "≈ %.0f MB".format(Locale.getDefault(), bytes / 1e6)
         fun estimate(height: Int) = (Exporter.videoBitrateFor(height) + Exporter.AUDIO_BITRATE) / 8.0 * totalSec
         val originalSize = if (needsReencode) estimate(recordedHeight) else segments.sumOf { it.file.length() }.toDouble()
         val options = mutableListOf<Pair<String, Int?>>((getString(R.string.export_original) + "  " + sizeText(originalSize)) to null)
@@ -2343,7 +2364,7 @@ class MainActivity : AppCompatActivity() {
             R.string.export_running else R.string.export_running_mix
         if (audioMix.isNotEmpty()) {
             val levels = audioMix.joinToString("/") { "${(it.gain * 100).toInt()} %" }
-            Toast.makeText(this, "Export: ${audioMix.size} Overlay-Tonspur(en) $levels, Mikrofon ${(micGain * 100).toInt()} %", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.export_levels, audioMix.size, levels, (micGain * 100).toInt()), Toast.LENGTH_LONG).show()
         }
         ex.export(segments.map { it.file }, targetHeight, object : Exporter.Listener {
             override fun onProgress(percent: Int) {
@@ -2366,7 +2387,7 @@ class MainActivity : AppCompatActivity() {
                     .setTitle(R.string.saved_title)
                     .setMessage(R.string.saved_msg)
                     .setPositiveButton(R.string.share) { _, _ -> shareVideo(uri) }
-                    .setNegativeButton("OK", null)
+                    .setNegativeButton(R.string.ok, null)
                     .show()
             }
             override fun onError(message: String) {
@@ -2377,7 +2398,7 @@ class MainActivity : AppCompatActivity() {
                 MaterialAlertDialogBuilder(this@MainActivity)
                     .setTitle(getString(R.string.error, ""))
                     .setMessage(message)
-                    .setPositiveButton("OK", null)
+                    .setPositiveButton(R.string.ok, null)
                     .show()
             }
         }, audioMix, micGain)
@@ -2568,7 +2589,7 @@ class MainActivity : AppCompatActivity() {
         if (list.isEmpty()) {
             Toast.makeText(this, R.string.no_drafts, Toast.LENGTH_SHORT).show(); return
         }
-        val fmtDate = java.text.SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.GERMANY)
+        val fmtDate = java.text.SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
         val dp = resources.displayMetrics.density
         val pad = (12 * dp).toInt()
         val adapter = object : android.widget.BaseAdapter() {
@@ -2614,7 +2635,7 @@ class MainActivity : AppCompatActivity() {
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.drafts)
             .setMessage(getString(R.string.draft_item,
-                java.text.SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.GERMANY).format(info.createdAt),
+                java.text.SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(info.createdAt),
                 info.segmentCount, fmt(info.durationMs)))
             .setPositiveButton(R.string.open) { _, _ -> loadDraft(info) }
             .setNeutralButton(R.string.delete) { _, _ -> drafts.delete(info) }
@@ -2705,7 +2726,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun fmt(ms: Long): String {
         val s = ms / 1000
-        return String.format(Locale.GERMANY, "%d:%02d", s / 60, s % 60)
+        return String.format(Locale.getDefault(), "%d:%02d", s / 60, s % 60)
     }
 
     private fun label(q: Quality) = when (q) {

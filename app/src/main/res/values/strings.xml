@@ -1,155 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Babacut</string>
-    <string name="record">Aufnahme starten</string>
-    <string name="stop">Aufnahme pausieren</string>
-    <string name="flip_camera">Kamera wechseln</string>
-    <string name="delete_last">Letztes Segment löschen</string>
-    <string name="finish">Fertigstellen</string>
-    <string name="quality">Auflösung</string>
-    <string name="permission_needed">Kamera- und Mikrofon-Zugriff werden benötigt.</string>
-    <string name="saved">Video gespeichert in Galerie</string>
-    <string name="error">Fehler: %1$s</string>
-    <string name="ready">Bereit – Knopf drücken zum Aufnehmen</string>
-    <string name="recording">Aufnahme… %1$s</string>
-    <string name="paused">Pause · %1$d Segmente · %2$s</string>
-    <string name="tap_again_delete">Nochmal tippen: letztes Segment löschen</string>
-    <string name="segment_deleted">Segment gelöscht</string>
-    <string name="no_segments">Noch nichts aufgenommen</string>
-    <string name="export_title">Video speichern</string>
-    <string name="export_resolution">Exportauflösung</string>
-    <string name="export_original">Original (schnell, ohne Neukodierung)</string>
-    <string name="export_running">Video wird zusammengefügt… %1$d %%</string>
-    <string name="discard_title">Aufnahme verwerfen?</string>
-    <string name="discard_msg">%1$d Segmente gehen verloren.</string>
-    <string name="discard">Verwerfen</string>
-    <string name="cancel">Abbrechen</string>
-    <string name="save">Speichern</string>
-    <string name="quality_title">Aufnahmeauflösung</string>
-    <string name="back_to_record">Zurück zur Aufnahme</string>
-    <string name="review_hint">Tippen: Pause/Weiter · Läuft in Schleife</string>
-    <string name="review_position">%1$s / %2$s · %3$d Segmente</string>
-    <string name="add_image">Bild aus Galerie einfügen</string>
-    <string name="remove_overlay">Overlay entfernen</string>
-    <string name="overlay_hint">Ziehen: verschieben · Zwei Finger: Größe/Drehung</string>
-    <string name="drafts">Entwürfe</string>
-    <string name="save_draft">Als Entwurf speichern</string>
-    <string name="draft_saved">Entwurf gespeichert</string>
-    <string name="draft_loaded">Entwurf geladen</string>
-    <string name="no_drafts">Keine Entwürfe vorhanden</string>
-    <string name="draft_item">%1$s · %2$d Segmente · %3$s</string>
-    <string name="open">Öffnen</string>
-    <string name="delete">Löschen</string>
-    <string name="add_video">Video aus Galerie einfügen</string>
-    <string name="video_copying">Video wird vorbereitet…</string>
-    <string name="only_one_video">Nur ein Video-Overlay gleichzeitig – erst das vorhandene entfernen</string>
-    <string name="sound_on">Overlay-Ton: an</string>
-    <string name="sound_off">Overlay-Ton: aus</string>
-    <string name="overlay_volume_title">Lautstärke Overlay-Video</string>
+    <string name="record">Start recording</string>
+    <string name="stop">Pause recording</string>
+    <string name="flip_camera">Switch camera</string>
+    <string name="delete_last">Delete last segment</string>
+    <string name="finish">Finish</string>
+    <string name="quality">Resolution</string>
+    <string name="permission_needed">Camera and microphone access are required.</string>
+    <string name="saved">Video saved to gallery</string>
+    <string name="error">Error: %1$s</string>
+    <string name="ready">Ready – press the button to record</string>
+    <string name="recording">Recording… %1$s</string>
+    <string name="paused">Paused · %1$d segments · %2$s</string>
+    <string name="tap_again_delete">Tap again to delete the last segment</string>
+    <string name="segment_deleted">Segment deleted</string>
+    <string name="no_segments">Nothing recorded yet</string>
+    <string name="export_title">Save video</string>
+    <string name="export_resolution">Export resolution</string>
+    <string name="export_original">Original (fast, no re-encoding)</string>
+    <string name="export_running">Assembling video… %1$d %%</string>
+    <string name="discard_title">Discard recording?</string>
+    <string name="discard_msg">%1$d segments will be lost.</string>
+    <string name="discard">Discard</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="quality_title">Recording resolution</string>
+    <string name="back_to_record">Back to recording</string>
+    <string name="review_hint">Tap: pause/resume · Loops</string>
+    <string name="review_position">%1$s / %2$s · %3$d segments</string>
+    <string name="add_image">Add image from gallery</string>
+    <string name="remove_overlay">Remove overlay</string>
+    <string name="overlay_hint">Drag to move · two fingers to resize/rotate</string>
+    <string name="drafts">Drafts</string>
+    <string name="save_draft">Save as draft</string>
+    <string name="draft_saved">Draft saved</string>
+    <string name="draft_loaded">Draft loaded</string>
+    <string name="no_drafts">No drafts yet</string>
+    <string name="draft_item">%1$s · %2$d segments · %3$s</string>
+    <string name="open">Open</string>
+    <string name="delete">Delete</string>
+    <string name="add_video">Add video from gallery</string>
+    <string name="video_copying">Preparing video…</string>
+    <string name="only_one_video">Only one video overlay at a time – remove the current one first</string>
+    <string name="sound_on">Overlay sound: on</string>
+    <string name="sound_off">Overlay sound: off</string>
+    <string name="overlay_volume_title">Overlay video volume</string>
     <string name="volume_percent">%1$d %%</string>
-    <string name="volume_hint">Wirkt beim Export und in der Review. In der Vorschau nur hörbar, wenn der Kopfhörer-Schalter an ist.</string>
-    <string name="mic_volume">Mikrofon-Lautstärke</string>
-    <string name="headphones_on">Kopfhörer erkannt – Overlay-Ton in der Vorschau an</string>
-    <string name="share">Teilen</string>
-    <string name="saved_title">Video gespeichert</string>
-    <string name="saved_msg">Das Video liegt in der Galerie unter Movies/VideoEditor.</string>
-    <string name="export_running_mix">Video wird gerendert (mit Overlay-Ton)… %1$d %%</string>
+    <string name="volume_hint">Applies to export and review. Audible in the preview only when the headphone switch is on.</string>
+    <string name="mic_volume">Microphone volume</string>
+    <string name="headphones_on">Headphones detected – overlay sound on in preview</string>
+    <string name="share">Share</string>
+    <string name="saved_title">Video saved</string>
+    <string name="saved_msg">The video is in your gallery under Movies/VideoEditor.</string>
+    <string name="export_running_mix">Rendering video (with overlay sound)… %1$d %%</string>
     <string name="ok">OK</string>
-    <string name="mic_volume_title">Mikrofon-Lautstärke</string>
-    <string name="mic_hint">Wirkt beim Export auf deine Aufnahme. 100 % = unverändert, 50 % klingt halb so laut.</string>
-    <string name="crash_title">Die App ist zuvor abgestürzt</string>
-    <string name="crash_msg">Bitte den Bericht kopieren und an Claude schicken.</string>
-    <string name="copy">Alles kopieren</string>
-    <string name="copied">In die Zwischenablage kopiert</string>
-    <string name="recovered">Aufnahme nach Absturz als Entwurf wiederhergestellt</string>
-    <string name="preview_sound">Overlay-Ton in der Vorschau (nur mit Kopfhörern!)</string>
-    <string name="preview_sound_on">Vorschau-Ton AN – nur mit Kopfhörern nutzen, sonst nimmt das Mikrofon ihn mit auf</string>
-    <string name="preview_sound_off">Vorschau-Ton aus</string>
-    <string name="preparing_audio">Ton wird vorbereitet…</string>
-    <string name="overlay_pause">Overlay-Video anhalten</string>
-    <string name="overlay_play">Overlay-Video weiterlaufen lassen</string>
-    <string name="add_text">Text einfügen</string>
-    <string name="edit_text">Text bearbeiten</string>
+    <string name="mic_volume_title">Microphone volume</string>
+    <string name="mic_hint">Applies to your recording on export. 100 % = unchanged, 50 % sounds half as loud.</string>
+    <string name="crash_title">The app crashed last time</string>
+    <string name="crash_msg">Please copy the report and send it to the developer.</string>
+    <string name="copy">Copy all</string>
+    <string name="copied">Copied to clipboard</string>
+    <string name="recovered">Recording restored as a draft after the crash</string>
+    <string name="preview_sound">Overlay sound in preview (headphones only!)</string>
+    <string name="preview_sound_on">Preview sound ON – use headphones only, otherwise the microphone will pick it up</string>
+    <string name="preview_sound_off">Preview sound off</string>
+    <string name="preparing_audio">Preparing audio…</string>
+    <string name="overlay_pause">Pause overlay video</string>
+    <string name="overlay_play">Resume overlay video</string>
+    <string name="add_text">Add text</string>
+    <string name="edit_text">Edit text</string>
     <string name="text_dialog_title">Text</string>
-    <string name="text_hint">Text oder Emojis eingeben…</string>
-    <string name="text_background">Hintergrund</string>
-    <string name="text_color">Farbe</string>
-    <string name="text_opacity">Text-Deckkraft</string>
-    <string name="bg_color">Hintergrundfarbe</string>
-    <string name="bg_opacity">Hintergrund-Deckkraft</string>
-    <string name="greenscreen">Kachel-Modus: Hintergrundvideo</string>
-    <string name="greenscreen_on">Kachel-Modus: Frontkamera aktiv – mit ↻ wechseln. Links: Form und Baba Regenbogen.</string>
-    <string name="greenscreen_remove_title">Kachel-Modus beenden?</string>
-    <string name="greenscreen_remove_msg">Das Hintergrundvideo wird entfernt; sein Ton bleibt bis hierher erhalten.</string>
-    <string name="remove">Entfernen</string>
-    <string name="greenscreen_conflict">Erst das Bild-im-Bild-Video entfernen – es kann nur ein Video gleichzeitig laufen.</string>
-    <string name="shape">Form der Kachel</string>
-    <string name="shape_square">Quadrat</string>
-    <string name="shape_portrait">Rechteck (3:4)</string>
-    <string name="shape_circle">Kreis</string>
-    <string name="border_toggle">Baba Regenbogen an/aus</string>
-    <string name="captions">Untertitel</string>
-    <string name="captions_title">Untertitel per Spracherkennung</string>
-    <string name="captions_language">Sprache</string>
-    <string name="captions_auto">Automatisch erkennen</string>
-    <string name="captions_always">Beim Öffnen der Review immer automatisch erzeugen</string>
-    <string name="captions_generate">Erzeugen</string>
-    <string name="captions_regenerate">Neu erzeugen</string>
-    <string name="captions_remove">Entfernen</string>
-    <string name="captions_model_download">Sprachmodell wird geladen (einmalig, ca. %1$d MB)… %2$d %%</string>
-    <string name="captions_preparing">Ton wird aufbereitet… %1$d %%</string>
-    <string name="captions_running">Spracherkennung… %1$d %%</string>
-    <string name="captions_done">%1$d Untertitel erzeugt (Sprache: %2$s)</string>
-    <string name="captions_none">Keine Sprache erkannt</string>
-    <string name="captions_export_note">Untertitel werden beim Speichern eingebrannt (Neukodierung).</string>
-    <string name="captions_template">Vorlage</string>
-    <string name="captions_model">Erkennung</string>
-    <string name="captions_prefetch">Sprachmodell wird im Hintergrund geladen (einmalig, ca. %1$d MB)</string>
-    <string name="captions_prefetch_done">Sprachmodell bereit</string>
-    <string name="captions_hint">Untertitel: Ziehen zum Verschieben, zwei Finger für Größe und Drehung</string>
-    <string name="tile_volume_title">Lautstärke im Kachel-Modus</string>
-    <string name="tile_bg_volume">Hintergrundvideo</string>
-    <string name="tile_mic_volume">Meine Stimme (Mikrofon)</string>
-    <string name="tile_volume_hint">Prozent = empfundene Lautstärke: 50 % klingt halb so laut, 0 % ist still.</string>
-    <string name="captions_emojis">Emojis einblenden (z. B. Iran 🇮🇷, Explosion 💥)</string>
-    <plurals name="segments">
-        <item quantity="one">%d Segment</item>
-        <item quantity="other">%d Segmente</item>
-    </plurals>
-    <string name="captions_edit">Bearbeiten</string>
-    <string name="captions_edit_title">Untertitel bearbeiten</string>
-    <string name="limit_reached">Maximale Länge von 5 Minuten erreicht – Segmente löschen, um weiter aufzunehmen</string>
-    <string name="low_space">Wenig Speicherplatz: nur noch %1$.1f GB frei</string>
-    <string name="mosaic">Mosaik</string>
-    <string name="mosaic_title">Mosaik-Raster</string>
-    <string name="mosaic_gap_white">Trennlinien und Füllung weiß (sonst schwarz)</string>
-    <string name="mosaic_rainbow">Trennlinien als Baba Regenbogen</string>
-    <string name="mosaic_hint">Kachel antippen: Medium wählen, Kamera, Füllfarbe · Ziehen verschiebt, zwei Finger zoomen</string>
-    <string name="mosaic_conflict">Erst den Kachel-Modus beenden.</string>
-    <string name="tile_media">Bild in diese Kachel</string>
-    <string name="tile_camera">Kachel zurück auf Kamera</string>
-    <string name="tile_fill">Füllfarbe dieser Kachel (schwarz/weiß)</string>
-    <string name="mosaic_tip">Kachel antippen, dann die Knöpfe oben links nutzen</string>
-    <string name="tile_video">Video in diese Kachel</string>
-    <string name="tile_video_downscale">Video wird auf 1080p umgerechnet… %1$d %%</string>
-    <string name="segment_moved">Segment verschoben</string>
-    <string name="segment_last_keep">Das letzte Segment kann hier nicht gelöscht werden – Aufnahme verwerfen stattdessen.</string>
-    <string name="delete_segment_title">Segment löschen?</string>
-    <string name="delete_segment_msg">Segment %1$d (%2$s) wird entfernt. Untertitel und Overlay-Ton werden angepasst.</string>
-    <string name="undo_delete">Rückgängig</string>
-    <string name="filter">Farbfilter</string>
-    <string name="settings">Einstellungen</string>
-    <string name="settings_captions">Untertitel</string>
-    <string name="settings_recording">Aufnahme</string>
-    <string name="settings_default_quality">Standard-Auflösung</string>
-    <string name="settings_default_quality_highest">Höchste der Kamera</string>
-    <string name="settings_mosaic">Mosaik</string>
-    <string name="settings_help">Hilfe</string>
-    <string name="settings_show_tips">Tipps beim nächsten Start erneut zeigen</string>
-    <string name="settings_crash">Letzten Absturzbericht anzeigen</string>
-    <string name="settings_no_crash">Kein Absturzbericht vorhanden</string>
+    <string name="text_hint">Type text or emojis…</string>
+    <string name="text_background">Background</string>
+    <string name="text_color">Color</string>
+    <string name="text_opacity">Text opacity</string>
+    <string name="bg_color">Background color</string>
+    <string name="bg_opacity">Background opacity</string>
+    <string name="greenscreen">Tile mode: background video</string>
+    <string name="greenscreen_on">Tile mode: front camera active – switch with ↻. Left: shape and Baba Rainbow.</string>
+    <string name="greenscreen_remove_title">End tile mode?</string>
+    <string name="greenscreen_remove_msg">The background video is removed; its sound stays up to this point.</string>
+    <string name="remove">Remove</string>
+    <string name="greenscreen_conflict">Remove the picture-in-picture video first – only one video can run at a time.</string>
+    <string name="shape">Tile shape</string>
+    <string name="shape_square">Square</string>
+    <string name="shape_portrait">Rectangle (3:4)</string>
+    <string name="shape_circle">Circle</string>
+    <string name="border_toggle">Baba Rainbow on/off</string>
+    <string name="captions">Captions</string>
+    <string name="captions_title">Captions via speech recognition</string>
+    <string name="captions_language">Language</string>
+    <string name="captions_auto">Detect automatically</string>
+    <string name="captions_always">Always generate automatically when opening the review</string>
+    <string name="captions_generate">Generate</string>
+    <string name="captions_regenerate">Regenerate</string>
+    <string name="captions_remove">Remove</string>
+    <string name="captions_model_download">Downloading speech model (once, approx. %1$d MB)… %2$d %%</string>
+    <string name="captions_preparing">Preparing audio… %1$d %%</string>
+    <string name="captions_running">Speech recognition… %1$d %%</string>
+    <string name="captions_done">%1$d captions created (language: %2$s)</string>
+    <string name="captions_none">No speech detected</string>
+    <string name="captions_export_note">Captions are burned in when saving (re-encoding).</string>
+    <string name="captions_template">Style</string>
+    <string name="captions_model">Recognition</string>
+    <string name="captions_prefetch">Speech model is downloading in the background (once, approx. %1$d MB)</string>
+    <string name="captions_prefetch_done">Speech model ready</string>
+    <string name="captions_hint">Captions: drag to move, two fingers to resize and rotate</string>
+    <string name="tile_volume_title">Volume in tile mode</string>
+    <string name="tile_bg_volume">Background video</string>
+    <string name="tile_mic_volume">My voice (microphone)</string>
+    <string name="tile_volume_hint">Percent = perceived loudness: 50 % sounds half as loud, 0 % is silent.</string>
+    <string name="captions_emojis">Show emojis (e.g. Iran 🇮🇷, explosion 💥)</string>
+    <string name="captions_edit">Edit</string>
+    <string name="captions_edit_title">Edit captions</string>
+    <string name="limit_reached">Maximum length of 5 minutes reached – delete segments to continue recording</string>
+    <string name="low_space">Low storage: only %1$.1f GB free</string>
+    <string name="mosaic">Mosaic</string>
+    <string name="mosaic_title">Mosaic grid</string>
+    <string name="mosaic_gap_white">Dividers and fill white (otherwise black)</string>
+    <string name="mosaic_rainbow">Dividers as Baba Rainbow</string>
+    <string name="mosaic_hint">Tap a tile: choose media, camera, fill color · drag to move, two fingers to zoom</string>
+    <string name="mosaic_conflict">End tile mode first.</string>
+    <string name="tile_media">Image into this tile</string>
+    <string name="tile_camera">Tile back to camera</string>
+    <string name="tile_fill">Fill color of this tile</string>
+    <string name="mosaic_tip">Tap a tile, then use the buttons at the top left</string>
+    <string name="tile_video">Video into this tile</string>
+    <string name="tile_video_downscale">Converting video to 1080p… %1$d %%</string>
+    <string name="segment_moved">Segment moved</string>
+    <string name="segment_last_keep">The last segment can\'t be deleted here – discard the recording instead.</string>
+    <string name="delete_segment_title">Delete segment?</string>
+    <string name="delete_segment_msg">Segment %1$d (%2$s) will be removed. Captions and overlay sound are adjusted.</string>
+    <string name="undo_delete">Undo</string>
+    <string name="filter">Color filter</string>
+    <string name="settings">Settings</string>
+    <string name="settings_captions">Captions</string>
+    <string name="settings_recording">Recording</string>
+    <string name="settings_default_quality">Default resolution</string>
+    <string name="settings_default_quality_highest">Highest of the camera</string>
+    <string name="settings_mosaic">Mosaic</string>
+    <string name="settings_help">Help</string>
+    <string name="settings_show_tips">Show tips again on next start</string>
+    <string name="settings_crash">Show last crash report</string>
+    <string name="settings_no_crash">No crash report available</string>
     <string name="settings_version">Version %1$s</string>
-    <string name="tip_record">Roter Knopf: Aufnahme starten, nochmal Tippen pausiert. Das letzte Segment löschst du unten links.</string>
-    <string name="tip_toolbar">Rechte Leiste: Filter, Bilder, Videos, Text, Kachel-Modus und Mosaik – sie lässt sich scrollen.</string>
-    <string name="tip_overlays">Overlays antippen, ziehen, mit zwei Fingern zoomen und drehen. Häkchen: Vorschau und Speichern.</string>
-    <string name="tip_headphones">Den Ton dieses Videos hörst du in der Vorschau nur mit Kopfhörern (Schalter rechts) – so bleibt dein Mikrofon sauber. Im fertigen Video ist er immer dabei.</string>
+    <string name="tip_record">Red button: start recording, tap again to pause. Delete the last segment at the bottom left.</string>
+    <string name="tip_toolbar">Right bar: filters, images, videos, text, tile mode and mosaic – it scrolls.</string>
+    <string name="tip_overlays">Tap overlays, drag them, zoom and rotate with two fingers. Checkmark: preview and save.</string>
+    <string name="tip_headphones">You hear this video\'s sound in the preview only with headphones (switch on the right) – keeping your microphone clean. It\'s always in the final video.</string>
+    <string name="off">Off</string>
+    <string name="seg_label">S%1$d</string>
+    <string name="start_label">Start %1$s</string>
+    <string name="end_label">End %1$s</string>
+    <string name="fine_scrub">Fine scrub</string>
+    <string name="drop_delete">Release to delete</string>
+    <string name="drag_hint">Drop between segments · onto the trash above to delete</string>
+    <string name="mosaic_first_off">Turn off the mosaic first.</string>
+    <string name="export_levels">Export: %1$d overlay track(s) %2$s, microphone %3$d %%</string>
+    <string name="caption_preview_words">Your text looks like this</string>
+    <string name="settings_language">App language</string>
+    <string name="language_system">System language</string>
+    <string-array name="filter_names">
+        <item>Original</item>
+        <item>Warm</item>
+        <item>Cool</item>
+        <item>Black &amp; white</item>
+        <item>Vintage</item>
+        <item>Vivid</item>
+        <item>Matte</item>
+        <item>Cinema</item>
+        <item>Pastel</item>
+    </string-array>
+    <string-array name="caption_templates">
+        <item>Classic</item>
+        <item>Bar</item>
+        <item>Karaoke</item>
+        <item>Word by word</item>
+        <item>Accent</item>
+        <item>Neon</item>
+        <item>Highlight box</item>
+        <item>Shadow</item>
+        <item>Two-tone</item>
+        <item>Typewriter</item>
+        <item>Big &amp; small</item>
+    </string-array>
+    <string-array name="model_labels">
+        <item>Top (fast)</item>
+        <item>Ali (balanced)</item>
+        <item>Baba (most accurate, slow)</item>
+    </string-array>
+    <plurals name="segments">
+        <item quantity="one">%d segment</item>
+        <item quantity="other">%d segments</item>
+    </plurals>
 </resources>

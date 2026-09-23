@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Babacut</string>
+    <string name="record">Kaydı başlat</string>
+    <string name="stop">Kaydı duraklat</string>
+    <string name="flip_camera">Kamerayı değiştir</string>
+    <string name="delete_last">Son bölümü sil</string>
+    <string name="finish">Bitir</string>
+    <string name="quality">Çözünürlük</string>
+    <string name="permission_needed">Kamera ve mikrofon erişimi gerekiyor.</string>
+    <string name="saved">Video galeriye kaydedildi</string>
+    <string name="error">Hata: %1$s</string>
+    <string name="ready">Hazır – kaydetmek için düğmeye bas</string>
+    <string name="recording">Kayıt… %1$s</string>
+    <string name="paused">Duraklatıldı · %1$d bölüm · %2$s</string>
+    <string name="tap_again_delete">Son bölümü silmek için tekrar dokun</string>
+    <string name="segment_deleted">Bölüm silindi</string>
+    <string name="no_segments">Henüz kayıt yok</string>
+    <string name="export_title">Videoyu kaydet</string>
+    <string name="export_resolution">Dışa aktarma çözünürlüğü</string>
+    <string name="export_original">Orijinal (hızlı, yeniden kodlama yok)</string>
+    <string name="export_running">Video birleştiriliyor… %1$d %%</string>
+    <string name="discard_title">Kayıt silinsin mi?</string>
+    <string name="discard_msg">%1$d bölüm kaybolacak.</string>
+    <string name="discard">Sil</string>
+    <string name="cancel">İptal</string>
+    <string name="save">Kaydet</string>
+    <string name="quality_title">Kayıt çözünürlüğü</string>
+    <string name="back_to_record">Kayda dön</string>
+    <string name="review_hint">Dokun: duraklat/devam · Döngüde oynar</string>
+    <string name="review_position">%1$s / %2$s · %3$d bölüm</string>
+    <string name="add_image">Galeriden resim ekle</string>
+    <string name="remove_overlay">Katmanı kaldır</string>
+    <string name="overlay_hint">Sürükle: taşı · iki parmak: boyut/döndürme</string>
+    <string name="drafts">Taslaklar</string>
+    <string name="save_draft">Taslak olarak kaydet</string>
+    <string name="draft_saved">Taslak kaydedildi</string>
+    <string name="draft_loaded">Taslak yüklendi</string>
+    <string name="no_drafts">Taslak yok</string>
+    <string name="draft_item">%1$s · %2$d bölüm · %3$s</string>
+    <string name="open">Aç</string>
+    <string name="delete">Sil</string>
+    <string name="add_video">Galeriden video ekle</string>
+    <string name="video_copying">Video hazırlanıyor…</string>
+    <string name="only_one_video">Aynı anda yalnızca bir video katmanı – önce mevcut olanı kaldır</string>
+    <string name="sound_on">Katman sesi: açık</string>
+    <string name="sound_off">Katman sesi: kapalı</string>
+    <string name="overlay_volume_title">Katman videosu ses düzeyi</string>
+    <string name="volume_percent">%1$d %%</string>
+    <string name="volume_hint">Dışa aktarma ve incelemede geçerli. Önizlemede yalnızca kulaklık anahtarı açıkken duyulur.</string>
+    <string name="mic_volume">Mikrofon ses düzeyi</string>
+    <string name="headphones_on">Kulaklık algılandı – önizlemede katman sesi açık</string>
+    <string name="share">Paylaş</string>
+    <string name="saved_title">Video kaydedildi</string>
+    <string name="saved_msg">Video galeride Movies/VideoEditor altında.</string>
+    <string name="export_running_mix">Video işleniyor (katman sesiyle)… %1$d %%</string>
+    <string name="ok">Tamam</string>
+    <string name="mic_volume_title">Mikrofon ses düzeyi</string>
+    <string name="mic_hint">Dışa aktarmada kaydına uygulanır. %%100 = değişmez, %%50 yarı yüksek duyulur.</string>
+    <string name="crash_title">Uygulama önceki seferde çöktü</string>
+    <string name="crash_msg">Lütfen raporu kopyalayıp geliştiriciye gönder.</string>
+    <string name="copy">Tümünü kopyala</string>
+    <string name="copied">Panoya kopyalandı</string>
+    <string name="recovered">Kayıt çökme sonrası taslak olarak kurtarıldı</string>
+    <string name="preview_sound">Önizlemede katman sesi (yalnızca kulaklıkla!)</string>
+    <string name="preview_sound_on">Önizleme sesi AÇIK – yalnızca kulaklıkla kullan, yoksa mikrofon sesi alır</string>
+    <string name="preview_sound_off">Önizleme sesi kapalı</string>
+    <string name="preparing_audio">Ses hazırlanıyor…</string>
+    <string name="overlay_pause">Katman videosunu duraklat</string>
+    <string name="overlay_play">Katman videosunu sürdür</string>
+    <string name="add_text">Metin ekle</string>
+    <string name="edit_text">Metni düzenle</string>
+    <string name="text_dialog_title">Metin</string>
+    <string name="text_hint">Metin veya emoji yaz…</string>
+    <string name="text_background">Arka plan</string>
+    <string name="text_color">Renk</string>
+    <string name="text_opacity">Metin opaklığı</string>
+    <string name="bg_color">Arka plan rengi</string>
+    <string name="bg_opacity">Arka plan opaklığı</string>
+    <string name="greenscreen">Karo modu: arka plan videosu</string>
+    <string name="greenscreen_on">Karo modu: ön kamera etkin – ↻ ile değiştir. Solda: şekil ve Baba Gökkuşağı.</string>
+    <string name="greenscreen_remove_title">Karo modu bitsin mi?</string>
+    <string name="greenscreen_remove_msg">Arka plan videosu kaldırılır; sesi buraya kadar kalır.</string>
+    <string name="remove">Kaldır</string>
+    <string name="greenscreen_conflict">Önce resim içinde resim videosunu kaldır – aynı anda yalnızca bir video çalışabilir.</string>
+    <string name="shape">Karo şekli</string>
+    <string name="shape_square">Kare</string>
+    <string name="shape_portrait">Dikdörtgen (3:4)</string>
+    <string name="shape_circle">Daire</string>
+    <string name="border_toggle">Baba Gökkuşağı açık/kapalı</string>
+    <string name="captions">Altyazılar</string>
+    <string name="captions_title">Konuşma tanıma ile altyazı</string>
+    <string name="captions_language">Dil</string>
+    <string name="captions_auto">Otomatik algıla</string>
+    <string name="captions_always">İnceleme açılırken her zaman otomatik oluştur</string>
+    <string name="captions_generate">Oluştur</string>
+    <string name="captions_regenerate">Yeniden oluştur</string>
+    <string name="captions_remove">Kaldır</string>
+    <string name="captions_model_download">Konuşma modeli indiriliyor (bir kez, yaklaşık %1$d MB)… %2$d %%</string>
+    <string name="captions_preparing">Ses hazırlanıyor… %1$d %%</string>
+    <string name="captions_running">Konuşma tanıma… %1$d %%</string>
+    <string name="captions_done">%1$d altyazı oluşturuldu (dil: %2$s)</string>
+    <string name="captions_none">Konuşma algılanmadı</string>
+    <string name="captions_export_note">Altyazılar kaydederken videoya işlenir (yeniden kodlama).</string>
+    <string name="captions_template">Stil</string>
+    <string name="captions_model">Tanıma</string>
+    <string name="captions_prefetch">Konuşma modeli arka planda indiriliyor (bir kez, yaklaşık %1$d MB)</string>
+    <string name="captions_prefetch_done">Konuşma modeli hazır</string>
+    <string name="captions_hint">Altyazılar: taşımak için sürükle, boyut ve döndürme için iki parmak</string>
+    <string name="tile_volume_title">Karo modunda ses düzeyi</string>
+    <string name="tile_bg_volume">Arka plan videosu</string>
+    <string name="tile_mic_volume">Sesim (mikrofon)</string>
+    <string name="tile_volume_hint">Yüzde = algılanan ses: %%50 yarı yüksek, %%0 sessiz.</string>
+    <string name="captions_emojis">Emoji göster (örn. İran 🇮🇷, patlama 💥)</string>
+    <string name="captions_edit">Düzenle</string>
+    <string name="captions_edit_title">Altyazıları düzenle</string>
+    <string name="limit_reached">En fazla 5 dakikaya ulaşıldı – devam etmek için bölüm sil</string>
+    <string name="low_space">Az depolama: yalnızca %1$.1f GB boş</string>
+    <string name="mosaic">Mozaik</string>
+    <string name="mosaic_title">Mozaik ızgarası</string>
+    <string name="mosaic_gap_white">Ayırıcılar ve dolgu beyaz (yoksa siyah)</string>
+    <string name="mosaic_rainbow">Ayırıcılar Baba Gökkuşağı olarak</string>
+    <string name="mosaic_hint">Karoya dokun: medya, kamera, dolgu rengi · sürükle taşı, iki parmakla yaklaştır</string>
+    <string name="mosaic_conflict">Önce karo modunu bitir.</string>
+    <string name="tile_media">Bu karoya resim</string>
+    <string name="tile_camera">Karoyu kameraya döndür</string>
+    <string name="tile_fill">Bu karonun dolgu rengi</string>
+    <string name="mosaic_tip">Bir karoya dokun, sonra sol üstteki düğmeleri kullan</string>
+    <string name="tile_video">Bu karoya video</string>
+    <string name="tile_video_downscale">Video 1080p\'ye dönüştürülüyor… %1$d %%</string>
+    <string name="segment_moved">Bölüm taşındı</string>
+    <string name="segment_last_keep">Son bölüm burada silinemez – bunun yerine kaydı sil.</string>
+    <string name="delete_segment_title">Bölüm silinsin mi?</string>
+    <string name="delete_segment_msg">Bölüm %1$d (%2$s) kaldırılacak. Altyazılar ve katman sesi uyarlanır.</string>
+    <string name="undo_delete">Geri al</string>
+    <string name="filter">Renk filtresi</string>
+    <string name="settings">Ayarlar</string>
+    <string name="settings_captions">Altyazılar</string>
+    <string name="settings_recording">Kayıt</string>
+    <string name="settings_default_quality">Varsayılan çözünürlük</string>
+    <string name="settings_default_quality_highest">Kameranın en yükseği</string>
+    <string name="settings_mosaic">Mozaik</string>
+    <string name="settings_help">Yardım</string>
+    <string name="settings_show_tips">İpuçlarını sonraki açılışta yeniden göster</string>
+    <string name="settings_crash">Son çökme raporunu göster</string>
+    <string name="settings_no_crash">Çökme raporu yok</string>
+    <string name="settings_version">Sürüm %1$s</string>
+    <string name="tip_record">Kırmızı düğme: kaydı başlat, tekrar dokun duraklat. Son bölümü sol alttan sil.</string>
+    <string name="tip_toolbar">Sağ çubuk: filtreler, resimler, videolar, metin, karo modu ve mozaik – kaydırılabilir.</string>
+    <string name="tip_overlays">Katmanlara dokun, sürükle, iki parmakla yaklaştır ve döndür. Onay: önizleme ve kaydet.</string>
+    <string name="tip_headphones">Bu videonun sesini önizlemede yalnızca kulaklıkla duyarsın (sağdaki anahtar) – mikrofonun temiz kalır. Son videoda her zaman vardır.</string>
+    <string name="off">Kapalı</string>
+    <string name="seg_label">B%1$d</string>
+    <string name="start_label">Başlangıç %1$s</string>
+    <string name="end_label">Bitiş %1$s</string>
+    <string name="fine_scrub">İnce arama</string>
+    <string name="drop_delete">Silmek için bırak</string>
+    <string name="drag_hint">Bölümler arasına bırak · silmek için üstteki çöp kutusuna</string>
+    <string name="mosaic_first_off">Önce mozaiği kapat.</string>
+    <string name="export_levels">Dışa aktarma: %1$d katman sesi %2$s, mikrofon %%%3$d</string>
+    <string name="caption_preview_words">Metnin böyle görünür</string>
+    <string name="settings_language">Uygulama dili</string>
+    <string name="language_system">Sistem dili</string>
+    <string-array name="filter_names">
+        <item>Orijinal</item>
+        <item>Sıcak</item>
+        <item>Soğuk</item>
+        <item>Siyah beyaz</item>
+        <item>Vintage</item>
+        <item>Canlı</item>
+        <item>Mat</item>
+        <item>Sinema</item>
+        <item>Pastel</item>
+    </string-array>
+    <string-array name="caption_templates">
+        <item>Klasik</item>
+        <item>Bant</item>
+        <item>Karaoke</item>
+        <item>Kelime kelime</item>
+        <item>Vurgu</item>
+        <item>Neon</item>
+        <item>Vurgu kutusu</item>
+        <item>Gölge</item>
+        <item>İki renk</item>
+        <item>Daktilo</item>
+        <item>Büyük &amp; küçük</item>
+    </string-array>
+    <string-array name="model_labels">
+        <item>Top (hızlı)</item>
+        <item>Ali (dengeli)</item>
+        <item>Baba (en doğru, yavaş)</item>
+    </string-array>
+    <plurals name="segments">
+        <item quantity="one">%d bölüm</item>
+        <item quantity="other">%d bölüm</item>
+    </plurals>
+</resources>

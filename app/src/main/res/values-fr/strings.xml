@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Babacut</string>
+    <string name="record">Démarrer l\'enregistrement</string>
+    <string name="stop">Mettre en pause</string>
+    <string name="flip_camera">Changer de caméra</string>
+    <string name="delete_last">Supprimer le dernier segment</string>
+    <string name="finish">Terminer</string>
+    <string name="quality">Résolution</string>
+    <string name="permission_needed">L\'accès à la caméra et au micro est requis.</string>
+    <string name="saved">Vidéo enregistrée dans la galerie</string>
+    <string name="error">Erreur : %1$s</string>
+    <string name="ready">Prêt – appuie sur le bouton pour filmer</string>
+    <string name="recording">Enregistrement… %1$s</string>
+    <string name="paused">Pause · %1$d segments · %2$s</string>
+    <string name="tap_again_delete">Touche à nouveau pour supprimer le dernier segment</string>
+    <string name="segment_deleted">Segment supprimé</string>
+    <string name="no_segments">Rien d\'enregistré pour l\'instant</string>
+    <string name="export_title">Enregistrer la vidéo</string>
+    <string name="export_resolution">Résolution d\'export</string>
+    <string name="export_original">Original (rapide, sans ré-encodage)</string>
+    <string name="export_running">Assemblage de la vidéo… %1$d %%</string>
+    <string name="discard_title">Abandonner l\'enregistrement ?</string>
+    <string name="discard_msg">%1$d segments seront perdus.</string>
+    <string name="discard">Abandonner</string>
+    <string name="cancel">Annuler</string>
+    <string name="save">Enregistrer</string>
+    <string name="quality_title">Résolution d\'enregistrement</string>
+    <string name="back_to_record">Retour à l\'enregistrement</string>
+    <string name="review_hint">Touche : pause/reprise · En boucle</string>
+    <string name="review_position">%1$s / %2$s · %3$d segments</string>
+    <string name="add_image">Ajouter une image de la galerie</string>
+    <string name="remove_overlay">Retirer la superposition</string>
+    <string name="overlay_hint">Glisse pour déplacer · deux doigts : taille/rotation</string>
+    <string name="drafts">Brouillons</string>
+    <string name="save_draft">Enregistrer comme brouillon</string>
+    <string name="draft_saved">Brouillon enregistré</string>
+    <string name="draft_loaded">Brouillon chargé</string>
+    <string name="no_drafts">Aucun brouillon</string>
+    <string name="draft_item">%1$s · %2$d segments · %3$s</string>
+    <string name="open">Ouvrir</string>
+    <string name="delete">Supprimer</string>
+    <string name="add_video">Ajouter une vidéo de la galerie</string>
+    <string name="video_copying">Préparation de la vidéo…</string>
+    <string name="only_one_video">Une seule vidéo superposée à la fois – retire d\'abord l\'actuelle</string>
+    <string name="sound_on">Son de la superposition : activé</string>
+    <string name="sound_off">Son de la superposition : coupé</string>
+    <string name="overlay_volume_title">Volume de la vidéo superposée</string>
+    <string name="volume_percent">%1$d %%</string>
+    <string name="volume_hint">S\'applique à l\'export et à la relecture. Audible dans l\'aperçu seulement avec l\'interrupteur casque.</string>
+    <string name="mic_volume">Volume du micro</string>
+    <string name="headphones_on">Casque détecté – son de la superposition dans l\'aperçu</string>
+    <string name="share">Partager</string>
+    <string name="saved_title">Vidéo enregistrée</string>
+    <string name="saved_msg">La vidéo est dans la galerie sous Movies/VideoEditor.</string>
+    <string name="export_running_mix">Rendu de la vidéo (avec son superposé)… %1$d %%</string>
+    <string name="ok">OK</string>
+    <string name="mic_volume_title">Volume du micro</string>
+    <string name="mic_hint">S\'applique à ton enregistrement à l\'export. 100 %% = inchangé, 50 %% sonne deux fois moins fort.</string>
+    <string name="crash_title">L\'appli a planté la dernière fois</string>
+    <string name="crash_msg">Copie le rapport et envoie-le au développeur.</string>
+    <string name="copy">Tout copier</string>
+    <string name="copied">Copié dans le presse-papiers</string>
+    <string name="recovered">Enregistrement restauré en brouillon après le plantage</string>
+    <string name="preview_sound">Son de la superposition dans l\'aperçu (casque uniquement !)</string>
+    <string name="preview_sound_on">Son de l\'aperçu ACTIVÉ – uniquement avec un casque, sinon le micro le capte</string>
+    <string name="preview_sound_off">Son de l\'aperçu coupé</string>
+    <string name="preparing_audio">Préparation du son…</string>
+    <string name="overlay_pause">Mettre la vidéo superposée en pause</string>
+    <string name="overlay_play">Reprendre la vidéo superposée</string>
+    <string name="add_text">Ajouter du texte</string>
+    <string name="edit_text">Modifier le texte</string>
+    <string name="text_dialog_title">Texte</string>
+    <string name="text_hint">Saisis du texte ou des emojis…</string>
+    <string name="text_background">Fond</string>
+    <string name="text_color">Couleur</string>
+    <string name="text_opacity">Opacité du texte</string>
+    <string name="bg_color">Couleur du fond</string>
+    <string name="bg_opacity">Opacité du fond</string>
+    <string name="greenscreen">Mode vignette : vidéo de fond</string>
+    <string name="greenscreen_on">Mode vignette : caméra avant active – change avec ↻. À gauche : forme et Arc-en-ciel Baba.</string>
+    <string name="greenscreen_remove_title">Quitter le mode vignette ?</string>
+    <string name="greenscreen_remove_msg">La vidéo de fond est retirée ; son son est conservé jusqu\'ici.</string>
+    <string name="remove">Retirer</string>
+    <string name="greenscreen_conflict">Retire d\'abord la vidéo incrustée – une seule vidéo peut tourner à la fois.</string>
+    <string name="shape">Forme de la vignette</string>
+    <string name="shape_square">Carré</string>
+    <string name="shape_portrait">Rectangle (3:4)</string>
+    <string name="shape_circle">Cercle</string>
+    <string name="border_toggle">Arc-en-ciel Baba oui/non</string>
+    <string name="captions">Sous-titres</string>
+    <string name="captions_title">Sous-titres par reconnaissance vocale</string>
+    <string name="captions_language">Langue</string>
+    <string name="captions_auto">Détecter automatiquement</string>
+    <string name="captions_always">Toujours générer à l\'ouverture de la relecture</string>
+    <string name="captions_generate">Générer</string>
+    <string name="captions_regenerate">Régénérer</string>
+    <string name="captions_remove">Retirer</string>
+    <string name="captions_model_download">Téléchargement du modèle vocal (une fois, env. %1$d Mo)… %2$d %%</string>
+    <string name="captions_preparing">Préparation du son… %1$d %%</string>
+    <string name="captions_running">Reconnaissance vocale… %1$d %%</string>
+    <string name="captions_done">%1$d sous-titres créés (langue : %2$s)</string>
+    <string name="captions_none">Aucune parole détectée</string>
+    <string name="captions_export_note">Les sous-titres sont incrustés à l\'enregistrement (ré-encodage).</string>
+    <string name="captions_template">Style</string>
+    <string name="captions_model">Reconnaissance</string>
+    <string name="captions_prefetch">Le modèle vocal se télécharge en arrière-plan (une fois, env. %1$d Mo)</string>
+    <string name="captions_prefetch_done">Modèle vocal prêt</string>
+    <string name="captions_hint">Sous-titres : glisse pour déplacer, deux doigts pour taille et rotation</string>
+    <string name="tile_volume_title">Volume en mode vignette</string>
+    <string name="tile_bg_volume">Vidéo de fond</string>
+    <string name="tile_mic_volume">Ma voix (micro)</string>
+    <string name="tile_volume_hint">Pourcentage = volume perçu : 50 %% sonne deux fois moins fort, 0 %% est silencieux.</string>
+    <string name="captions_emojis">Afficher des emojis (ex. Iran 🇮🇷, explosion 💥)</string>
+    <string name="captions_edit">Modifier</string>
+    <string name="captions_edit_title">Modifier les sous-titres</string>
+    <string name="limit_reached">Durée maximale de 5 minutes atteinte – supprime des segments pour continuer</string>
+    <string name="low_space">Peu d\'espace : seulement %1$.1f Go libres</string>
+    <string name="mosaic">Mosaïque</string>
+    <string name="mosaic_title">Grille de la mosaïque</string>
+    <string name="mosaic_gap_white">Séparateurs et remplissage en blanc (sinon noir)</string>
+    <string name="mosaic_rainbow">Séparateurs en Arc-en-ciel Baba</string>
+    <string name="mosaic_hint">Touche une case : média, caméra, couleur de fond · glisse pour déplacer, deux doigts pour zoomer</string>
+    <string name="mosaic_conflict">Quitte d\'abord le mode vignette.</string>
+    <string name="tile_media">Image dans cette case</string>
+    <string name="tile_camera">Case de retour à la caméra</string>
+    <string name="tile_fill">Couleur de fond de cette case</string>
+    <string name="mosaic_tip">Touche une case, puis utilise les boutons en haut à gauche</string>
+    <string name="tile_video">Vidéo dans cette case</string>
+    <string name="tile_video_downscale">Conversion de la vidéo en 1080p… %1$d %%</string>
+    <string name="segment_moved">Segment déplacé</string>
+    <string name="segment_last_keep">Le dernier segment ne peut pas être supprimé ici – abandonne l\'enregistrement.</string>
+    <string name="delete_segment_title">Supprimer le segment ?</string>
+    <string name="delete_segment_msg">Le segment %1$d (%2$s) sera retiré. Sous-titres et son sont ajustés.</string>
+    <string name="undo_delete">Annuler</string>
+    <string name="filter">Filtre couleur</string>
+    <string name="settings">Paramètres</string>
+    <string name="settings_captions">Sous-titres</string>
+    <string name="settings_recording">Enregistrement</string>
+    <string name="settings_default_quality">Résolution par défaut</string>
+    <string name="settings_default_quality_highest">La plus haute de la caméra</string>
+    <string name="settings_mosaic">Mosaïque</string>
+    <string name="settings_help">Aide</string>
+    <string name="settings_show_tips">Réafficher les astuces au prochain démarrage</string>
+    <string name="settings_crash">Afficher le dernier rapport de plantage</string>
+    <string name="settings_no_crash">Aucun rapport de plantage</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="tip_record">Bouton rouge : démarre l\'enregistrement, touche à nouveau pour la pause. Supprime le dernier segment en bas à gauche.</string>
+    <string name="tip_toolbar">Barre de droite : filtres, images, vidéos, texte, mode vignette et mosaïque – elle défile.</string>
+    <string name="tip_overlays">Touche les superpositions, glisse-les, zoome et pivote à deux doigts. Coche : aperçu et enregistrement.</string>
+    <string name="tip_headphones">Le son de cette vidéo n\'est audible dans l\'aperçu qu\'avec un casque (interrupteur à droite) – ton micro reste propre. Il est toujours dans la vidéo finale.</string>
+    <string name="off">Non</string>
+    <string name="seg_label">S%1$d</string>
+    <string name="start_label">Début %1$s</string>
+    <string name="end_label">Fin %1$s</string>
+    <string name="fine_scrub">Défilement fin</string>
+    <string name="drop_delete">Relâche pour supprimer</string>
+    <string name="drag_hint">Dépose entre les segments · sur la corbeille en haut pour supprimer</string>
+    <string name="mosaic_first_off">Désactive d\'abord la mosaïque.</string>
+    <string name="export_levels">Export : %1$d piste(s) superposée(s) %2$s, micro %3$d %%</string>
+    <string name="caption_preview_words">Ton texte ressemble à ça</string>
+    <string name="settings_language">Langue de l\'appli</string>
+    <string name="language_system">Langue du système</string>
+    <string-array name="filter_names">
+        <item>Original</item>
+        <item>Chaud</item>
+        <item>Froid</item>
+        <item>Noir et blanc</item>
+        <item>Vintage</item>
+        <item>Vif</item>
+        <item>Mat</item>
+        <item>Cinéma</item>
+        <item>Pastel</item>
+    </string-array>
+    <string-array name="caption_templates">
+        <item>Classique</item>
+        <item>Bandeau</item>
+        <item>Karaoké</item>
+        <item>Mot à mot</item>
+        <item>Accent</item>
+        <item>Néon</item>
+        <item>Encadré</item>
+        <item>Ombre</item>
+        <item>Bicolore</item>
+        <item>Machine à écrire</item>
+        <item>Grand &amp; petit</item>
+    </string-array>
+    <string-array name="model_labels">
+        <item>Top (rapide)</item>
+        <item>Ali (équilibré)</item>
+        <item>Baba (le plus précis, lent)</item>
+    </string-array>
+    <plurals name="segments">
+        <item quantity="one">%d segment</item>
+        <item quantity="other">%d segments</item>
+    </plurals>
+</resources>

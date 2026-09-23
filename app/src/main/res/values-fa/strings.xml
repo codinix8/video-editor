@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Babacut</string>
+    <string name="record">شروع ضبط</string>
+    <string name="stop">توقف موقت ضبط</string>
+    <string name="flip_camera">تغییر دوربین</string>
+    <string name="delete_last">حذف آخرین بخش</string>
+    <string name="finish">پایان</string>
+    <string name="quality">وضوح</string>
+    <string name="permission_needed">دسترسی به دوربین و میکروفون لازم است.</string>
+    <string name="saved">ویدیو در گالری ذخیره شد</string>
+    <string name="error">خطا: %1$s</string>
+    <string name="ready">آماده – برای ضبط دکمه را بزن</string>
+    <string name="recording">در حال ضبط… %1$s</string>
+    <string name="paused">مکث · %1$d بخش · %2$s</string>
+    <string name="tap_again_delete">برای حذف آخرین بخش دوباره بزن</string>
+    <string name="segment_deleted">بخش حذف شد</string>
+    <string name="no_segments">هنوز چیزی ضبط نشده</string>
+    <string name="export_title">ذخیرهٔ ویدیو</string>
+    <string name="export_resolution">وضوح خروجی</string>
+    <string name="export_original">اصلی (سریع، بدون تبدیل دوباره)</string>
+    <string name="export_running">در حال ساخت ویدیو… %1$d %%</string>
+    <string name="discard_title">ضبط دور انداخته شود؟</string>
+    <string name="discard_msg">%1$d بخش از دست می‌رود.</string>
+    <string name="discard">دور بریز</string>
+    <string name="cancel">لغو</string>
+    <string name="save">ذخیره</string>
+    <string name="quality_title">وضوح ضبط</string>
+    <string name="back_to_record">بازگشت به ضبط</string>
+    <string name="review_hint">لمس: مکث/ادامه · پخش تکراری</string>
+    <string name="review_position">%1$s / %2$s · %3$d بخش</string>
+    <string name="add_image">افزودن عکس از گالری</string>
+    <string name="remove_overlay">حذف لایه</string>
+    <string name="overlay_hint">بکش تا جابه‌جا شود · دو انگشت: اندازه/چرخش</string>
+    <string name="drafts">پیش‌نویس‌ها</string>
+    <string name="save_draft">ذخیره به‌عنوان پیش‌نویس</string>
+    <string name="draft_saved">پیش‌نویس ذخیره شد</string>
+    <string name="draft_loaded">پیش‌نویس بارگذاری شد</string>
+    <string name="no_drafts">پیش‌نویسی وجود ندارد</string>
+    <string name="draft_item">%1$s · %2$d بخش · %3$s</string>
+    <string name="open">باز کن</string>
+    <string name="delete">حذف</string>
+    <string name="add_video">افزودن ویدیو از گالری</string>
+    <string name="video_copying">آماده‌سازی ویدیو…</string>
+    <string name="only_one_video">فقط یک ویدیوی لایه در هر زمان – اول ویدیوی فعلی را حذف کن</string>
+    <string name="sound_on">صدای لایه: روشن</string>
+    <string name="sound_off">صدای لایه: خاموش</string>
+    <string name="overlay_volume_title">صدای ویدیوی لایه</string>
+    <string name="volume_percent">%1$d %%</string>
+    <string name="volume_hint">در خروجی و بازبینی اعمال می‌شود. در پیش‌نمایش فقط با کلید هدفون شنیده می‌شود.</string>
+    <string name="mic_volume">صدای میکروفون</string>
+    <string name="headphones_on">هدفون شناسایی شد – صدای لایه در پیش‌نمایش روشن</string>
+    <string name="share">اشتراک‌گذاری</string>
+    <string name="saved_title">ویدیو ذخیره شد</string>
+    <string name="saved_msg">ویدیو در گالری در Movies/VideoEditor است.</string>
+    <string name="export_running_mix">رندر ویدیو (با صدای لایه)… %1$d %%</string>
+    <string name="ok">باشه</string>
+    <string name="mic_volume_title">صدای میکروفون</string>
+    <string name="mic_hint">در خروجی روی ضبط تو اعمال می‌شود. ۱۰۰٪ = بدون تغییر، ۵۰٪ نصف بلندی.</string>
+    <string name="crash_title">برنامه دفعهٔ قبل از کار افتاد</string>
+    <string name="crash_msg">لطفاً گزارش را کپی کن و برای توسعه‌دهنده بفرست.</string>
+    <string name="copy">کپی همه</string>
+    <string name="copied">در کلیپ‌بورد کپی شد</string>
+    <string name="recovered">ضبط پس از خرابی به‌عنوان پیش‌نویس بازیابی شد</string>
+    <string name="preview_sound">صدای لایه در پیش‌نمایش (فقط با هدفون!)</string>
+    <string name="preview_sound_on">صدای پیش‌نمایش روشن – فقط با هدفون، وگرنه میکروفون آن را ضبط می‌کند</string>
+    <string name="preview_sound_off">صدای پیش‌نمایش خاموش</string>
+    <string name="preparing_audio">آماده‌سازی صدا…</string>
+    <string name="overlay_pause">مکث ویدیوی لایه</string>
+    <string name="overlay_play">ادامهٔ ویدیوی لایه</string>
+    <string name="add_text">افزودن متن</string>
+    <string name="edit_text">ویرایش متن</string>
+    <string name="text_dialog_title">متن</string>
+    <string name="text_hint">متن یا ایموجی بنویس…</string>
+    <string name="text_background">پس‌زمینه</string>
+    <string name="text_color">رنگ</string>
+    <string name="text_opacity">شفافیت متن</string>
+    <string name="bg_color">رنگ پس‌زمینه</string>
+    <string name="bg_opacity">شفافیت پس‌زمینه</string>
+    <string name="greenscreen">حالت کاشی: ویدیوی پس‌زمینه</string>
+    <string name="greenscreen_on">حالت کاشی: دوربین جلو فعال – با ↻ تغییر بده. چپ: شکل و رنگین‌کمان بابا.</string>
+    <string name="greenscreen_remove_title">پایان حالت کاشی؟</string>
+    <string name="greenscreen_remove_msg">ویدیوی پس‌زمینه حذف می‌شود؛ صدایش تا اینجا می‌ماند.</string>
+    <string name="remove">حذف</string>
+    <string name="greenscreen_conflict">اول ویدیوی تصویر‌در‌تصویر را حذف کن – فقط یک ویدیو می‌تواند پخش شود.</string>
+    <string name="shape">شکل کاشی</string>
+    <string name="shape_square">مربع</string>
+    <string name="shape_portrait">مستطیل (۳:۴)</string>
+    <string name="shape_circle">دایره</string>
+    <string name="border_toggle">رنگین‌کمان بابا روشن/خاموش</string>
+    <string name="captions">زیرنویس</string>
+    <string name="captions_title">زیرنویس با تشخیص گفتار</string>
+    <string name="captions_language">زبان</string>
+    <string name="captions_auto">تشخیص خودکار</string>
+    <string name="captions_always">هنگام باز شدن بازبینی همیشه خودکار بساز</string>
+    <string name="captions_generate">بساز</string>
+    <string name="captions_regenerate">دوباره بساز</string>
+    <string name="captions_remove">حذف</string>
+    <string name="captions_model_download">دانلود مدل گفتار (یک‌بار، حدود %1$d مگابایت)… %2$d %%</string>
+    <string name="captions_preparing">آماده‌سازی صدا… %1$d %%</string>
+    <string name="captions_running">تشخیص گفتار… %1$d %%</string>
+    <string name="captions_done">%1$d زیرنویس ساخته شد (زبان: %2$s)</string>
+    <string name="captions_none">گفتاری شناسایی نشد</string>
+    <string name="captions_export_note">زیرنویس‌ها هنگام ذخیره در ویدیو حک می‌شوند (تبدیل دوباره).</string>
+    <string name="captions_template">سبک</string>
+    <string name="captions_model">تشخیص</string>
+    <string name="captions_prefetch">مدل گفتار در پس‌زمینه دانلود می‌شود (یک‌بار، حدود %1$d مگابایت)</string>
+    <string name="captions_prefetch_done">مدل گفتار آماده است</string>
+    <string name="captions_hint">زیرنویس: بکش تا جابه‌جا شود، دو انگشت برای اندازه و چرخش</string>
+    <string name="tile_volume_title">صدا در حالت کاشی</string>
+    <string name="tile_bg_volume">ویدیوی پس‌زمینه</string>
+    <string name="tile_mic_volume">صدای من (میکروفون)</string>
+    <string name="tile_volume_hint">درصد = بلندی درک‌شده: ۵۰٪ نصف بلندی، ۰٪ بی‌صدا.</string>
+    <string name="captions_emojis">نمایش ایموجی (مثلاً ایران 🇮🇷، انفجار 💥)</string>
+    <string name="captions_edit">ویرایش</string>
+    <string name="captions_edit_title">ویرایش زیرنویس‌ها</string>
+    <string name="limit_reached">حداکثر ۵ دقیقه رسید – برای ادامه بخش‌ها را حذف کن</string>
+    <string name="low_space">فضای کم: فقط %1$.1f گیگابایت خالی</string>
+    <string name="mosaic">موزاییک</string>
+    <string name="mosaic_title">شبکهٔ موزاییک</string>
+    <string name="mosaic_gap_white">جداکننده‌ها و پرکننده سفید (وگرنه سیاه)</string>
+    <string name="mosaic_rainbow">جداکننده‌ها به‌شکل رنگین‌کمان بابا</string>
+    <string name="mosaic_hint">کاشی را لمس کن: رسانه، دوربین، رنگ پرکننده · بکش تا جابه‌جا شود، دو انگشت برای زوم</string>
+    <string name="mosaic_conflict">اول حالت کاشی را ببند.</string>
+    <string name="tile_media">عکس در این کاشی</string>
+    <string name="tile_camera">کاشی به دوربین برگردد</string>
+    <string name="tile_fill">رنگ پرکنندهٔ این کاشی</string>
+    <string name="mosaic_tip">یک کاشی را لمس کن، بعد از دکمه‌های بالا چپ استفاده کن</string>
+    <string name="tile_video">ویدیو در این کاشی</string>
+    <string name="tile_video_downscale">تبدیل ویدیو به 1080p… %1$d %%</string>
+    <string name="segment_moved">بخش جابه‌جا شد</string>
+    <string name="segment_last_keep">آخرین بخش را اینجا نمی‌توان حذف کرد – به‌جایش ضبط را دور بریز.</string>
+    <string name="delete_segment_title">بخش حذف شود؟</string>
+    <string name="delete_segment_msg">بخش %1$d (%2$s) حذف می‌شود. زیرنویس و صدای لایه تنظیم می‌شوند.</string>
+    <string name="undo_delete">واگرد</string>
+    <string name="filter">فیلتر رنگ</string>
+    <string name="settings">تنظیمات</string>
+    <string name="settings_captions">زیرنویس</string>
+    <string name="settings_recording">ضبط</string>
+    <string name="settings_default_quality">وضوح پیش‌فرض</string>
+    <string name="settings_default_quality_highest">بالاترین وضوح دوربین</string>
+    <string name="settings_mosaic">موزاییک</string>
+    <string name="settings_help">راهنما</string>
+    <string name="settings_show_tips">نمایش دوبارهٔ نکته‌ها در شروع بعدی</string>
+    <string name="settings_crash">نمایش آخرین گزارش خرابی</string>
+    <string name="settings_no_crash">گزارش خرابی وجود ندارد</string>
+    <string name="settings_version">نسخهٔ %1$s</string>
+    <string name="tip_record">دکمهٔ قرمز: شروع ضبط، دوباره بزن برای مکث. آخرین بخش را پایین چپ حذف کن.</string>
+    <string name="tip_toolbar">نوار راست: فیلتر، عکس، ویدیو، متن، حالت کاشی و موزاییک – قابل اسکرول است.</string>
+    <string name="tip_overlays">لایه‌ها را لمس کن، بکش، با دو انگشت زوم و چرخش. تیک: پیش‌نمایش و ذخیره.</string>
+    <string name="tip_headphones">صدای این ویدیو را در پیش‌نمایش فقط با هدفون می‌شنوی (کلید سمت راست) – تا میکروفونت تمیز بماند. در ویدیوی نهایی همیشه هست.</string>
+    <string name="off">خاموش</string>
+    <string name="seg_label">ب%1$d</string>
+    <string name="start_label">شروع %1$s</string>
+    <string name="end_label">پایان %1$s</string>
+    <string name="fine_scrub">جست‌وجوی دقیق</string>
+    <string name="drop_delete">رها کن تا حذف شود</string>
+    <string name="drag_hint">بین بخش‌ها رها کن · روی سطل بالا برای حذف</string>
+    <string name="mosaic_first_off">اول موزاییک را خاموش کن.</string>
+    <string name="export_levels">خروجی: %1$d ترک لایه %2$s، میکروفون %3$d %%</string>
+    <string name="caption_preview_words">متن تو این‌طور دیده می‌شود</string>
+    <string name="settings_language">زبان برنامه</string>
+    <string name="language_system">زبان سیستم</string>
+    <string-array name="filter_names">
+        <item>اصلی</item>
+        <item>گرم</item>
+        <item>سرد</item>
+        <item>سیاه‌وسفید</item>
+        <item>قدیمی</item>
+        <item>پررنگ</item>
+        <item>مات</item>
+        <item>سینمایی</item>
+        <item>پاستلی</item>
+    </string-array>
+    <string-array name="caption_templates">
+        <item>کلاسیک</item>
+        <item>نوار</item>
+        <item>کارائوکه</item>
+        <item>کلمه‌به‌کلمه</item>
+        <item>تأکید</item>
+        <item>نئون</item>
+        <item>کادر برجسته</item>
+        <item>سایه</item>
+        <item>دورنگ</item>
+        <item>ماشین‌تحریر</item>
+        <item>بزرگ و کوچک</item>
+    </string-array>
+    <string-array name="model_labels">
+        <item>تاپ (سریع)</item>
+        <item>علی (متعادل)</item>
+        <item>بابا (دقیق‌ترین، آهسته)</item>
+    </string-array>
+    <plurals name="segments">
+        <item quantity="one">%d بخش</item>
+        <item quantity="other">%d بخش</item>
+    </plurals>
+</resources>

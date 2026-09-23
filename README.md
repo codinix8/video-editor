@@ -39,7 +39,8 @@ Auf dem Handy: Datei öffnen → „Aus dieser Quelle installieren" erlauben →
 | 3c | Videos in Kacheln: 1080p-Umrechnung, gemeinsames Play/Pause, Lautstärke je Kachel, Protokoll, Ton-Mix, Entwürfe | ✅ Build 53 |
 | 6 | Schnitt in der Review: Segmente per langem Drücken umordnen oder löschen, Papierkorb, Rückgängig; Zeitachsen-Umbau für Untertitel und Ton | ✅ Build 58 |
 | 4b | Farbfilter (9 Looks) für das Kamerabild, live umschaltbar, eingebrannt; rechte Knopfspalte scrollbar | ✅ Build 59 |
-| 7 | Aufräumen: Einstellungen-Seite, Tipps beim ersten Öffnen, Kopfhörer-Hinweis mit Punkt, Play/Pause per Tipp, Mosaik-Panel | in Test |
+| 7 | Aufräumen: Einstellungen-Seite, Tipps beim ersten Öffnen, Kopfhörer-Hinweis mit Punkt, Play/Pause per Tipp, Mosaik-Panel | ✅ Build 65 |
+| 8 | Babacut-Branding, Icon, 7 Sprachen (EN Standard, DE, TR, ES, FR, FA, AR), Sprachwahl in den Einstellungen | in Test |
 
 ## Technik
 

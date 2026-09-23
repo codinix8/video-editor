@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Babacut</string>
+    <string name="record">بدء التسجيل</string>
+    <string name="stop">إيقاف التسجيل مؤقتًا</string>
+    <string name="flip_camera">تبديل الكاميرا</string>
+    <string name="delete_last">حذف آخر مقطع</string>
+    <string name="finish">إنهاء</string>
+    <string name="quality">الدقة</string>
+    <string name="permission_needed">يلزم الوصول إلى الكاميرا والميكروفون.</string>
+    <string name="saved">تم حفظ الفيديو في المعرض</string>
+    <string name="error">خطأ: %1$s</string>
+    <string name="ready">جاهز – اضغط الزر للتسجيل</string>
+    <string name="recording">جارٍ التسجيل… %1$s</string>
+    <string name="paused">إيقاف مؤقت · %1$d مقاطع · %2$s</string>
+    <string name="tap_again_delete">انقر مرة أخرى لحذف آخر مقطع</string>
+    <string name="segment_deleted">تم حذف المقطع</string>
+    <string name="no_segments">لم يُسجَّل شيء بعد</string>
+    <string name="export_title">حفظ الفيديو</string>
+    <string name="export_resolution">دقة التصدير</string>
+    <string name="export_original">الأصل (سريع، بدون إعادة ترميز)</string>
+    <string name="export_running">جارٍ تجميع الفيديو… %1$d %%</string>
+    <string name="discard_title">تجاهل التسجيل؟</string>
+    <string name="discard_msg">سيُفقد %1$d مقطع.</string>
+    <string name="discard">تجاهل</string>
+    <string name="cancel">إلغاء</string>
+    <string name="save">حفظ</string>
+    <string name="quality_title">دقة التسجيل</string>
+    <string name="back_to_record">عودة إلى التسجيل</string>
+    <string name="review_hint">انقر: إيقاف/متابعة · تكرار</string>
+    <string name="review_position">%1$s / %2$s · %3$d مقاطع</string>
+    <string name="add_image">إضافة صورة من المعرض</string>
+    <string name="remove_overlay">إزالة الطبقة</string>
+    <string name="overlay_hint">اسحب للتحريك · إصبعان: الحجم/التدوير</string>
+    <string name="drafts">المسودات</string>
+    <string name="save_draft">حفظ كمسودة</string>
+    <string name="draft_saved">تم حفظ المسودة</string>
+    <string name="draft_loaded">تم تحميل المسودة</string>
+    <string name="no_drafts">لا توجد مسودات</string>
+    <string name="draft_item">%1$s · %2$d مقاطع · %3$s</string>
+    <string name="open">فتح</string>
+    <string name="delete">حذف</string>
+    <string name="add_video">إضافة فيديو من المعرض</string>
+    <string name="video_copying">جارٍ تجهيز الفيديو…</string>
+    <string name="only_one_video">طبقة فيديو واحدة فقط في كل مرة – أزل الحالية أولًا</string>
+    <string name="sound_on">صوت الطبقة: مفعّل</string>
+    <string name="sound_off">صوت الطبقة: مغلق</string>
+    <string name="overlay_volume_title">مستوى صوت فيديو الطبقة</string>
+    <string name="volume_percent">%1$d %%</string>
+    <string name="volume_hint">يُطبَّق على التصدير والمراجعة. في المعاينة يُسمع فقط عند تشغيل مفتاح سماعة الرأس.</string>
+    <string name="mic_volume">مستوى صوت الميكروفون</string>
+    <string name="headphones_on">تم اكتشاف سماعة رأس – صوت الطبقة مفعّل في المعاينة</string>
+    <string name="share">مشاركة</string>
+    <string name="saved_title">تم حفظ الفيديو</string>
+    <string name="saved_msg">الفيديو في المعرض ضمن Movies/VideoEditor.</string>
+    <string name="export_running_mix">جارٍ إنتاج الفيديو (مع صوت الطبقة)… %1$d %%</string>
+    <string name="ok">حسنًا</string>
+    <string name="mic_volume_title">مستوى صوت الميكروفون</string>
+    <string name="mic_hint">يُطبَّق على تسجيلك عند التصدير. 100 %% = بلا تغيير، 50 %% نصف الارتفاع.</string>
+    <string name="crash_title">توقف التطبيق في المرة السابقة</string>
+    <string name="crash_msg">يرجى نسخ التقرير وإرساله إلى المطوّر.</string>
+    <string name="copy">نسخ الكل</string>
+    <string name="copied">تم النسخ إلى الحافظة</string>
+    <string name="recovered">تم استرداد التسجيل كمسودة بعد التوقف</string>
+    <string name="preview_sound">صوت الطبقة في المعاينة (بسماعة الرأس فقط!)</string>
+    <string name="preview_sound_on">صوت المعاينة مفعّل – استخدم سماعة رأس فقط وإلا سيلتقطه الميكروفون</string>
+    <string name="preview_sound_off">صوت المعاينة مغلق</string>
+    <string name="preparing_audio">جارٍ تجهيز الصوت…</string>
+    <string name="overlay_pause">إيقاف فيديو الطبقة مؤقتًا</string>
+    <string name="overlay_play">متابعة فيديو الطبقة</string>
+    <string name="add_text">إضافة نص</string>
+    <string name="edit_text">تعديل النص</string>
+    <string name="text_dialog_title">نص</string>
+    <string name="text_hint">اكتب نصًا أو رموزًا تعبيرية…</string>
+    <string name="text_background">الخلفية</string>
+    <string name="text_color">اللون</string>
+    <string name="text_opacity">شفافية النص</string>
+    <string name="bg_color">لون الخلفية</string>
+    <string name="bg_opacity">شفافية الخلفية</string>
+    <string name="greenscreen">وضع البلاطة: فيديو الخلفية</string>
+    <string name="greenscreen_on">وضع البلاطة: الكاميرا الأمامية فعّالة – بدّل بـ ↻. يسارًا: الشكل وقوس قزح بابا.</string>
+    <string name="greenscreen_remove_title">إنهاء وضع البلاطة؟</string>
+    <string name="greenscreen_remove_msg">سيُزال فيديو الخلفية؛ يبقى صوته حتى هذه النقطة.</string>
+    <string name="remove">إزالة</string>
+    <string name="greenscreen_conflict">أزل فيديو الصورة داخل الصورة أولًا – يمكن تشغيل فيديو واحد فقط.</string>
+    <string name="shape">شكل البلاطة</string>
+    <string name="shape_square">مربع</string>
+    <string name="shape_portrait">مستطيل (3:4)</string>
+    <string name="shape_circle">دائرة</string>
+    <string name="border_toggle">قوس قزح بابا تشغيل/إيقاف</string>
+    <string name="captions">الترجمة</string>
+    <string name="captions_title">ترجمة بالتعرّف على الكلام</string>
+    <string name="captions_language">اللغة</string>
+    <string name="captions_auto">اكتشاف تلقائي</string>
+    <string name="captions_always">إنشاء تلقائي دائمًا عند فتح المراجعة</string>
+    <string name="captions_generate">إنشاء</string>
+    <string name="captions_regenerate">إعادة الإنشاء</string>
+    <string name="captions_remove">إزالة</string>
+    <string name="captions_model_download">تنزيل نموذج الكلام (مرة واحدة، نحو %1$d م.ب)… %2$d %%</string>
+    <string name="captions_preparing">تجهيز الصوت… %1$d %%</string>
+    <string name="captions_running">التعرّف على الكلام… %1$d %%</string>
+    <string name="captions_done">تم إنشاء %1$d ترجمة (اللغة: %2$s)</string>
+    <string name="captions_none">لم يُكتشف كلام</string>
+    <string name="captions_export_note">تُدمج الترجمة في الفيديو عند الحفظ (إعادة ترميز).</string>
+    <string name="captions_template">النمط</string>
+    <string name="captions_model">التعرّف</string>
+    <string name="captions_prefetch">يُنزَّل نموذج الكلام في الخلفية (مرة واحدة، نحو %1$d م.ب)</string>
+    <string name="captions_prefetch_done">نموذج الكلام جاهز</string>
+    <string name="captions_hint">الترجمة: اسحب للتحريك، إصبعان للحجم والتدوير</string>
+    <string name="tile_volume_title">الصوت في وضع البلاطة</string>
+    <string name="tile_bg_volume">فيديو الخلفية</string>
+    <string name="tile_mic_volume">صوتي (الميكروفون)</string>
+    <string name="tile_volume_hint">النسبة = الارتفاع المُدرَك: 50 %% نصف الارتفاع، 0 %% صمت.</string>
+    <string name="captions_emojis">إظهار الرموز التعبيرية (مثل إيران 🇮🇷، انفجار 💥)</string>
+    <string name="captions_edit">تعديل</string>
+    <string name="captions_edit_title">تعديل الترجمة</string>
+    <string name="limit_reached">تم الوصول إلى الحد الأقصى 5 دقائق – احذف مقاطع للمتابعة</string>
+    <string name="low_space">مساحة قليلة: %1$.1f غ.ب فقط متاحة</string>
+    <string name="mosaic">فسيفساء</string>
+    <string name="mosaic_title">شبكة الفسيفساء</string>
+    <string name="mosaic_gap_white">الفواصل والتعبئة بالأبيض (وإلا أسود)</string>
+    <string name="mosaic_rainbow">الفواصل كقوس قزح بابا</string>
+    <string name="mosaic_hint">انقر بلاطة: الوسائط، الكاميرا، لون التعبئة · اسحب للتحريك، إصبعان للتكبير</string>
+    <string name="mosaic_conflict">أنهِ وضع البلاطة أولًا.</string>
+    <string name="tile_media">صورة في هذه البلاطة</string>
+    <string name="tile_camera">إعادة البلاطة إلى الكاميرا</string>
+    <string name="tile_fill">لون تعبئة هذه البلاطة</string>
+    <string name="mosaic_tip">انقر بلاطة ثم استخدم الأزرار أعلى اليسار</string>
+    <string name="tile_video">فيديو في هذه البلاطة</string>
+    <string name="tile_video_downscale">تحويل الفيديو إلى 1080p… %1$d %%</string>
+    <string name="segment_moved">تم نقل المقطع</string>
+    <string name="segment_last_keep">لا يمكن حذف آخر مقطع هنا – تجاهل التسجيل بدلًا من ذلك.</string>
+    <string name="delete_segment_title">حذف المقطع؟</string>
+    <string name="delete_segment_msg">سيُزال المقطع %1$d (%2$s). تُضبط الترجمة وصوت الطبقة.</string>
+    <string name="undo_delete">تراجع</string>
+    <string name="filter">مرشّح الألوان</string>
+    <string name="settings">الإعدادات</string>
+    <string name="settings_captions">الترجمة</string>
+    <string name="settings_recording">التسجيل</string>
+    <string name="settings_default_quality">الدقة الافتراضية</string>
+    <string name="settings_default_quality_highest">أعلى دقة للكاميرا</string>
+    <string name="settings_mosaic">فسيفساء</string>
+    <string name="settings_help">مساعدة</string>
+    <string name="settings_show_tips">إظهار النصائح مرة أخرى عند البدء التالي</string>
+    <string name="settings_crash">عرض آخر تقرير توقف</string>
+    <string name="settings_no_crash">لا يوجد تقرير توقف</string>
+    <string name="settings_version">الإصدار %1$s</string>
+    <string name="tip_record">الزر الأحمر: بدء التسجيل، انقر مرة أخرى للإيقاف المؤقت. احذف آخر مقطع أسفل اليسار.</string>
+    <string name="tip_toolbar">الشريط الأيمن: المرشّحات، الصور، الفيديو، النص، وضع البلاطة والفسيفساء – قابل للتمرير.</string>
+    <string name="tip_overlays">انقر الطبقات واسحبها، وكبّر ودوّر بإصبعين. علامة الصح: معاينة وحفظ.</string>
+    <string name="tip_headphones">تسمع صوت هذا الفيديو في المعاينة بسماعة الرأس فقط (المفتاح على اليمين) – ليبقى ميكروفونك نقيًا. وهو موجود دائمًا في الفيديو النهائي.</string>
+    <string name="off">إيقاف</string>
+    <string name="seg_label">م%1$d</string>
+    <string name="start_label">البداية %1$s</string>
+    <string name="end_label">النهاية %1$s</string>
+    <string name="fine_scrub">تمرير دقيق</string>
+    <string name="drop_delete">أفلت للحذف</string>
+    <string name="drag_hint">أفلت بين المقاطع · على سلة المهملات أعلاه للحذف</string>
+    <string name="mosaic_first_off">أوقف الفسيفساء أولًا.</string>
+    <string name="export_levels">التصدير: %1$d مسار طبقة %2$s، الميكروفون %3$d %%</string>
+    <string name="caption_preview_words">هكذا يبدو نصك</string>
+    <string name="settings_language">لغة التطبيق</string>
+    <string name="language_system">لغة النظام</string>
+    <string-array name="filter_names">
+        <item>الأصل</item>
+        <item>دافئ</item>
+        <item>بارد</item>
+        <item>أبيض وأسود</item>
+        <item>قديم</item>
+        <item>زاهٍ</item>
+        <item>مطفي</item>
+        <item>سينمائي</item>
+        <item>باستيل</item>
+    </string-array>
+    <string-array name="caption_templates">
+        <item>كلاسيكي</item>
+        <item>شريط</item>
+        <item>كاريوكي</item>
+        <item>كلمة بكلمة</item>
+        <item>تأكيد</item>
+        <item>نيون</item>
+        <item>إطار مميّز</item>
+        <item>ظل</item>
+        <item>لونان</item>
+        <item>آلة كاتبة</item>
+        <item>كبير وصغير</item>
+    </string-array>
+    <string-array name="model_labels">
+        <item>توب (سريع)</item>
+        <item>علي (متوازن)</item>
+        <item>بابا (الأدق، بطيء)</item>
+    </string-array>
+    <plurals name="segments">
+        <item quantity="one">مقطع واحد</item>
+        <item quantity="other">%d مقاطع</item>
+    </plurals>
+</resources>

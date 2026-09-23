@@ -254,8 +254,8 @@ object CaptionStyle {
     }
 
     /** Vorschau einer Vorlage mit Beispieltext für den Auswahl-Dialog. */
-    fun preview(template: Int, accent: Int, frameW: Int, frameH: Int): Bitmap {
-        val words = listOf("Dein", "Text", "sieht", "so", "aus")
+    fun preview(template: Int, accent: Int, frameW: Int, frameH: Int, sample: String = "Your text looks like this"): Bitmap {
+        val words = sample.split(" ").filter { it.isNotBlank() }
         val ws = words.mapIndexed { i, w -> Word(i * 400L, i * 400L + 380, w) }
         val c = Caption(0, 2000, words.joinToString(" "), ws)
         val s = CaptionSettings(template = template, accentColor = accent, scale = 1f, emojis = false)

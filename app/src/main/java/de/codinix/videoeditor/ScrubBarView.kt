@@ -128,7 +128,7 @@ class ScrubBarView @JvmOverloads constructor(context: Context, attrs: AttributeS
         val totalText = fmt(total)
         canvas.drawText(totalText, w - textPaint.measureText(totalText), y, textPaint)
         if (scrubbing && fine < 1f) {
-            val hint = "Feinspulen"
+            val hint = context.getString(R.string.fine_scrub)
             canvas.drawText(hint, (w - textPaint.measureText(hint)) / 2, y, textPaint)
         }
     }
@@ -158,7 +158,7 @@ class ScrubBarView @JvmOverloads constructor(context: Context, attrs: AttributeS
         val len = dragLen.coerceAtLeast(40f * dp)
         rect.set(dragX - len / 2, dragY - hh, dragX + len / 2, dragY + hh)
         canvas.drawRoundRect(rect, hh, hh, if (over) trashPaint else playedPaint)
-        val hint = if (over) "Loslassen zum Löschen" else "Seitlich einordnen · oben auf den Papierkorb zum Löschen"
+        val hint = if (over) context.getString(R.string.drop_delete) else context.getString(R.string.drag_hint)
         canvas.drawText(hint, (w - textPaint.measureText(hint)) / 2, barTop - 10f * dp, textPaint)
     }
 
