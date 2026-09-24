@@ -195,4 +195,5 @@
         <item quantity="other">%d segments</item>
     </plurals>
     <string name="file_browser_hint">Long-press opens the file browser – for videos the gallery picker doesn\'t show (e.g. downloads)</string>
+    <string name="recording_paused_background">Recording paused – segment saved (the app was in the background)</string>
 </resources>

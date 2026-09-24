@@ -195,4 +195,5 @@
         <item quantity="other">%d bölüm</item>
     </plurals>
     <string name="file_browser_hint">Uzun basma dosya tarayıcısını açar – galeri seçicinin göstermediği videolar için (örn. indirmeler)</string>
+    <string name="recording_paused_background">Kayıt duraklatıldı – bölüm kaydedildi (uygulama arka plandaydı)</string>
 </resources>

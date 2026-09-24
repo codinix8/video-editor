@@ -494,7 +494,7 @@ class MainActivity : AppCompatActivity() {
             when (event) {
                 is VideoRecordEvent.Start -> {
                     liveDurationMs = 0
-                    if (overlayStore.videoOverlay()?.playing != false) overlayPlayer?.play()
+                    overlayStore.videoOverlay()?.let { o -> if (o.playing) overlayPlayer?.let { resumeAt(it, o.sourcePositionAt(currentTotalMs())) } }
                     setTileVideosPlaying(true)
                     refreshUi()
                 }
@@ -1217,7 +1217,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setTileVideosPlaying(playing: Boolean) {
-        tileVideos().forEach { v -> tilePlayers[v.id]?.let { if (playing && v.playing) it.play() else it.pause() } }
+        val total = currentTotalMs()
+        tileVideos().forEach { v ->
+            tilePlayers[v.id]?.let { p ->
+                if (playing && v.playing) resumeAt(p, v.sourcePositionAt(total)) else p.pause()
+            }
+        }
+    }
+
+    /** Player sicher weiterlaufen lassen: ggf. neu vorbereiten, an die Protokollstelle springen, starten. */
+    private fun resumeAt(p: ExoPlayer, positionMs: Long) {
+        if (p.playbackState == Player.STATE_IDLE) p.prepare()
+        if (kotlin.math.abs(p.currentPosition - positionMs) > 400) p.seekTo(positionMs)
+        p.play()
     }
 
     private fun syncTilePlayers() {
@@ -2754,6 +2766,7 @@ class MainActivity : AppCompatActivity() {
         val vo = overlayStore.videoOverlay()
         binding.deleteButton.setImageResource(R.drawable.ic_backspace)
         binding.deleteButton.contentDescription = getString(R.string.delete_last)
+        binding.gestureView.showIdleMarkers = !recording && anyLiveVideo()
     }
 
     private fun fmt(ms: Long): String {
@@ -2772,6 +2785,7 @@ class MainActivity : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
         // Laufende Aufnahme beim Verlassen beenden; das Segment bleibt erhalten.
+        if (activeRecording != null) stoppedInBackground = true
         activeRecording?.stop()
         activeRecording = null
         player?.pause()
@@ -2780,8 +2794,17 @@ class MainActivity : AppCompatActivity() {
         tilePlayers.values.forEach { it.pause() }
     }
 
+    private var stoppedInBackground = false
+
     override fun onStart() {
         super.onStart()
+        if (stoppedInBackground) { stoppedInBackground = false; Toast.makeText(this, R.string.recording_paused_background, Toast.LENGTH_LONG).show() }
+        if (!inReview) {
+            overlayPlayer?.let { if (it.playbackState == Player.STATE_IDLE) it.prepare() }
+            tilePlayers.values.forEach { if (it.playbackState == Player.STATE_IDLE) it.prepare() }
+            overlayStore.videoOverlay()?.let { o -> overlayPlayer?.seekTo(o.sourcePositionAt(currentTotalMs())) }
+            syncTilePlayers()
+        }
         if (inReview) { player?.play(); binding.review.playIcon.visibility = android.view.View.GONE }
     }
 

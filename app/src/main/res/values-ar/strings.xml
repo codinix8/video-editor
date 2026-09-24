@@ -195,4 +195,5 @@
         <item quantity="other">%d مقاطع</item>
     </plurals>
     <string name="file_browser_hint">الضغط المطوّل يفتح مستعرض الملفات – للفيديوهات التي لا يعرضها منتقي المعرض (مثل التنزيلات)</string>
+    <string name="recording_paused_background">تم إيقاف التسجيل مؤقتًا – حُفظ المقطع (كان التطبيق في الخلفية)</string>
 </resources>

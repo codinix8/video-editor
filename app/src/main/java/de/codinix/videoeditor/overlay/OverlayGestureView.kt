@@ -276,8 +276,30 @@ class OverlayGestureView @JvmOverloads constructor(
 
     // --------------------------------------------------------------- Zeichnen
 
+    /** Steht die Aufnahme? Dann kleine Pause-Marken in Videokacheln und Video-Overlays. */
+    var showIdleMarkers = false
+        set(v) { field = v; invalidate() }
+
+    private fun drawIdleMarkers(canvas: Canvas) {
+        if (!showIdleMarkers) return
+        val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x99FFFFFF.toInt() }
+        val bg = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x66000000 }
+        fun mark(r: RectF) {
+            val s = 10f * resources.displayMetrics.density
+            val cx = r.right - s * 1.8f; val cy = r.top + s * 1.8f
+            canvas.drawCircle(cx, cy, s * 1.3f, bg)
+            canvas.drawRoundRect(cx - s * 0.45f, cy - s * 0.5f, cx - s * 0.12f, cy + s * 0.5f, 2f, 2f, p)
+            canvas.drawRoundRect(cx + s * 0.12f, cy - s * 0.5f, cx + s * 0.45f, cy + s * 0.5f, 2f, 2f, p)
+        }
+        mosaic?.let { m -> if (m.layout != Mosaic.LAYOUT_NONE) Mosaic.rects(m.layout).forEachIndexed { i, r ->
+            if (m.tiles.getOrNull(i)?.kind == Mosaic.KIND_VIDEO) mark(RectF(toPxX(r.left), toPxY(r.top), toPxX(r.right), toPxY(r.bottom)))
+        } }
+        store.items.filterIsInstance<VideoOverlay>().forEach { o -> if (!o.isBackground) mark(rectOf(o, -1)) }
+    }
+
     override fun onDraw(canvas: Canvas) {
         computeFrameRect()
+        drawIdleMarkers(canvas)
         drawPlayIcon(canvas)
         mosaic?.let { m ->
             if (m.selected >= 0 && m.layout != Mosaic.LAYOUT_NONE) {
