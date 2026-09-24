@@ -196,4 +196,12 @@
     </plurals>
     <string name="file_browser_hint">Un appui long ouvre l\'explorateur de fichiers – pour les vidéos que le sélecteur de galerie n\'affiche pas (ex. téléchargements)</string>
     <string name="recording_paused_background">Enregistrement en pause – segment sauvegardé (l\'appli était en arrière-plan)</string>
+    <string name="settings_safe_zone">Repères de plateforme</string>
+    <string name="safe_zone_hint">Montre où TikTok, Instagram ou Shorts superposent leur interface – affichage seulement, pas dans l\'export.</string>
+    <string-array name="safe_zones">
+        <item>Non</item>
+        <item>TikTok</item>
+        <item>Instagram Reels</item>
+        <item>YouTube Shorts</item>
+    </string-array>
 </resources>

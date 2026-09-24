@@ -13,6 +13,11 @@
         app:implementationMode="performance"
         app:scaleType="fillCenter" />
 
+    <de.codinix.videoeditor.SafeZoneView
+        android:id="@+id/safeZone"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
     <de.codinix.videoeditor.overlay.OverlayGestureView
         android:id="@+id/gestureView"
         android:layout_width="match_parent"

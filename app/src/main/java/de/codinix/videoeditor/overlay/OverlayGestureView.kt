@@ -124,6 +124,33 @@ class OverlayGestureView @JvmOverloads constructor(
     private fun toPxX(fx: Float) = frameRect.left + fx * frameRect.width()
     private fun toPxY(fy: Float) = frameRect.top + fy * frameRect.height()
 
+    // Einrasten: Rotation auf 90°-Schritte, Position auf die Bildmitte
+    private var snapLinesUntil = 0L
+    private var snapH = false; private var snapV = false; private var snapRot = false
+    private val snapPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xCCFFD60A.toInt(); strokeWidth = 2.5f }
+    private var lastSnapState = 0
+    private fun snapRotation(deg: Float): Float {
+        val n = Math.round(deg / 90f) * 90f
+        return if (kotlin.math.abs(deg - n) < 4f) { snapRot = true; n } else { snapRot = false; deg }
+    }
+    private fun snapCenter(v: Float, isX: Boolean): Float {
+        val hit = kotlin.math.abs(v - 0.5f) < 0.018f
+        if (isX) snapH = hit else snapV = hit
+        return if (hit) 0.5f else v
+    }
+    private fun snapFeedback() {
+        val state = (if (snapH) 1 else 0) or (if (snapV) 2 else 0) or (if (snapRot) 4 else 0)
+        if (state != 0 && state != lastSnapState) performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK)
+        lastSnapState = state
+        if (state != 0) snapLinesUntil = System.currentTimeMillis() + 400
+    }
+    private fun drawSnapLines(canvas: Canvas) {
+        if (System.currentTimeMillis() > snapLinesUntil) return
+        if (snapH) canvas.drawLine(toPxX(0.5f), frameRect.top, toPxX(0.5f), frameRect.bottom, snapPaint)
+        if (snapV) canvas.drawLine(frameRect.left, toPxY(0.5f), frameRect.right, toPxY(0.5f), snapPaint)
+        postInvalidateDelayed(100)
+    }
+
     private fun hitTest(px: Float, py: Float): Overlay? {
         // Oberstes zuerst
         for (o in store.items.asReversed()) {
@@ -197,7 +224,7 @@ class OverlayGestureView @JvmOverloads constructor(
                     if (startDist > 0) {
                         o.widthFrac = (startWidth * d / startDist).coerceIn(0.05f, 3f)
                     }
-                    o.rotationDeg = startRot + (angle(e) - startAngle)
+                    o.rotationDeg = snapRotation(startRot + (angle(e) - startAngle))
                     val mx = midX(e); val my = midY(e)
                     o.cx += (mx - lastMidX) / frameRect.width()
                     o.cy += (my - lastMidY) / frameRect.height()
@@ -209,7 +236,8 @@ class OverlayGestureView @JvmOverloads constructor(
                     o.cy += dy / frameRect.height()
                     lastX = e.x; lastY = e.y
                 }
-                o.cx = o.cx.coerceIn(-0.5f, 1.5f); o.cy = o.cy.coerceIn(-0.5f, 1.5f)
+                o.cx = snapCenter(o.cx.coerceIn(-0.5f, 1.5f), true); o.cy = snapCenter(o.cy.coerceIn(-0.5f, 1.5f), false)
+                snapFeedback()
                 store.publish()
                 onChanged?.invoke()
                 invalidate()
@@ -240,6 +268,7 @@ class OverlayGestureView @JvmOverloads constructor(
                     onSelectionChanged?.invoke(active)
                 }
                 active = null; mosaicTile = -1
+                lastSnapState = 0; snapH = false; snapV = false; snapRot = false
                 invalidate()
                 return true
             }
@@ -299,6 +328,7 @@ class OverlayGestureView @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         computeFrameRect()
+        drawSnapLines(canvas)
         drawIdleMarkers(canvas)
         drawPlayIcon(canvas)
         mosaic?.let { m ->

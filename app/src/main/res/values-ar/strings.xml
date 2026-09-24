@@ -196,4 +196,12 @@
     </plurals>
     <string name="file_browser_hint">الضغط المطوّل يفتح مستعرض الملفات – للفيديوهات التي لا يعرضها منتقي المعرض (مثل التنزيلات)</string>
     <string name="recording_paused_background">تم إيقاف التسجيل مؤقتًا – حُفظ المقطع (كان التطبيق في الخلفية)</string>
+    <string name="settings_safe_zone">إرشادات المنصة</string>
+    <string name="safe_zone_hint">يعرض أين تضع TikTok أو Instagram أو Shorts واجهتها فوق الفيديو – للعرض فقط، ليس في التصدير.</string>
+    <string-array name="safe_zones">
+        <item>إيقاف</item>
+        <item>TikTok</item>
+        <item>Instagram Reels</item>
+        <item>YouTube Shorts</item>
+    </string-array>
 </resources>

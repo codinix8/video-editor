@@ -196,4 +196,12 @@
     </plurals>
     <string name="file_browser_hint">فشار طولانی مرورگر فایل را باز می‌کند – برای ویدیوهایی که انتخاب‌گر گالری نشان نمی‌دهد (مثل دانلودها)</string>
     <string name="recording_paused_background">ضبط متوقف شد – بخش ذخیره شد (برنامه در پس‌زمینه بود)</string>
+    <string name="settings_safe_zone">راهنمای پلتفرم</string>
+    <string name="safe_zone_hint">نشان می‌دهد تیک‌تاک، اینستاگرام یا شورتس کجا رابط خود را روی ویدیو می‌گذارند – فقط نمایش، در خروجی نیست.</string>
+    <string-array name="safe_zones">
+        <item>خاموش</item>
+        <item>TikTok</item>
+        <item>Instagram Reels</item>
+        <item>YouTube Shorts</item>
+    </string-array>
 </resources>

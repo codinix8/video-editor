@@ -196,4 +196,12 @@
     </plurals>
     <string name="file_browser_hint">Mantener pulsado abre el explorador de archivos – para vídeos que el selector de galería no muestra (p. ej. descargas)</string>
     <string name="recording_paused_background">Grabación en pausa – segmento guardado (la app estaba en segundo plano)</string>
+    <string name="settings_safe_zone">Guías de plataforma</string>
+    <string name="safe_zone_hint">Muestra dónde TikTok, Instagram o Shorts superponen su interfaz – solo visualización, no en la exportación.</string>
+    <string-array name="safe_zones">
+        <item>No</item>
+        <item>TikTok</item>
+        <item>Instagram Reels</item>
+        <item>YouTube Shorts</item>
+    </string-array>
 </resources>

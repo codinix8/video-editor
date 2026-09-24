@@ -196,4 +196,12 @@
     </plurals>
     <string name="file_browser_hint">Uzun basma dosya tarayıcısını açar – galeri seçicinin göstermediği videolar için (örn. indirmeler)</string>
     <string name="recording_paused_background">Kayıt duraklatıldı – bölüm kaydedildi (uygulama arka plandaydı)</string>
+    <string name="settings_safe_zone">Platform kılavuzları</string>
+    <string name="safe_zone_hint">TikTok, Instagram veya Shorts arayüzünün videoyu nerede kapladığını gösterir – yalnızca görüntü, dışa aktarmada yok.</string>
+    <string-array name="safe_zones">
+        <item>Kapalı</item>
+        <item>TikTok</item>
+        <item>Instagram Reels</item>
+        <item>YouTube Shorts</item>
+    </string-array>
 </resources>

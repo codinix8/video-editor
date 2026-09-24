@@ -14,6 +14,11 @@
         app:surface_type="surface_view"
         app:use_controller="false" />
 
+    <de.codinix.videoeditor.SafeZoneView
+        android:id="@+id/reviewSafeZone"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
     <de.codinix.videoeditor.whisper.CaptionView
         android:id="@+id/captionView"
         android:layout_width="match_parent"

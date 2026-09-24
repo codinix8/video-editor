@@ -19,7 +19,7 @@ data class CaptionSettings(
     var template: Int = CaptionStyle.TEMPLATE_CLASSIC,
     /** Mitte des Blocks als Anteil der Frame-Breite/-Höhe (0,0 = oben links). */
     var cxFrac: Float = 0.5f,
-    var cyFrac: Float = 0.80f,
+    var cyFrac: Float = 0.70f,
     /** Größenfaktor relativ zur Grundgröße. */
     var scale: Float = 1f,
     /** Drehung im Uhrzeigersinn. */
@@ -32,7 +32,7 @@ data class CaptionSettings(
         .put("scale", scale.toDouble()).put("rot", rotationDeg.toDouble()).put("accent", accentColor).put("emojis", emojis)
     companion object {
         fun fromJson(o: JSONObject?): CaptionSettings = if (o == null) CaptionSettings() else CaptionSettings(
-            o.optInt("template", 0), o.optDouble("cx", 0.5).toFloat(), o.optDouble("cy", 0.8).toFloat(),
+            o.optInt("template", 0), o.optDouble("cx", 0.5).toFloat(), o.optDouble("cy", 0.7).toFloat(),
             o.optDouble("scale", 1.0).toFloat(), o.optDouble("rot", 0.0).toFloat(), o.optInt("accent", 0xFFFFD60A.toInt()),
             o.optBoolean("emojis", false))
     }

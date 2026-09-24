@@ -196,4 +196,12 @@
     </plurals>
     <string name="file_browser_hint">Langes Drücken öffnet den Datei-Browser – für Videos, die der Galerie-Picker nicht zeigt (z. B. Downloads)</string>
     <string name="recording_paused_background">Aufnahme pausiert – Segment gesichert (die App war im Hintergrund)</string>
+    <string name="settings_safe_zone">Plattform-Hilfslinien</string>
+    <string name="safe_zone_hint">Zeigt, wo TikTok, Instagram oder Shorts ihre Oberfläche über das Video legen – nur Anzeige, nicht im Export.</string>
+    <string-array name="safe_zones">
+        <item>Aus</item>
+        <item>TikTok</item>
+        <item>Instagram Reels</item>
+        <item>YouTube Shorts</item>
+    </string-array>
 </resources>

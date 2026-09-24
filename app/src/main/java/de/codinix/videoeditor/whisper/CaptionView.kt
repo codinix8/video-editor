@@ -40,6 +40,10 @@ class CaptionView @JvmOverloads constructor(context: Context, attrs: AttributeSe
     private var startScale = 1f
     private var startAngle = 0f
     private var startRot = 0f
+    private var lastRotSnap = false
+    private var lastSnapX = false; private var lastSnapY = false
+    private var snapUntil = 0L
+    private val snapPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xCCFFD60A.toInt(); strokeWidth = 2.5f }
     private var lastMidX = 0f
     private var lastMidY = 0f
 
@@ -53,6 +57,11 @@ class CaptionView @JvmOverloads constructor(context: Context, attrs: AttributeSe
     }
 
     override fun onDraw(canvas: Canvas) {
+        if (System.currentTimeMillis() < snapUntil) {
+            if (lastSnapX) canvas.drawLine(width / 2f, 0f, width / 2f, height.toFloat(), snapPaint)
+            if (lastSnapY) canvas.drawLine(0f, height / 2f, width.toFloat(), height / 2f, snapPaint)
+            postInvalidateDelayed(100)
+        }
         val c = current ?: run { lastRect.setEmpty(); return }
         if (width == 0 || height == 0) return
         val key = (currentIdx.toLong() shl 20) or (CaptionStyle.cacheKey(c, timeMs, settings).toLong() and 0xFFFFF)
@@ -104,7 +113,12 @@ class CaptionView @JvmOverloads constructor(context: Context, attrs: AttributeSe
                     val d = hypot(e.getX(1) - e.getX(0), e.getY(1) - e.getY(0))
                     settings.scale = (startScale * d / startDist).coerceIn(0.5f, 2.2f)
                     val ang = Math.toDegrees(Math.atan2((e.getY(1) - e.getY(0)).toDouble(), (e.getX(1) - e.getX(0)).toDouble())).toFloat()
-                    settings.rotationDeg = startRot + (ang - startAngle)
+                    val raw = startRot + (ang - startAngle)
+                    val n = Math.round(raw / 90f) * 90f
+                    val rotSnap = kotlin.math.abs(raw - n) < 4f
+                    settings.rotationDeg = if (rotSnap) n else raw
+                    if (rotSnap && !lastRotSnap) performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK)
+                    lastRotSnap = rotSnap
                     val mx = (e.getX(0) + e.getX(1)) / 2f; val my = (e.getY(0) + e.getY(1)) / 2f
                     settings.cxFrac = (settings.cxFrac + (mx - lastMidX) / width).coerceIn(0.05f, 0.95f)
                     settings.cyFrac = (settings.cyFrac + (my - lastMidY) / height).coerceIn(0.05f, 0.95f)
@@ -118,6 +132,14 @@ class CaptionView @JvmOverloads constructor(context: Context, attrs: AttributeSe
                     }
                     lastX = e.x; lastY = e.y
                 }
+                // Mitte einrasten (horizontal und vertikal)
+                val hx = kotlin.math.abs(settings.cxFrac - 0.5f) < 0.018f
+                val hy = kotlin.math.abs(settings.cyFrac - 0.5f) < 0.018f
+                if (hx) settings.cxFrac = 0.5f
+                if (hy) settings.cyFrac = 0.5f
+                if ((hx || hy) && !(lastSnapX || lastSnapY)) performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK)
+                lastSnapX = hx; lastSnapY = hy
+                snapUntil = if (hx || hy) System.currentTimeMillis() + 400 else 0
                 invalidate()
                 return true
             }

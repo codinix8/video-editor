@@ -247,8 +247,10 @@ class MainActivity : AppCompatActivity() {
 
         compositor = CompositorProcessor(overlayStore)
         compositorEffect = CompositorEffect(compositor)
+        binding.safeZone.platform = prefs.getInt("safe_zone", 0)
         compositor.onFrameAspectChanged = { aspect -> main.post {
             binding.gestureView.frameAspect = aspect
+            binding.safeZone.frameAspect = aspect
             de.codinix.videoeditor.overlay.CameraOverlay.cameraAspect = 1f / aspect   // H/B
             overlayStore.publish(); binding.gestureView.invalidate()
         } }
@@ -813,6 +815,22 @@ class MainActivity : AppCompatActivity() {
         }
         box.addView(android.widget.TextView(this).apply { text = getString(R.string.captions_model); textSize = 12f; alpha = 0.7f; setPadding(0, pad / 2, 0, 0) })
         box.addView(modelSpinner)
+
+        // Plattform-Hilfslinien
+        box.addView(header(R.string.settings_safe_zone))
+        val zones = resources.getStringArray(R.array.safe_zones)
+        box.addView(android.widget.Spinner(this).apply {
+            adapter = android.widget.ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, zones)
+            setSelection(prefs.getInt("safe_zone", 0))
+            onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(p: android.widget.AdapterView<*>?, v: android.view.View?, pos: Int, id: Long) {
+                    prefs.edit().putInt("safe_zone", pos).apply()
+                    binding.safeZone.platform = pos; binding.review.reviewSafeZone.platform = pos
+                }
+                override fun onNothingSelected(p: android.widget.AdapterView<*>?) {}
+            }
+        })
+        box.addView(android.widget.TextView(this).apply { text = getString(R.string.safe_zone_hint); textSize = 12f; alpha = 0.7f })
 
         // Aufnahme
         box.addView(header(R.string.settings_recording))
