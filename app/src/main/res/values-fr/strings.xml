@@ -194,4 +194,5 @@
         <item quantity="one">%d segment</item>
         <item quantity="other">%d segments</item>
     </plurals>
+    <string name="file_browser_hint">Un appui long ouvre l\'explorateur de fichiers – pour les vidéos que le sélecteur de galerie n\'affiche pas (ex. téléchargements)</string>
 </resources>

@@ -151,6 +151,23 @@ class MainActivity : AppCompatActivity() {
     private val pickTileVideo = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) setTileVideo(uri)
     }
+    /** Datei-Browser als Ausweg für Videos, die der Galerie-Picker nicht anzeigt (z. B. Downloads). */
+    private enum class VideoTarget { OVERLAY, BACKGROUND, TILE }
+    private var pendingVideoTarget = VideoTarget.OVERLAY
+    private val pickVideoDocument = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri == null) return@registerForActivityResult
+        when (pendingVideoTarget) {
+            VideoTarget.OVERLAY -> addVideoOverlay(uri)
+            VideoTarget.BACKGROUND -> addVideoOverlay(uri, asBackground = true)
+            VideoTarget.TILE -> setTileVideo(uri)
+        }
+    }
+    private fun openVideoDocument(target: VideoTarget) {
+        pendingVideoTarget = target
+        Toast.makeText(this, R.string.file_browser_hint, Toast.LENGTH_SHORT).show()
+        pickVideoDocument.launch(arrayOf("video/*", "application/octet-stream"))
+    }
+
     /** Player der Kachelvideos, per Video-ID. */
     private val tilePlayers = HashMap<Long, ExoPlayer>()
     private fun tileVideos() = if (mosaicActive) mosaic.videos() else emptyList()
@@ -273,6 +290,11 @@ class MainActivity : AppCompatActivity() {
         }
         binding.tileVideoButton.setOnClickListener {
             if (mosaic.selected >= 0) pickTileVideo.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
+        }
+        binding.tileVideoButton.setOnLongClickListener { if (mosaic.selected >= 0) openVideoDocument(VideoTarget.TILE); true }
+        binding.addVideoButton.setOnLongClickListener { openVideoDocument(VideoTarget.OVERLAY); true }
+        binding.greenscreenButton.setOnLongClickListener {
+            if (!greenscreenActive && !mosaicActive && activeRecording == null) openVideoDocument(VideoTarget.BACKGROUND); true
         }
         binding.tileSoundButton.setOnClickListener {
             mosaic.tiles.getOrNull(mosaic.selected)?.video?.let { showVolumeDialog(it) }
@@ -1211,6 +1233,11 @@ class MainActivity : AppCompatActivity() {
         }
         binding.tileVideoButton.setOnClickListener {
             if (mosaic.selected >= 0) pickTileVideo.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
+        }
+        binding.tileVideoButton.setOnLongClickListener { if (mosaic.selected >= 0) openVideoDocument(VideoTarget.TILE); true }
+        binding.addVideoButton.setOnLongClickListener { openVideoDocument(VideoTarget.OVERLAY); true }
+        binding.greenscreenButton.setOnLongClickListener {
+            if (!greenscreenActive && !mosaicActive && activeRecording == null) openVideoDocument(VideoTarget.BACKGROUND); true
         }
         binding.tileSoundButton.setOnClickListener {
             mosaic.tiles.getOrNull(mosaic.selected)?.video?.let { showVolumeDialog(it) }
@@ -2655,6 +2682,11 @@ class MainActivity : AppCompatActivity() {
             mosaic = loaded.mosaic ?: de.codinix.videoeditor.overlay.Mosaic(de.codinix.videoeditor.overlay.Mosaic.LAYOUT_NONE)
             binding.tileVideoButton.setOnClickListener {
             if (mosaic.selected >= 0) pickTileVideo.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
+        }
+        binding.tileVideoButton.setOnLongClickListener { if (mosaic.selected >= 0) openVideoDocument(VideoTarget.TILE); true }
+        binding.addVideoButton.setOnLongClickListener { openVideoDocument(VideoTarget.OVERLAY); true }
+        binding.greenscreenButton.setOnLongClickListener {
+            if (!greenscreenActive && !mosaicActive && activeRecording == null) openVideoDocument(VideoTarget.BACKGROUND); true
         }
         binding.tileSoundButton.setOnClickListener {
             mosaic.tiles.getOrNull(mosaic.selected)?.video?.let { showVolumeDialog(it) }

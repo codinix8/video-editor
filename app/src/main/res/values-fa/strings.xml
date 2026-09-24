@@ -194,4 +194,5 @@
         <item quantity="one">%d بخش</item>
         <item quantity="other">%d بخش</item>
     </plurals>
+    <string name="file_browser_hint">فشار طولانی مرورگر فایل را باز می‌کند – برای ویدیوهایی که انتخاب‌گر گالری نشان نمی‌دهد (مثل دانلودها)</string>
 </resources>

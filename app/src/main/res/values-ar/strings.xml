@@ -194,4 +194,5 @@
         <item quantity="one">مقطع واحد</item>
         <item quantity="other">%d مقاطع</item>
     </plurals>
+    <string name="file_browser_hint">الضغط المطوّل يفتح مستعرض الملفات – للفيديوهات التي لا يعرضها منتقي المعرض (مثل التنزيلات)</string>
 </resources>

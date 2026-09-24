@@ -194,4 +194,5 @@
         <item quantity="one">%d Segment</item>
         <item quantity="other">%d Segmente</item>
     </plurals>
+    <string name="file_browser_hint">Langes Drücken öffnet den Datei-Browser – für Videos, die der Galerie-Picker nicht zeigt (z. B. Downloads)</string>
 </resources>

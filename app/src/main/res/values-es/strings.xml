@@ -194,4 +194,5 @@
         <item quantity="one">%d segmento</item>
         <item quantity="other">%d segmentos</item>
     </plurals>
+    <string name="file_browser_hint">Mantener pulsado abre el explorador de archivos – para vídeos que el selector de galería no muestra (p. ej. descargas)</string>
 </resources>

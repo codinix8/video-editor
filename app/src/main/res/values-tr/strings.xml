@@ -194,4 +194,5 @@
         <item quantity="one">%d bölüm</item>
         <item quantity="other">%d bölüm</item>
     </plurals>
+    <string name="file_browser_hint">Uzun basma dosya tarayıcısını açar – galeri seçicinin göstermediği videolar için (örn. indirmeler)</string>
 </resources>
