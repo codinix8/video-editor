@@ -13,6 +13,8 @@ import java.util.concurrent.atomic.AtomicLong
  * Ausgaben unterschiedliche Pixelgrößen haben.
  */
 sealed class Overlay {
+    /** Aufnahmezeit (ms), ab der das Overlay existiert. Davor wird es beim Export nachträglich aufgelegt. */
+    var createdAtMs: Long = 0L
     abstract val id: Long
     abstract var cx: Float
     abstract var cy: Float

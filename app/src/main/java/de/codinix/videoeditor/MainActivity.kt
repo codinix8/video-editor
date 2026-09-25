@@ -609,6 +609,7 @@ class MainActivity : AppCompatActivity() {
         try {
             val bmp = loadBitmap(uri, 1280)
             val overlay = ImageOverlay(Overlay.newId(), bmp, cx = 0.5f, cy = 0.5f, widthFrac = 0.45f)
+            overlay.createdAtMs = currentTotalMs()
             overlayStore.add(overlay)
             updateOverlayButtons(overlay)
             binding.gestureView.invalidate()
@@ -736,6 +737,7 @@ class MainActivity : AppCompatActivity() {
                 if (text.isEmpty()) return@setPositiveButton
                 if (existing == null) {
                     val o = TextOverlay(Overlay.newId(), text, textColor(), bgColor(), widthFrac = 0.6f)
+                    o.createdAtMs = currentTotalMs()
                     overlayStore.add(o)
                     updateOverlayButtons(o)
                 } else {
@@ -2010,6 +2012,7 @@ class MainActivity : AppCompatActivity() {
                 val pcm = de.codinix.videoeditor.whisper.AudioPrep.prepare(segs, cacheDir) { p ->
                     main.post { dialog.setMessage(getString(R.string.captions_preparing, p)) }
                 }
+                val audioCheck = de.codinix.videoeditor.whisper.AudioPrep.lastDiagnostics
                 main.post { dialog.setMessage(getString(R.string.captions_running, 0)) }
                 engine = de.codinix.videoeditor.whisper.WhisperEngine.load(modelManager.file(model))
 
@@ -2056,6 +2059,7 @@ class MainActivity : AppCompatActivity() {
                     persistSession()
                     Toast.makeText(this, if (chunks.isEmpty()) getString(R.string.captions_none)
                         else getString(R.string.captions_done, chunks.size, result.language) + "\n" + getString(R.string.captions_hint), Toast.LENGTH_LONG).show()
+                    if (audioCheck.isNotEmpty()) main.postDelayed({ Toast.makeText(this, "Ton-Kontrolle: $audioCheck", Toast.LENGTH_LONG).show() }, 3500)
                     if (inReview) player?.play()
                 }
             } catch (e: Throwable) {
@@ -2176,6 +2180,13 @@ class MainActivity : AppCompatActivity() {
         main.post(playbackTicker)
         refreshCaptionUi()
         persistSession()
+    }
+
+    /** Bild-/Text-Overlays, die nach Aufnahmebeginn hinzukamen: für den Zeitraum davor nachträglich auflegen. */
+    private fun postOverlaySpecs(): List<de.codinix.videoeditor.whisper.PostOverlaySpec> = overlayStore.items.mapNotNull { o ->
+        val bmp = when (o) { is ImageOverlay -> o.bitmap; is TextOverlay -> o.bitmap; else -> null } ?: return@mapNotNull null
+        if (o.createdAtMs <= 0L) return@mapNotNull null
+        de.codinix.videoeditor.whisper.PostOverlaySpec(bmp, o.cx, o.cy, o.widthFrac, o.rotationDeg, o.createdAtMs)
     }
 
     /** Review an Gesamtposition [ms] setzen (Segment und Position in der Playlist berechnen). */
@@ -2415,6 +2426,7 @@ class MainActivity : AppCompatActivity() {
         val ex = Exporter(this)
         ex.captions = captions.toList()
         ex.captionSettings = captionSettings.copy()
+        ex.postOverlays = postOverlaySpecs()
         exporter = ex
         val audioMix = allAudioMixes()
         val progressRes = if (audioMix.isEmpty() && kotlin.math.abs(micGain - 1f) < 0.01f)
@@ -2511,6 +2523,7 @@ class MainActivity : AppCompatActivity() {
                 val j = org.json.JSONObject()
                     .put("cx", o.cx.toDouble()).put("cy", o.cy.toDouble())
                     .put("widthFrac", o.widthFrac.toDouble()).put("rotationDeg", o.rotationDeg.toDouble())
+                    .put("createdAtMs", o.createdAtMs)
                 when (o) {
                     is ImageOverlay -> {
                         val png = File(sessionImgDir, "img_${o.id}.png")

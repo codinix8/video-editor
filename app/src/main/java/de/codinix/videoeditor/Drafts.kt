@@ -118,6 +118,7 @@ class DraftStore(context: Context) {
                 .put("cx", o.cx.toDouble()).put("cy", o.cy.toDouble())
                 .put("widthFrac", o.widthFrac.toDouble())
                 .put("rotationDeg", o.rotationDeg.toDouble())
+                .put("createdAtMs", o.createdAtMs)
             when (o) {
                 is ImageOverlay -> {
                     val png = File(dir, "overlay_$i.png")
@@ -289,7 +290,7 @@ class DraftStore(context: Context) {
             if (o.optString("type", "image") == "text") {
                 val bg: Int? = if (o.has("bgColor") && !o.isNull("bgColor")) o.getInt("bgColor")
                     else if (o.optBoolean("background", false)) 0xC8000000.toInt() else null
-                overlays.add(TextOverlay(Overlay.newId(), o.getString("text"), o.getInt("color"), bg, cx, cy, w, rot))
+                overlays.add(TextOverlay(Overlay.newId(), o.getString("text"), o.getInt("color"), bg, cx, cy, w, rot).also { it.createdAtMs = o.optLong("createdAtMs", 0L) })
                 continue
             }
             val src = File(info.dir, o.getString("file"))
@@ -304,7 +305,7 @@ class DraftStore(context: Context) {
                 overlays.add(vo)
             } else {
                 val bmp = BitmapFactory.decodeFile(src.absolutePath) ?: continue
-                overlays.add(ImageOverlay(Overlay.newId(), bmp, cx, cy, w, rot))
+                overlays.add(ImageOverlay(Overlay.newId(), bmp, cx, cy, w, rot).also { it.createdAtMs = o.optLong("createdAtMs", 0L) })
             }
         }
         val quality = if (j.isNull("quality")) null else j.getString("quality")

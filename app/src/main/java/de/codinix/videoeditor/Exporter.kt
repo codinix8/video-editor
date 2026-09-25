@@ -103,6 +103,8 @@ class Exporter(private val context: Context) {
     /** Untertitel für den Export (leer = keine). */
     var captions: List<de.codinix.videoeditor.whisper.Caption> = emptyList()
     var captionSettings = de.codinix.videoeditor.whisper.CaptionSettings()
+    /** Bild-/Text-Overlays, die für den Zeitraum vor ihrem Einfügen nachträglich aufgelegt werden. */
+    var postOverlays: List<de.codinix.videoeditor.whisper.PostOverlaySpec> = emptyList()
 
     fun export(
         segments: List<File>, targetHeight: Int?, listener: Listener,
@@ -133,7 +135,7 @@ class Exporter(private val context: Context) {
             }
             return
         }
-        if (!isUnity(micGain) || captions.isNotEmpty()) {
+        if (!isUnity(micGain) || captions.isNotEmpty() || postOverlays.isNotEmpty()) {
             transform(segments, targetHeight, outFile, listener, emptyList(), micGain)
             return
         }
@@ -175,6 +177,10 @@ class Exporter(private val context: Context) {
         var offsetUs = 0L
         val items = segments.map { f ->
             val effects = ArrayList<androidx.media3.common.Effect>(videoEffects)
+            if (postOverlays.isNotEmpty() && outW > 0) {
+                val list = postOverlays.map { de.codinix.videoeditor.whisper.PostOverlay(it, outW, offsetUs) as androidx.media3.effect.TextureOverlay }
+                effects.add(androidx.media3.effect.OverlayEffect(com.google.common.collect.ImmutableList.copyOf(list)))
+            }
             if (captions.isNotEmpty() && outW > 0 && outH > 0) {
                 val overlay = de.codinix.videoeditor.whisper.CaptionOverlay(captions, captionSettings, outW, outH, offsetUs)
                 effects.add(androidx.media3.effect.OverlayEffect(com.google.common.collect.ImmutableList.of<androidx.media3.effect.TextureOverlay>(overlay)))

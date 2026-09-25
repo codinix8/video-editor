@@ -13,15 +13,21 @@ import java.nio.ByteOrder
  */
 object AudioPrep {
     const val RATE = 16000
+    /** Nach [prepare]: Abweichungen zwischen Tonlänge und Segmentdauer (leer = alles stimmig). */
+    @Volatile var lastDiagnostics: String = ""
 
     fun prepare(segments: List<Pair<File, Long>>, cacheDir: File, onProgress: (Int) -> Unit): FloatArray {
         val totalMs = segments.sumOf { it.second }
         val out = FloatArray((totalMs * RATE / 1000).toInt())
         var offset = 0
+        val diag = StringBuilder()
         segments.forEachIndexed { idx, (file, durMs) ->
             val frames = (durMs * RATE / 1000).toInt()
             val decoded = OverlayAudioRenderer.decode(file, cacheDir)
             if (decoded != null) {
+                val audioMs = decoded.durationMs
+                if (kotlin.math.abs(audioMs - durMs) > 500 || decoded.sampleRate !in listOf(44100, 48000))
+                    diag.append("S${idx + 1}: Ton ${audioMs / 1000}s / Video ${durMs / 1000}s, ${decoded.sampleRate} Hz, ${decoded.channels} Kanal · ")
                 val raf = RandomAccessFile(decoded.pcm, "r")
                 try {
                     val srcRate = decoded.sampleRate; val ch = decoded.channels
@@ -53,6 +59,7 @@ object AudioPrep {
             offset += frames
             onProgress(((idx + 1) * 100) / segments.size)
         }
+        lastDiagnostics = diag.toString().trimEnd(' ', '·')
         return out
     }
 }

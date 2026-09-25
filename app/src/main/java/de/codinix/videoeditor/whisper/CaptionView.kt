@@ -21,6 +21,9 @@ class CaptionView @JvmOverloads constructor(context: Context, attrs: AttributeSe
     var settings = CaptionSettings()
         set(v) { field = v; cache.clear(); invalidate() }
     var onSettingsChanged: (() -> Unit)? = null
+    /** Nachträglich aufgelegte Overlays (sichtbar bis untilMs). */
+    var postOverlays: List<PostOverlaySpec> = emptyList()
+        set(v) { field = v; invalidate() }
     /** Doppeltipp auf den Untertitel: Editor öffnen (mit Index des Blocks). */
     var onEditRequested: ((Int) -> Unit)? = null
     private var lastTapAt = 0L
@@ -51,7 +54,7 @@ class CaptionView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         timeMs = ms
         val idx = captions.indexOfFirst { ms >= it.startMs && ms < it.endMs }
         val c = if (idx >= 0) captions[idx] else null
-        val needsRedraw = c !== current || c != null
+        val needsRedraw = c !== current || c != null || postOverlays.isNotEmpty()
         current = c; currentIdx = idx
         if (needsRedraw) invalidate()
     }
@@ -61,6 +64,15 @@ class CaptionView @JvmOverloads constructor(context: Context, attrs: AttributeSe
             if (lastSnapX) canvas.drawLine(width / 2f, 0f, width / 2f, height.toFloat(), snapPaint)
             if (lastSnapY) canvas.drawLine(0f, height / 2f, width.toFloat(), height / 2f, snapPaint)
             postInvalidateDelayed(100)
+        }
+        // Post-Overlays vor den Untertiteln
+        postOverlays.forEach { o ->
+            if (timeMs >= o.untilMs) return@forEach
+            val w = o.widthFrac * width; val h = w * o.bitmap.height / o.bitmap.width.toFloat()
+            val cx = width * o.cx; val cy = height * o.cy
+            canvas.save(); canvas.rotate(o.rotationDeg, cx, cy)
+            canvas.drawBitmap(o.bitmap, null, android.graphics.RectF(cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2), paint)
+            canvas.restore()
         }
         val c = current ?: run { lastRect.setEmpty(); return }
         if (width == 0 || height == 0) return
