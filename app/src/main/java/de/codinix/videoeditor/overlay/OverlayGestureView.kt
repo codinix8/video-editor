@@ -205,7 +205,8 @@ class OverlayGestureView @JvmOverloads constructor(
                     val r = Mosaic.rects(m.layout)[mosaicTile]
                     if (e.pointerCount >= 2 && startDist > 0) {
                         t.zoom = (mosaicStartZoom * dist(e) / startDist).coerceIn(0.3f, 4f)
-                        t.rotationDeg = mosaicStartRot + (angle(e) - startAngle)
+                        t.rotationDeg = snapRotation(mosaicStartRot + (angle(e) - startAngle))
+                        snapH = false; snapV = false; snapFeedback()
                     } else {
                         val dx = e.x - lastX; val dy = e.y - lastY
                         if (kotlin.math.abs(dx) > 2 || kotlin.math.abs(dy) > 2) moved = true
