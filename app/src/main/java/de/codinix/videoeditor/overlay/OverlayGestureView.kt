@@ -213,9 +213,13 @@ class OverlayGestureView @JvmOverloads constructor(
                     } else {
                         val dx = e.x - lastX; val dy = e.y - lastY
                         if (kotlin.math.abs(dx) > 2 || kotlin.math.abs(dy) > 2) moved = true
-                        // Inhalt folgt dem Finger: Verschiebung relativ zur Kachelgröße
-                        t.offX = (t.offX - dx / (r.width() * frameRect.width()) * 2f).coerceIn(-1f, 1f)
-                        t.offY = (t.offY - dy / (r.height() * frameRect.height()) * 2f).coerceIn(-1f, 1f)
+                        // Fingerbewegung in die Achsen des (gedrehten) Inhalts umrechnen, damit er
+                        // immer dem Finger folgt – auch kopfüber oder um 90° gedreht
+                        val rad = Math.toRadians(t.rotationDeg.toDouble())
+                        val ldx = (dx * cos(rad) + dy * sin(rad)).toFloat()
+                        val ldy = (-dx * sin(rad) + dy * cos(rad)).toFloat()
+                        t.offX = (t.offX - ldx / (r.width() * frameRect.width()) * 2f).coerceIn(-1f, 1f)
+                        t.offY = (t.offY - ldy / (r.height() * frameRect.height()) * 2f).coerceIn(-1f, 1f)
                         lastX = e.x; lastY = e.y
                     }
                     onMosaicChanged?.invoke()
