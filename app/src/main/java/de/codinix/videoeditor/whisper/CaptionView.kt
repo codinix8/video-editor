@@ -30,6 +30,8 @@ class CaptionView @JvmOverloads constructor(context: Context, attrs: AttributeSe
     private var textStartWidth = 0.6f
     private var textStartRot = 0f
     private var lastTextTapAt = 0L
+    private var rawX = 0.5f
+    private var rawY = 0.5f
     /** Doppeltipp auf den Untertitel: Editor öffnen (mit Index des Blocks). */
     var onEditRequested: ((Int) -> Unit)? = null
     private var lastTapAt = 0L
@@ -124,10 +126,12 @@ class CaptionView @JvmOverloads constructor(context: Context, attrs: AttributeSe
                     if (now - lastTextTapAt < 320 && activeText === t) { lastTextTapAt = 0; onReviewTextEdit?.invoke(t); return true }
                     lastTextTapAt = now
                     activeText = t; reviewTexts.remove(t); reviewTexts.add(t)   // nach vorn
+                    rawX = t.cx; rawY = t.cy
                     dragging = true; lastX = e.x; lastY = e.y; invalidate()
                     return true
                 }
                 activeText = null
+                rawX = settings.cxFrac; rawY = settings.cyFrac
                 if (current == null || lastRect.isEmpty) { invalidate(); return false }
                 // Treffer im (zurückgedrehten) Block?
                 val cx = lastRect.centerX(); val cy = lastRect.centerY()
@@ -169,14 +173,14 @@ class CaptionView @JvmOverloads constructor(context: Context, attrs: AttributeSe
                         val n = Math.round(raw / 90f) * 90f
                         t.rotationDeg = if (kotlin.math.abs(raw - n) < 4f) n else raw
                         val mx = (e.getX(0) + e.getX(1)) / 2f; val my = (e.getY(0) + e.getY(1)) / 2f
-                        t.cx = (t.cx + (mx - lastMidX) / width).coerceIn(0f, 1f); t.cy = (t.cy + (my - lastMidY) / height).coerceIn(0f, 1f)
+                        rawX = (rawX + (mx - lastMidX) / width).coerceIn(0f, 1f); rawY = (rawY + (my - lastMidY) / height).coerceIn(0f, 1f)
                         lastMidX = mx; lastMidY = my
                     } else {
-                        t.cx = (t.cx + (e.x - lastX) / width).coerceIn(0f, 1f); t.cy = (t.cy + (e.y - lastY) / height).coerceIn(0f, 1f)
+                        rawX = (rawX + (e.x - lastX) / width).coerceIn(0f, 1f); rawY = (rawY + (e.y - lastY) / height).coerceIn(0f, 1f)
                         lastX = e.x; lastY = e.y
                     }
-                    if (kotlin.math.abs(t.cx - 0.5f) < 0.018f) t.cx = 0.5f
-                    if (kotlin.math.abs(t.cy - 0.5f) < 0.018f) t.cy = 0.5f
+                    t.cx = if (kotlin.math.abs(rawX - 0.5f) < 0.018f) 0.5f else rawX
+                    t.cy = if (kotlin.math.abs(rawY - 0.5f) < 0.018f) 0.5f else rawY
                     invalidate(); return true
                 }
                 if (e.pointerCount >= 2 && startDist > 0) {
@@ -190,23 +194,21 @@ class CaptionView @JvmOverloads constructor(context: Context, attrs: AttributeSe
                     if (rotSnap && !lastRotSnap) performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK)
                     lastRotSnap = rotSnap
                     val mx = (e.getX(0) + e.getX(1)) / 2f; val my = (e.getY(0) + e.getY(1)) / 2f
-                    settings.cxFrac = (settings.cxFrac + (mx - lastMidX) / width).coerceIn(0.05f, 0.95f)
-                    settings.cyFrac = (settings.cyFrac + (my - lastMidY) / height).coerceIn(0.05f, 0.95f)
+                    rawX = (rawX + (mx - lastMidX) / width).coerceIn(0.05f, 0.95f)
+                    rawY = (rawY + (my - lastMidY) / height).coerceIn(0.05f, 0.95f)
                     lastMidX = mx; lastMidY = my
                     cache.clear()
                 } else {
                     val dx = e.x - lastX; val dy = e.y - lastY
-                    if (abs(dx) > 0.5f || abs(dy) > 0.5f) {
-                        settings.cxFrac = (settings.cxFrac + dx / width).coerceIn(0.05f, 0.95f)
-                        settings.cyFrac = (settings.cyFrac + dy / height).coerceIn(0.05f, 0.95f)
-                    }
+                    rawX = (rawX + dx / width).coerceIn(0.05f, 0.95f)
+                    rawY = (rawY + dy / height).coerceIn(0.05f, 0.95f)
                     lastX = e.x; lastY = e.y
                 }
-                // Mitte einrasten (horizontal und vertikal)
-                val hx = kotlin.math.abs(settings.cxFrac - 0.5f) < 0.018f
-                val hy = kotlin.math.abs(settings.cyFrac - 0.5f) < 0.018f
-                if (hx) settings.cxFrac = 0.5f
-                if (hy) settings.cyFrac = 0.5f
+                // Mitte einrasten (horizontal und vertikal) – nur die sichtbare Position
+                val hx = kotlin.math.abs(rawX - 0.5f) < 0.018f
+                val hy = kotlin.math.abs(rawY - 0.5f) < 0.018f
+                settings.cxFrac = if (hx) 0.5f else rawX
+                settings.cyFrac = if (hy) 0.5f else rawY
                 if ((hx || hy) && !(lastSnapX || lastSnapY)) performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK)
                 lastSnapX = hx; lastSnapY = hy
                 snapUntil = if (hx || hy) System.currentTimeMillis() + 400 else 0

@@ -103,6 +103,9 @@ class OverlayGestureView @JvmOverloads constructor(
     private var startRot = 0f
     private var lastMidX = 0f
     private var lastMidY = 0f
+    /** Ungerastete Position während der Geste; gerastet wird nur die sichtbare. */
+    private var rawCx = 0f
+    private var rawCy = 0f
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         computeFrameRect()
@@ -178,7 +181,7 @@ class OverlayGestureView @JvmOverloads constructor(
                 moved = false
                 lastX = e.x; lastY = e.y
                 active = hitTest(e.x, e.y)
-                active?.let { store.bringToFront(it.id) }
+                active?.let { store.bringToFront(it.id); rawCx = it.cx; rawCy = it.cy }
                 mosaicTile = if (active == null) mosaicTileAt(e.x, e.y) else -1
                 return true
             }
@@ -227,17 +230,18 @@ class OverlayGestureView @JvmOverloads constructor(
                     }
                     o.rotationDeg = snapRotation(startRot + (angle(e) - startAngle))
                     val mx = midX(e); val my = midY(e)
-                    o.cx += (mx - lastMidX) / frameRect.width()
-                    o.cy += (my - lastMidY) / frameRect.height()
+                    rawCx += (mx - lastMidX) / frameRect.width()
+                    rawCy += (my - lastMidY) / frameRect.height()
                     lastMidX = mx; lastMidY = my
                 } else {
                     val dx = e.x - lastX; val dy = e.y - lastY
                     if (abs(dx) > 2 || abs(dy) > 2) moved = true
-                    o.cx += dx / frameRect.width()
-                    o.cy += dy / frameRect.height()
+                    rawCx += dx / frameRect.width()
+                    rawCy += dy / frameRect.height()
                     lastX = e.x; lastY = e.y
                 }
-                o.cx = snapCenter(o.cx.coerceIn(-0.5f, 1.5f), true); o.cy = snapCenter(o.cy.coerceIn(-0.5f, 1.5f), false)
+                rawCx = rawCx.coerceIn(-0.5f, 1.5f); rawCy = rawCy.coerceIn(-0.5f, 1.5f)
+                o.cx = snapCenter(rawCx, true); o.cy = snapCenter(rawCy, false)
                 snapFeedback()
                 store.publish()
                 onChanged?.invoke()
