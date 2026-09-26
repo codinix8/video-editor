@@ -77,7 +77,8 @@ class DraftStore(context: Context) {
         val audioTracks: List<AudioTrack> = emptyList(),
         val captions: List<de.codinix.videoeditor.whisper.Caption> = emptyList(),
         val captionSettings: de.codinix.videoeditor.whisper.CaptionSettings = de.codinix.videoeditor.whisper.CaptionSettings(),
-        val mosaic: de.codinix.videoeditor.overlay.Mosaic? = null
+        val mosaic: de.codinix.videoeditor.overlay.Mosaic? = null,
+        val reviewTexts: List<de.codinix.videoeditor.whisper.ReviewText> = emptyList()
     )
 
     fun list(): List<Info> = root.listFiles()?.mapNotNull { dir ->
@@ -100,7 +101,8 @@ class DraftStore(context: Context) {
         audioTracks: List<AudioTrack> = emptyList(),
         captions: List<de.codinix.videoeditor.whisper.Caption> = emptyList(),
         captionSettings: de.codinix.videoeditor.whisper.CaptionSettings = de.codinix.videoeditor.whisper.CaptionSettings(),
-        mosaic: de.codinix.videoeditor.overlay.Mosaic? = null
+        mosaic: de.codinix.videoeditor.overlay.Mosaic? = null,
+        reviewTexts: List<de.codinix.videoeditor.whisper.ReviewText> = emptyList()
     ): Info {
         val id = System.currentTimeMillis().toString()
         val dir = File(root, id).apply { mkdirs() }
@@ -164,6 +166,7 @@ class DraftStore(context: Context) {
             .put("audioTracks", trArr)
             .put("captions", de.codinix.videoeditor.whisper.Caption.listToJson(captions))
             .put("captionSettings", captionSettings.toJson())
+            .put("reviewTexts", de.codinix.videoeditor.whisper.ReviewText.listToJson(reviewTexts))
         if (mosaic != null) {
             val files = mosaic.tiles.mapIndexed { i, t ->
                 t.video?.let { v ->
@@ -238,6 +241,7 @@ class DraftStore(context: Context) {
             .put("audioTracks", trArr)
             .put("captions", session.optJSONArray("captions") ?: JSONArray())
             .put("captionSettings", session.optJSONObject("captionSettings") ?: JSONObject())
+            .put("reviewTexts", session.optJSONArray("reviewTexts") ?: JSONArray())
         session.optJSONObject("mosaic")?.let { mj ->
             val tiles = mj.optJSONArray("tiles") ?: JSONArray()
             for (i in 0 until tiles.length()) {
@@ -336,7 +340,8 @@ class DraftStore(context: Context) {
         }
         val loaded = Loaded(segments, overlays, j.getInt("lensFacing"), quality, tracks,
             de.codinix.videoeditor.whisper.Caption.listFromJson(j.optJSONArray("captions")),
-            de.codinix.videoeditor.whisper.CaptionSettings.fromJson(j.optJSONObject("captionSettings")), mosaic)
+            de.codinix.videoeditor.whisper.CaptionSettings.fromJson(j.optJSONObject("captionSettings")), mosaic,
+            de.codinix.videoeditor.whisper.ReviewText.listFromJson(j.optJSONArray("reviewTexts")))
         delete(info)
         return loaded
     }

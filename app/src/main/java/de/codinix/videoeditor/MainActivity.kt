@@ -176,6 +176,8 @@ class MainActivity : AppCompatActivity() {
 
     // ---- Untertitel ----
     private val captions = mutableListOf<de.codinix.videoeditor.whisper.Caption>()
+    /** Texte, die in der Review über das ganze Video gelegt werden. */
+    private val reviewTexts = mutableListOf<de.codinix.videoeditor.whisper.ReviewText>()
     private val modelManager by lazy { de.codinix.videoeditor.whisper.ModelManager(this) }
     private val prefs by lazy { getSharedPreferences("settings", MODE_PRIVATE) }
     private var transcribing = false
@@ -355,6 +357,10 @@ class MainActivity : AppCompatActivity() {
         binding.review.saveDraftButton.setOnClickListener { saveDraft() }
         binding.review.captionsButton.setOnClickListener { showCaptionsDialog() }
         binding.review.captionsEditButton.setOnClickListener { showCaptionEditor(-1) }
+        binding.review.reviewTextButton.setOnClickListener { showReviewTextDialog(null) }
+        binding.review.captionView.reviewTexts = reviewTexts
+        binding.review.captionView.onReviewTextChanged = { persistSession() }
+        binding.review.captionView.onReviewTextEdit = { t -> showReviewTextDialog(t) }
         binding.review.scrubBar.onScrubStart = { player?.pause(); reviewOverlayPlayer?.pause() }
         binding.review.scrubBar.onScrub = { ms -> seekReviewTo(ms, play = false) }
         binding.review.scrubBar.onScrubEnd = { ms -> seekReviewTo(ms, play = true) }
@@ -2182,6 +2188,89 @@ class MainActivity : AppCompatActivity() {
         persistSession()
     }
 
+    /** Text über das ganze Video (Review). existing == null: neu. */
+    private fun showReviewTextDialog(existing: de.codinix.videoeditor.whisper.ReviewText?) {
+        player?.pause()
+        val dp = resources.displayMetrics.density; val pad = (16 * dp).toInt()
+        var textRgb = (existing?.colorArgb ?: android.graphics.Color.WHITE) or 0xFF000000.toInt()
+        var textAlpha = existing?.let { android.graphics.Color.alpha(it.colorArgb) } ?: 255
+        var bgOn = existing?.bgColorArgb != null
+        var bgRgb = (existing?.bgColorArgb ?: android.graphics.Color.BLACK) or 0xFF000000.toInt()
+        var bgAlpha = existing?.bgColorArgb?.let { android.graphics.Color.alpha(it) } ?: 200
+        fun textColor() = (textRgb and 0x00FFFFFF) or (textAlpha shl 24)
+        fun bgColor(): Int? = if (bgOn) (bgRgb and 0x00FFFFFF) or (bgAlpha shl 24) else null
+        val input = android.widget.EditText(this).apply {
+            hint = getString(R.string.text_hint); setText(existing?.text ?: "")
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE or android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+            minLines = 2; maxLines = 5; gravity = android.view.Gravity.CENTER; textSize = 22f; setPadding(pad, pad, pad, pad)
+        }
+        val previewBg = android.graphics.drawable.GradientDrawable().apply { cornerRadius = 12 * dp }
+        fun refreshPreview() { input.setTextColor(textColor()); previewBg.setColor(bgColor() ?: 0x22888888); input.background = previewBg }
+        fun hideKeyboard() { getSystemService(android.view.inputmethod.InputMethodManager::class.java).hideSoftInputFromWindow(input.windowToken, 0) }
+        fun label(res: Int) = android.widget.TextView(this).apply { text = getString(res); textSize = 13f; setPadding(0, pad, 0, pad / 4) }
+        fun swatches(selected: () -> Int, onPick: (Int) -> Unit): android.view.View {
+            val row = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.HORIZONTAL }
+            val views = mutableListOf<Pair<Int, android.view.View>>()
+            fun refresh() { views.forEach { (c, v) -> v.scaleX = if (c == (selected() or 0xFF000000.toInt())) 1.2f else 1f; v.scaleY = v.scaleX } }
+            TextRenderer.COLORS.forEach { c ->
+                val size = (34 * dp).toInt()
+                val v = android.view.View(this).apply {
+                    layoutParams = android.widget.LinearLayout.LayoutParams(size, size).apply { setMargins(pad / 3, pad / 4, pad / 3, pad / 4) }
+                    background = android.graphics.drawable.GradientDrawable().apply { shape = android.graphics.drawable.GradientDrawable.OVAL; setColor(c); setStroke(3, 0xFF888888.toInt()) }
+                    setOnClickListener { hideKeyboard(); onPick(c); refresh(); refreshPreview() }
+                }
+                views.add(c to v); row.addView(v)
+            }
+            refresh()
+            return android.widget.HorizontalScrollView(this).apply { addView(row); isHorizontalScrollBarEnabled = false }
+        }
+        fun slider(initial: Int, onChange: (Int) -> Unit) = android.widget.SeekBar(this).apply {
+            max = 100; progress = initial
+            setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(sb: android.widget.SeekBar, v: Int, fromUser: Boolean) { onChange(v); refreshPreview() }
+                override fun onStartTrackingTouch(sb: android.widget.SeekBar) { hideKeyboard() }
+                override fun onStopTrackingTouch(sb: android.widget.SeekBar) {}
+            })
+        }
+        val bgSection = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            visibility = if (bgOn) android.view.View.VISIBLE else android.view.View.GONE
+            addView(label(R.string.bg_color)); addView(swatches({ bgRgb }) { bgRgb = it })
+            addView(label(R.string.bg_opacity)); addView(slider(bgAlpha * 100 / 255) { bgAlpha = it * 255 / 100 })
+        }
+        val bgSwitch = com.google.android.material.materialswitch.MaterialSwitch(this).apply {
+            text = getString(R.string.text_background); isChecked = bgOn; setPadding(0, pad, 0, 0)
+            setOnCheckedChangeListener { _, on -> bgOn = on; bgSection.visibility = if (on) android.view.View.VISIBLE else android.view.View.GONE; refreshPreview() }
+        }
+        val box = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL; setPadding(pad, pad / 2, pad, 0)
+            addView(input); addView(label(R.string.text_color)); addView(swatches({ textRgb }) { textRgb = it })
+            addView(label(R.string.text_opacity)); addView(slider(textAlpha * 100 / 255) { textAlpha = it * 255 / 100 })
+            addView(bgSwitch); addView(bgSection)
+        }
+        refreshPreview()
+        val b = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.text_dialog_title)
+            .setView(android.widget.ScrollView(this).apply { addView(box) })
+            .setPositiveButton(R.string.ok) { _, _ ->
+                val text = input.text.toString().trim()
+                if (text.isNotEmpty()) {
+                    if (existing == null) reviewTexts.add(de.codinix.videoeditor.whisper.ReviewText(System.nanoTime(), text, textColor(), bgColor()))
+                    else { existing.text = text; existing.colorArgb = textColor(); existing.bgColorArgb = bgColor(); existing.rerender() }
+                    binding.review.captionView.invalidate(); persistSession()
+                }
+                if (inReview) player?.play()
+            }
+            .setNegativeButton(R.string.cancel) { _, _ -> if (inReview) player?.play() }
+            .setOnCancelListener { if (inReview) player?.play() }
+        if (existing != null) b.setNeutralButton(R.string.delete) { _, _ ->
+            reviewTexts.remove(existing); binding.review.captionView.invalidate(); persistSession(); if (inReview) player?.play()
+        }
+        val dlg = b.create()
+        dlg.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        dlg.show(); input.requestFocus()
+    }
+
     /** Bild-/Text-Overlays, die nach Aufnahmebeginn hinzukamen: für den Zeitraum davor nachträglich auflegen. */
     private fun postOverlaySpecs(): List<de.codinix.videoeditor.whisper.PostOverlaySpec> = overlayStore.items.mapNotNull { o ->
         val bmp = when (o) { is ImageOverlay -> o.bitmap; is TextOverlay -> o.bitmap; else -> null } ?: return@mapNotNull null
@@ -2426,7 +2515,7 @@ class MainActivity : AppCompatActivity() {
         val ex = Exporter(this)
         ex.captions = captions.toList()
         ex.captionSettings = captionSettings.copy()
-        ex.postOverlays = postOverlaySpecs()
+        ex.postOverlays = reviewTexts.map { it.spec() }
         exporter = ex
         val audioMix = allAudioMixes()
         val progressRes = if (audioMix.isEmpty() && kotlin.math.abs(micGain - 1f) < 0.01f)
@@ -2447,6 +2536,7 @@ class MainActivity : AppCompatActivity() {
                 audioHistory.forEach { it.file.delete() }
                 audioHistory.clear()
                 captions.clear()
+                reviewTexts.clear()
                 captionSettings = loadDefaultCaptionSettings()
                 clearOverlays()
                 resetMosaic()
@@ -2493,6 +2583,7 @@ class MainActivity : AppCompatActivity() {
                 audioHistory.forEach { it.file.delete() }
                 audioHistory.clear()
                 captions.clear()
+                reviewTexts.clear()
                 captionSettings = loadDefaultCaptionSettings()
                 resetMosaic()
                 clearSession()
@@ -2562,6 +2653,7 @@ class MainActivity : AppCompatActivity() {
                 .put("mosaic", mosaicJson ?: org.json.JSONObject.NULL)
                 .put("captions", de.codinix.videoeditor.whisper.Caption.listToJson(captions))
                 .put("captionSettings", captionSettings.toJson())
+                .put("reviewTexts", de.codinix.videoeditor.whisper.ReviewText.listToJson(reviewTexts))
                 .put("lensFacing", lensFacing)
                 .put("quality", preferredQuality?.let { label(it) } ?: org.json.JSONObject.NULL)
             sessionFile.writeText(root.toString())
@@ -2631,9 +2723,10 @@ class MainActivity : AppCompatActivity() {
                 audioHistory.map { DraftStore.AudioTrack(it.file, it.startOffsetMs, it.endOffsetMs, it.volume, it.durationMs,
                     it.timeline.map { t -> VideoOverlay.Event(t.fromMs, t.gain, t.playing, t.seekMs) }) },
                 captions.toList(), captionSettings,
-                if (mosaicActive) mosaic else null
+                if (mosaicActive) mosaic else null,
+                reviewTexts.toList()
             )
-            captions.clear()
+            captions.clear(); reviewTexts.clear()
             resetMosaic()
             segments.clear()
             audioHistory.clear()
@@ -2721,6 +2814,7 @@ class MainActivity : AppCompatActivity() {
             clearOverlays()
             loaded.overlays.forEach { overlayStore.add(it) }
             captions.clear(); captions.addAll(loaded.captions)
+            reviewTexts.clear(); reviewTexts.addAll(loaded.reviewTexts)
             captionSettings = loaded.captionSettings
             mosaic = loaded.mosaic ?: de.codinix.videoeditor.overlay.Mosaic(de.codinix.videoeditor.overlay.Mosaic.LAYOUT_NONE)
             binding.tileVideoButton.setOnClickListener {

@@ -84,6 +84,18 @@
         app:layout_constraintTop_toBottomOf="@id/captionsButton" />
 
     <ImageButton
+        android:id="@+id/reviewTextButton"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_round_button"
+        android:contentDescription="@string/add_text"
+        android:src="@drawable/ic_text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/captionsEditButton" />
+
+    <ImageButton
         android:id="@+id/saveDraftButton"
         android:layout_width="52dp"
         android:layout_height="52dp"

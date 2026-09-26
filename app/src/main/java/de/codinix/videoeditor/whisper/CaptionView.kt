@@ -21,9 +21,15 @@ class CaptionView @JvmOverloads constructor(context: Context, attrs: AttributeSe
     var settings = CaptionSettings()
         set(v) { field = v; cache.clear(); invalidate() }
     var onSettingsChanged: (() -> Unit)? = null
-    /** Nachträglich aufgelegte Overlays (sichtbar bis untilMs). */
-    var postOverlays: List<PostOverlaySpec> = emptyList()
+    /** Texte der Review (über das ganze Video). */
+    var reviewTexts: MutableList<ReviewText> = mutableListOf()
         set(v) { field = v; invalidate() }
+    var onReviewTextChanged: (() -> Unit)? = null
+    var onReviewTextEdit: ((ReviewText) -> Unit)? = null
+    private var activeText: ReviewText? = null
+    private var textStartWidth = 0.6f
+    private var textStartRot = 0f
+    private var lastTextTapAt = 0L
     /** Doppeltipp auf den Untertitel: Editor öffnen (mit Index des Blocks). */
     var onEditRequested: ((Int) -> Unit)? = null
     private var lastTapAt = 0L
@@ -33,6 +39,25 @@ class CaptionView @JvmOverloads constructor(context: Context, attrs: AttributeSe
     private var currentIdx = -1
     private val cache = HashMap<Long, Bitmap>()
     private val paint = Paint(Paint.FILTER_BITMAP_FLAG)
+    private val framePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE; strokeWidth = 3f; color = android.graphics.Color.WHITE
+        pathEffect = android.graphics.DashPathEffect(floatArrayOf(18f, 12f), 0f)
+    }
+    private fun textRect(o: ReviewText): android.graphics.RectF {
+        val w = o.widthFrac * width; val h = w * o.bitmap.height / o.bitmap.width.toFloat()
+        val cx = width * o.cx; val cy = height * o.cy
+        return android.graphics.RectF(cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2)
+    }
+    private fun textAt(x: Float, y: Float): ReviewText? {
+        for (o in reviewTexts.asReversed()) {
+            val r = textRect(o); val rad = Math.toRadians(-o.rotationDeg.toDouble())
+            val dx = x - r.centerX(); val dy = y - r.centerY()
+            val lx = (dx * Math.cos(rad) - dy * Math.sin(rad)).toFloat() + r.centerX()
+            val ly = (dx * Math.sin(rad) + dy * Math.cos(rad)).toFloat() + r.centerY()
+            if (android.graphics.RectF(r).apply { inset(-30f, -30f) }.contains(lx, ly)) return o
+        }
+        return null
+    }
     private var lastRect = android.graphics.RectF()
 
     // Gesten
@@ -54,7 +79,7 @@ class CaptionView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         timeMs = ms
         val idx = captions.indexOfFirst { ms >= it.startMs && ms < it.endMs }
         val c = if (idx >= 0) captions[idx] else null
-        val needsRedraw = c !== current || c != null || postOverlays.isNotEmpty()
+        val needsRedraw = c !== current || c != null || reviewTexts.isNotEmpty()
         current = c; currentIdx = idx
         if (needsRedraw) invalidate()
     }
@@ -65,13 +90,12 @@ class CaptionView @JvmOverloads constructor(context: Context, attrs: AttributeSe
             if (lastSnapY) canvas.drawLine(0f, height / 2f, width.toFloat(), height / 2f, snapPaint)
             postInvalidateDelayed(100)
         }
-        // Post-Overlays vor den Untertiteln
-        postOverlays.forEach { o ->
-            if (timeMs >= o.untilMs) return@forEach
-            val w = o.widthFrac * width; val h = w * o.bitmap.height / o.bitmap.width.toFloat()
-            val cx = width * o.cx; val cy = height * o.cy
-            canvas.save(); canvas.rotate(o.rotationDeg, cx, cy)
-            canvas.drawBitmap(o.bitmap, null, android.graphics.RectF(cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2), paint)
+        // Review-Texte vor den Untertiteln
+        reviewTexts.forEach { o ->
+            val r = textRect(o)
+            canvas.save(); canvas.rotate(o.rotationDeg, r.centerX(), r.centerY())
+            canvas.drawBitmap(o.bitmap, null, r, paint)
+            if (o === activeText) canvas.drawRoundRect(android.graphics.RectF(r).apply { inset(-6f, -6f) }, 10f, 10f, framePaint)
             canvas.restore()
         }
         val c = current ?: run { lastRect.setEmpty(); return }
@@ -95,7 +119,16 @@ class CaptionView @JvmOverloads constructor(context: Context, attrs: AttributeSe
     override fun onTouchEvent(e: MotionEvent): Boolean {
         when (e.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
-                if (current == null || lastRect.isEmpty) return false
+                textAt(e.x, e.y)?.let { t ->
+                    val now = System.currentTimeMillis()
+                    if (now - lastTextTapAt < 320 && activeText === t) { lastTextTapAt = 0; onReviewTextEdit?.invoke(t); return true }
+                    lastTextTapAt = now
+                    activeText = t; reviewTexts.remove(t); reviewTexts.add(t)   // nach vorn
+                    dragging = true; lastX = e.x; lastY = e.y; invalidate()
+                    return true
+                }
+                activeText = null
+                if (current == null || lastRect.isEmpty) { invalidate(); return false }
                 // Treffer im (zurückgedrehten) Block?
                 val cx = lastRect.centerX(); val cy = lastRect.centerY()
                 val rad = Math.toRadians(-settings.rotationDeg.toDouble())
@@ -111,6 +144,13 @@ class CaptionView @JvmOverloads constructor(context: Context, attrs: AttributeSe
                 return true
             }
             MotionEvent.ACTION_POINTER_DOWN -> {
+                if (dragging && e.pointerCount == 2 && activeText != null) {
+                    startDist = hypot(e.getX(1) - e.getX(0), e.getY(1) - e.getY(0))
+                    textStartWidth = activeText!!.widthFrac; textStartRot = activeText!!.rotationDeg
+                    startAngle = Math.toDegrees(Math.atan2((e.getY(1) - e.getY(0)).toDouble(), (e.getX(1) - e.getX(0)).toDouble())).toFloat()
+                    lastMidX = (e.getX(0) + e.getX(1)) / 2f; lastMidY = (e.getY(0) + e.getY(1)) / 2f
+                    return true
+                }
                 if (dragging && e.pointerCount == 2) {
                     startDist = hypot(e.getX(1) - e.getX(0), e.getY(1) - e.getY(0)); startScale = settings.scale
                     startAngle = Math.toDegrees(Math.atan2((e.getY(1) - e.getY(0)).toDouble(), (e.getX(1) - e.getX(0)).toDouble())).toFloat()
@@ -121,6 +161,24 @@ class CaptionView @JvmOverloads constructor(context: Context, attrs: AttributeSe
             }
             MotionEvent.ACTION_MOVE -> {
                 if (!dragging) return false
+                activeText?.let { t ->
+                    if (e.pointerCount >= 2 && startDist > 0) {
+                        val d = hypot(e.getX(1) - e.getX(0), e.getY(1) - e.getY(0))
+                        t.widthFrac = (textStartWidth * d / startDist).coerceIn(0.1f, 1.5f)
+                        val raw = textStartRot + Math.toDegrees(Math.atan2((e.getY(1) - e.getY(0)).toDouble(), (e.getX(1) - e.getX(0)).toDouble())).toFloat() - startAngle
+                        val n = Math.round(raw / 90f) * 90f
+                        t.rotationDeg = if (kotlin.math.abs(raw - n) < 4f) n else raw
+                        val mx = (e.getX(0) + e.getX(1)) / 2f; val my = (e.getY(0) + e.getY(1)) / 2f
+                        t.cx = (t.cx + (mx - lastMidX) / width).coerceIn(0f, 1f); t.cy = (t.cy + (my - lastMidY) / height).coerceIn(0f, 1f)
+                        lastMidX = mx; lastMidY = my
+                    } else {
+                        t.cx = (t.cx + (e.x - lastX) / width).coerceIn(0f, 1f); t.cy = (t.cy + (e.y - lastY) / height).coerceIn(0f, 1f)
+                        lastX = e.x; lastY = e.y
+                    }
+                    if (kotlin.math.abs(t.cx - 0.5f) < 0.018f) t.cx = 0.5f
+                    if (kotlin.math.abs(t.cy - 0.5f) < 0.018f) t.cy = 0.5f
+                    invalidate(); return true
+                }
                 if (e.pointerCount >= 2 && startDist > 0) {
                     val d = hypot(e.getX(1) - e.getX(0), e.getY(1) - e.getY(0))
                     settings.scale = (startScale * d / startDist).coerceIn(0.5f, 2.2f)
@@ -161,7 +219,11 @@ class CaptionView @JvmOverloads constructor(context: Context, attrs: AttributeSe
                 return dragging
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                if (dragging) { dragging = false; onSettingsChanged?.invoke(); return true }
+                if (dragging) {
+                    dragging = false
+                    if (activeText != null) onReviewTextChanged?.invoke() else onSettingsChanged?.invoke()
+                    invalidate(); return true
+                }
                 return false
             }
         }
