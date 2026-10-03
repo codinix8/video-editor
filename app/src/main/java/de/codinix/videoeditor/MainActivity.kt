@@ -2250,7 +2250,7 @@ class MainActivity : AppCompatActivity() {
         val previewBg = android.graphics.drawable.GradientDrawable().apply { cornerRadius = 12 * dp }
         fun refreshPreview() { input.setTextColor(textColor()); previewBg.setColor(bgColor() ?: 0x22888888); input.background = previewBg }
         fun hideKeyboard() { getSystemService(android.view.inputmethod.InputMethodManager::class.java).hideSoftInputFromWindow(input.windowToken, 0) }
-        fun label(res: Int) = android.widget.TextView(this).apply { text = getString(res); textSize = 13f; setPadding(0, pad, 0, pad / 4) }
+        fun label(res: Int) = Sheet.label(this, getString(res))
         fun swatches(selected: () -> Int, onPick: (Int) -> Unit): android.view.View {
             val row = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.HORIZONTAL }
             val views = mutableListOf<Pair<Int, android.view.View>>()
