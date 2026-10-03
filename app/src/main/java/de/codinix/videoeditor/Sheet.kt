@@ -108,7 +108,7 @@ class Sheet(private val ctx: Context) {
             val scroll = androidx.core.widget.NestedScrollView(ctx).apply {
                 isVerticalScrollBarEnabled = true; scrollBarStyle = View.SCROLLBARS_OUTSIDE_OVERLAY
                 isNestedScrollingEnabled = true
-                addView(body)
+                addView(card)
             }
             root.addView(scroll, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f).apply { topMargin = (8 * dp).toInt() })
         }
@@ -147,29 +147,16 @@ class Sheet(private val ctx: Context) {
 
     fun show(): BottomSheetDialog = create().also { it.show() }
 
-    private fun divider() = View(ctx).apply {
-        layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 1).apply { topMargin = (4 * dp).toInt(); bottomMargin = (4 * dp).toInt() }
-        setBackgroundColor(0x1AFFFFFF)
-    }
-
     companion object {
         const val BG = 0xFF161823.toInt()
         const val CARD = 0xFF262833.toInt()
         const val ACCENT = 0xFFFE2C55.toInt()
-        const val TAG_SECTION = "sheet_section"
-        const val TAG_LABEL = "sheet_label"
 
-        /** Abschnittstitel: steht außerhalb der Karte, grau, mit Abstand. Startet eine neue Karte. */
+        /** Abschnittsüberschrift im Stil der Karten. */
         fun header(ctx: Context, text: CharSequence): TextView = TextView(ctx).apply {
-            this.text = text; textSize = 13f; setTextColor(0xFF9A9BA6.toInt()); typeface = android.graphics.Typeface.DEFAULT_BOLD
-            letterSpacing = 0.04f; tag = TAG_SECTION
-        }
-
-        /** Feldbezeichnung innerhalb einer Karte: klein und dezent, gehört zum folgenden Element. */
-        fun label(ctx: Context, text: CharSequence): TextView = TextView(ctx).apply {
-            this.text = text; textSize = 12f; setTextColor(0xFF8A8B96.toInt()); tag = TAG_LABEL
+            this.text = text; textSize = 12.5f; setTextColor(0xFF9A9BA6.toInt()); isAllCaps = false
             val dp = ctx.resources.displayMetrics.density
-            setPadding(0, (10 * dp).toInt(), 0, 0)
+            setPadding(0, (18 * dp).toInt(), 0, (6 * dp).toInt())
         }
     }
 }
