@@ -2897,19 +2897,24 @@ class MainActivity : AppCompatActivity() {
 
     private fun showDrafts() {
         if (activeRecording != null || segments.isNotEmpty()) return
-        val list = drafts.list()
-        if (list.isEmpty()) {
+        val all = drafts.list()
+        if (all.isEmpty()) {
             Toast.makeText(this, R.string.no_drafts, Toast.LENGTH_SHORT).show(); return
         }
+        val manual = all.filter { !it.auto }
+        val history = all.filter { it.auto }
         val fmtDate = java.text.SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
         val dp = resources.displayMetrics.density
         val pad = (12 * dp).toInt()
+        var current: List<DraftStore.Info> = if (manual.isNotEmpty() || history.isEmpty()) manual else history
+        lateinit var dlg: AlertDialog
+
         val adapter = object : android.widget.BaseAdapter() {
-            override fun getCount() = list.size
-            override fun getItem(i: Int) = list[i]
+            override fun getCount() = current.size
+            override fun getItem(i: Int) = current[i]
             override fun getItemId(i: Int) = i.toLong()
             override fun getView(i: Int, convert: android.view.View?, parent: android.view.ViewGroup): android.view.View {
-                val info = list[i]
+                val info = current[i]
                 val row = (convert as? android.widget.LinearLayout) ?: android.widget.LinearLayout(this@MainActivity).apply {
                     orientation = android.widget.LinearLayout.HORIZONTAL
                     gravity = android.view.Gravity.CENTER_VERTICAL
@@ -2930,20 +2935,50 @@ class MainActivity : AppCompatActivity() {
                 val img = row.getChildAt(0) as android.widget.ImageView
                 val texts = row.getChildAt(1) as android.widget.LinearLayout
                 if (info.thumb.exists()) img.setImageBitmap(BitmapFactory.decodeFile(info.thumb.absolutePath)) else img.setImageDrawable(null)
-                (texts.getChildAt(0) as android.widget.TextView).text =
-                    (if (info.auto) getString(R.string.backup_label) + " · " else "") + fmtDate.format(info.createdAt)
-                (texts.getChildAt(1) as android.widget.TextView).text =
-                    resources.getQuantityString(R.plurals.segments, info.segmentCount, info.segmentCount) + " · " + fmt(info.durationMs) +
-                    (if (info.auto) " · " + String.format(Locale.getDefault(), "%.1f GB", info.sizeBytes / 1e9) + " · " + getString(R.string.backup_note) else "")
-                row.alpha = if (info.auto) 0.85f else 1f
+                (texts.getChildAt(0) as android.widget.TextView).text = fmtDate.format(info.createdAt)
+                val base = resources.getQuantityString(R.plurals.segments, info.segmentCount, info.segmentCount) + " · " + fmt(info.durationMs)
+                (texts.getChildAt(1) as android.widget.TextView).text = if (info.auto) {
+                    val daysLeft = (7 - (System.currentTimeMillis() - info.createdAt) / 86_400_000L).coerceAtLeast(0)
+                    base + " · " + String.format(Locale.getDefault(), "%.1f GB", info.sizeBytes / 1e9) + " · " + getString(R.string.backup_days_left, daysLeft)
+                } else base
                 return row
             }
         }
-        MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.drafts)
-            .setAdapter(adapter) { _, which -> askDraftAction(list[which]) }
+        val listView = android.widget.ListView(this).apply {
+            this.adapter = adapter
+            divider = null
+            setOnItemClickListener { _, _, which, _ -> dlg.dismiss(); askDraftAction(current[which]) }
+        }
+        val empty = android.widget.TextView(this).apply {
+            text = getString(R.string.history_empty); textSize = 14f; alpha = 0.7f; gravity = android.view.Gravity.CENTER
+            setPadding(pad, pad * 3, pad, pad * 3); visibility = android.view.View.GONE
+        }
+        val tabs = com.google.android.material.tabs.TabLayout(this).apply {
+            addTab(newTab().setIcon(R.drawable.ic_save).setText(R.string.drafts))
+            addTab(newTab().setIcon(R.drawable.ic_history).setText(R.string.history))
+            tabGravity = com.google.android.material.tabs.TabLayout.GRAVITY_FILL
+            addOnTabSelectedListener(object : com.google.android.material.tabs.TabLayout.OnTabSelectedListener {
+                override fun onTabSelected(tab: com.google.android.material.tabs.TabLayout.Tab) {
+                    current = if (tab.position == 0) manual else history
+                    adapter.notifyDataSetChanged()
+                    empty.visibility = if (current.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
+                    empty.text = getString(if (tab.position == 0) R.string.no_drafts else R.string.history_empty)
+                    listView.visibility = if (current.isEmpty()) android.view.View.GONE else android.view.View.VISIBLE
+                }
+                override fun onTabUnselected(tab: com.google.android.material.tabs.TabLayout.Tab) {}
+                override fun onTabReselected(tab: com.google.android.material.tabs.TabLayout.Tab) {}
+            })
+        }
+        val box = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            addView(tabs); addView(listView); addView(empty)
+        }
+        dlg = MaterialAlertDialogBuilder(this)
+            .setView(box)
             .setNegativeButton(R.string.cancel, null)
-            .show()
+            .create()
+        dlg.show()
+        if (current === history) tabs.selectTab(tabs.getTabAt(1)) else { empty.visibility = if (manual.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE }
     }
 
     private fun askDraftAction(info: DraftStore.Info) {

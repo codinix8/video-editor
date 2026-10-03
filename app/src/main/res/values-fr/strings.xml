@@ -218,4 +218,7 @@
     <string name="backup_kept_toast">Gardée comme brouillon normal</string>
     <string name="backup_kept">Le projet est conservé comme sauvegarde d\'export dans les brouillons.</string>
     <string name="backup_dropped">%1$d sauvegarde(s) supprimée(s) pour libérer de l\'espace</string>
+    <string name="history">Historique</string>
+    <string name="history_empty">Pas encore de sauvegardes d\'export – après chaque export, le projet reste ici 7 jours.</string>
+    <string name="backup_days_left">%1$d jours restants</string>
 </resources>

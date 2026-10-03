@@ -218,4 +218,7 @@
     <string name="backup_kept_toast">Als normaler Entwurf behalten</string>
     <string name="backup_kept">Das Projekt bleibt als Export-Sicherung in den Entwürfen.</string>
     <string name="backup_dropped">%1$d Export-Sicherung(en) entfernt, um Speicher freizugeben</string>
+    <string name="history">Verlauf</string>
+    <string name="history_empty">Noch keine Export-Sicherungen – nach jedem Export bleibt das Projekt hier 7 Tage erhalten.</string>
+    <string name="backup_days_left">noch %1$d Tage</string>
 </resources>

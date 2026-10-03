@@ -218,4 +218,7 @@
     <string name="backup_kept_toast">به‌عنوان پیش‌نویس عادی نگه داشته شد</string>
     <string name="backup_kept">پروژه به‌عنوان پشتیبان خروجی در پیش‌نویس‌ها می‌ماند.</string>
     <string name="backup_dropped">%1$d پشتیبان برای آزادسازی فضا حذف شد</string>
+    <string name="history">تاریخچه</string>
+    <string name="history_empty">هنوز پشتیبان خروجی نیست – پس از هر خروجی، پروژه ۷ روز اینجا می‌ماند.</string>
+    <string name="backup_days_left">%1$d روز مانده</string>
 </resources>

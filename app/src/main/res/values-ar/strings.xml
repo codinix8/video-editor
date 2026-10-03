@@ -218,4 +218,7 @@
     <string name="backup_kept_toast">احتُفظ بها كمسودة عادية</string>
     <string name="backup_kept">يُحتفظ بالمشروع كنسخة تصدير احتياطية في المسودات.</string>
     <string name="backup_dropped">أُزيلت %1$d نسخة احتياطية لتحرير المساحة</string>
+    <string name="history">السجل</string>
+    <string name="history_empty">لا نسخ تصدير احتياطية بعد – بعد كل تصدير يبقى المشروع هنا 7 أيام.</string>
+    <string name="backup_days_left">بقي %1$d أيام</string>
 </resources>

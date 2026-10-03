@@ -218,4 +218,7 @@
     <string name="backup_kept_toast">Kept as a regular draft</string>
     <string name="backup_kept">The project is kept as an export backup in Drafts.</string>
     <string name="backup_dropped">%1$d export backup(s) removed to free storage</string>
+    <string name="history">History</string>
+    <string name="history_empty">No export backups yet – after each export the project is kept here for 7 days.</string>
+    <string name="backup_days_left">%1$d days left</string>
 </resources>

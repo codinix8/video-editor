@@ -218,4 +218,7 @@
     <string name="backup_kept_toast">Normal taslak olarak saklandı</string>
     <string name="backup_kept">Proje, Taslaklar\'da dışa aktarma yedeği olarak kalır.</string>
     <string name="backup_dropped">Depolama için %1$d yedek kaldırıldı</string>
+    <string name="history">Geçmiş</string>
+    <string name="history_empty">Henüz dışa aktarma yedeği yok – her dışa aktarmadan sonra proje burada 7 gün kalır.</string>
+    <string name="backup_days_left">%1$d gün kaldı</string>
 </resources>

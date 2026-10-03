@@ -218,4 +218,7 @@
     <string name="backup_kept_toast">Conservado como borrador normal</string>
     <string name="backup_kept">El proyecto se conserva como copia de exportación en Borradores.</string>
     <string name="backup_dropped">%1$d copia(s) eliminadas para liberar espacio</string>
+    <string name="history">Historial</string>
+    <string name="history_empty">Aún no hay copias de exportación – tras cada exportación el proyecto se conserva aquí 7 días.</string>
+    <string name="backup_days_left">quedan %1$d días</string>
 </resources>
