@@ -84,7 +84,10 @@ class Sheet(private val ctx: Context) {
             setPadding(pad, pad / 2, pad, pad / 2)
         }
         message?.let { card.addView(TextView(ctx).apply { text = it; textSize = 15f; setTextColor(0xFFDDDDE2.toInt()); setPadding(0, pad / 2, 0, pad / 2); setTextIsSelectable(true) }) }
-        content?.let { v ->
+        content?.let { v0 ->
+            // Doppelte Scroll-Container auflösen: liefert der Dialog schon einen ScrollView, dessen Inhalt nehmen
+            var v = v0
+            if (!tall && v is ScrollView && v.childCount == 1) { val inner = v.getChildAt(0); v.removeView(inner); v = inner }
             (v.parent as? android.view.ViewGroup)?.removeView(v)
             card.addView(v, if (tall) LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f) else
                 LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
@@ -94,7 +97,11 @@ class Sheet(private val ctx: Context) {
             val screenH = ctx.resources.displayMetrics.heightPixels
             root.layoutParams = android.view.ViewGroup.LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, (screenH * 0.82f).toInt())
         } else {
-            val scroll = ScrollView(ctx).apply { isVerticalScrollBarEnabled = false; addView(card) }
+            val scroll = androidx.core.widget.NestedScrollView(ctx).apply {
+                isVerticalScrollBarEnabled = true; scrollBarStyle = View.SCROLLBARS_OUTSIDE_OVERLAY
+                isNestedScrollingEnabled = true
+                addView(card)
+            }
             root.addView(scroll, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f).apply { topMargin = (8 * dp).toInt() })
         }
 
