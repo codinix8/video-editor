@@ -751,22 +751,22 @@ class MainActivity : AppCompatActivity() {
             })
         }
 
-        val bgSection = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            visibility = if (bgOn) android.view.View.VISIBLE else android.view.View.GONE
-            addView(label(R.string.bg_color))
-            addView(swatchGrid({ bgRgb }) { bgRgb = it })
-            addView(label(R.string.bg_opacity))
-            addView(slider(bgAlpha * 100 / 255) { bgAlpha = it * 255 / 100 })
-        }
-        val bgSwitch = com.google.android.material.materialswitch.MaterialSwitch(this).apply {
-            text = getString(R.string.text_background)
-            isChecked = bgOn
-            setPadding(0, pad, 0, 0)
-            setOnCheckedChangeListener { _, on ->
-                bgOn = on
-                bgSection.visibility = if (on) android.view.View.VISIBLE else android.view.View.GONE
-                refreshPreview()
+        val sec = Sections(this)
+        sec.section(getString(R.string.text_dialog_title))
+        sec.custom(input)
+        sec.section(getString(R.string.text_color))
+        sec.custom(swatches({ textRgb }) { textRgb = it })
+        sec.slider(getString(R.string.text_opacity), textAlpha * 100 / 255, onChange = { textAlpha = it * 255 / 100; refreshPreview() })
+        sec.section(getString(R.string.text_background))
+        val bgCard = Sections(this)
+        bgCard.section(null)
+        bgCard.custom(swatches({ bgRgb }) { bgRgb = it })
+        bgCard.slider(getString(R.string.bg_opacity), bgAlpha * 100 / 255, onChange = { bgAlpha = it * 255 / 100; refreshPreview() })
+        bgCard.root.visibility = if (bgOn) android.view.View.VISIBLE else android.view.View.GONE
+        sec.switch(getString(R.string.text_background), bgOn) { on -> bgOn = on; bgCard.root.visibility = if (on) android.view.View.VISIBLE else android.view.View.GONE; refreshPreview() }
+        sec.root.addView(bgCard.root)
+        val box = sec.root
+        refreshPreview()
             }
         }
 
@@ -789,7 +789,7 @@ class MainActivity : AppCompatActivity() {
 
         val textDialog = Sheet(this)
             .setTitle(R.string.text_dialog_title)
-            .setView(android.widget.ScrollView(this).apply { addView(box) })
+            .setSections(sec)
             .setPositiveButton(R.string.ok) { _, _ ->
                 val text = input.text.toString().trim()
                 if (text.isEmpty()) return@setPositiveButton
@@ -819,161 +819,89 @@ class MainActivity : AppCompatActivity() {
     // ---------------------------------------------------------------- Einstellungen & Tipps
 
     private fun showSettings() {
-        val dp = resources.displayMetrics.density
-        val pad = (16 * dp).toInt()
-        fun header(res: Int) = Sheet.header(this, getString(res))
-        val box = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.VERTICAL; setPadding(pad, 0, pad, pad) }
+        val sec = Sections(this)
 
-        // App-Sprache
-        box.addView(header(R.string.settings_language))
+        // Sprache
         val langTags = listOf("", "en", "de", "tr", "es", "fr", "fa", "ar")
         val langNames = listOf(getString(R.string.language_system), "English", "Deutsch", "Türkçe", "Español", "Français", "فارسی", "العربية")
-        val current = androidx.appcompat.app.AppCompatDelegate.getApplicationLocales().toLanguageTags()
-        box.addView(android.widget.Spinner(this).apply {
-            adapter = android.widget.ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, langNames)
-            setSelection(langTags.indexOfFirst { it.isNotEmpty() && current.startsWith(it) }.coerceAtLeast(0))
-            onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-                var first = true
-                override fun onItemSelected(p: android.widget.AdapterView<*>?, v: android.view.View?, pos: Int, id: Long) {
-                    if (first) { first = false; return }
-                    val tag = langTags[pos]
-                    androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(
-                        if (tag.isEmpty()) androidx.core.os.LocaleListCompat.getEmptyLocaleList()
-                        else androidx.core.os.LocaleListCompat.forLanguageTags(tag))
-                }
-                override fun onNothingSelected(p: android.widget.AdapterView<*>?) {}
-            }
-        })
+        val currentLang = androidx.appcompat.app.AppCompatDelegate.getApplicationLocales().toLanguageTags()
+        sec.section(getString(R.string.settings_language))
+        sec.choice(getString(R.string.settings_language), langNames, langTags.indexOfFirst { it.isNotEmpty() && currentLang.startsWith(it) }.coerceAtLeast(0)) { pos ->
+            val tag = langTags[pos]
+            androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(
+                if (tag.isEmpty()) androidx.core.os.LocaleListCompat.getEmptyLocaleList() else androidx.core.os.LocaleListCompat.forLanguageTags(tag))
+        }
 
         // Untertitel
-        box.addView(header(R.string.settings_captions))
-        val auto = com.google.android.material.materialswitch.MaterialSwitch(this).apply {
-            text = getString(R.string.captions_always); isChecked = prefs.getBoolean("captions_auto", false)
-            setOnCheckedChangeListener { _, on -> prefs.edit().putBoolean("captions_auto", on).apply() }
+        sec.section(getString(R.string.settings_captions))
+        sec.switch(getString(R.string.captions_always), prefs.getBoolean("captions_auto", false)) { on -> prefs.edit().putBoolean("captions_auto", on).apply() }
+        sec.choice(getString(R.string.captions_language), captionLanguages.map { it.second },
+            captionLanguages.indexOfFirst { it.first == prefs.getString("captions_lang", null) }.coerceAtLeast(0)) { pos ->
+            prefs.edit().putString("captions_lang", captionLanguages[pos].first).apply()
         }
-        box.addView(auto)
-        val langSpinner = android.widget.Spinner(this).apply {
-            adapter = android.widget.ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, captionLanguages.map { it.second })
-            setSelection(captionLanguages.indexOfFirst { it.first == prefs.getString("captions_lang", null) }.coerceAtLeast(0))
-            onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(p: android.widget.AdapterView<*>?, v: android.view.View?, pos: Int, id: Long) { prefs.edit().putString("captions_lang", captionLanguages[pos].first).apply() }
-                override fun onNothingSelected(p: android.widget.AdapterView<*>?) {}
-            }
-        }
-        box.addView(android.widget.TextView(this).apply { text = getString(R.string.captions_language); textSize = 12f; alpha = 0.7f })
-        box.addView(langSpinner)
         val models = de.codinix.videoeditor.whisper.ModelManager.Model.values()
-        val modelSpinner = android.widget.Spinner(this).apply {
-            adapter = android.widget.ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
-                models.mapIndexed { i, it -> resources.getStringArray(R.array.model_labels)[i] + if (modelManager.isAvailable(it)) "" else " · ${it.approxMb} MB" })
-            setSelection(prefs.getInt("captions_model", 1))
-            onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(p: android.widget.AdapterView<*>?, v: android.view.View?, pos: Int, id: Long) {
-                    if (prefs.getInt("captions_model", 1) != pos) { prefs.edit().putInt("captions_model", pos).apply(); prefetchCaptionModel() }
-                }
-                override fun onNothingSelected(p: android.widget.AdapterView<*>?) {}
-            }
+        sec.choice(getString(R.string.captions_model),
+            models.mapIndexed { i, it -> resources.getStringArray(R.array.model_labels)[i] + if (modelManager.isAvailable(it)) "" else " · ${it.approxMb} MB" },
+            prefs.getInt("captions_model", 1)) { pos ->
+            if (prefs.getInt("captions_model", 1) != pos) { prefs.edit().putInt("captions_model", pos).apply(); prefetchCaptionModel() }
         }
-        box.addView(android.widget.TextView(this).apply { text = getString(R.string.captions_model); textSize = 12f; alpha = 0.7f; setPadding(0, pad / 2, 0, 0) })
-        box.addView(modelSpinner)
-
-        // Plattform-Hilfslinien
-        box.addView(header(R.string.settings_safe_zone))
-        val zones = resources.getStringArray(R.array.safe_zones)
-        box.addView(android.widget.Spinner(this).apply {
-            adapter = android.widget.ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, zones)
-            setSelection(prefs.getInt("safe_zone", 0))
-            onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(p: android.widget.AdapterView<*>?, v: android.view.View?, pos: Int, id: Long) {
-                    prefs.edit().putInt("safe_zone", pos).apply()
-                    binding.safeZone.platform = pos; binding.review.reviewSafeZone.platform = pos
-                }
-                override fun onNothingSelected(p: android.widget.AdapterView<*>?) {}
-            }
-        })
-        box.addView(android.widget.TextView(this).apply { text = getString(R.string.safe_zone_hint); textSize = 12f; alpha = 0.7f })
 
         // Aufnahme
-        box.addView(header(R.string.settings_recording))
+        sec.section(getString(R.string.settings_recording))
         val qualities = listOf<Quality?>(null) + QUALITY_ORDER
-        val qualitySpinner = android.widget.Spinner(this).apply {
-            adapter = android.widget.ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
-                qualities.map { q -> if (q == null) getString(R.string.settings_default_quality_highest) else label(q) })
-            setSelection(qualities.indexOfFirst { q -> (q?.let { label(it) }) == prefs.getString("default_quality", null) }.coerceAtLeast(0))
-            onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(p: android.widget.AdapterView<*>?, v: android.view.View?, pos: Int, id: Long) {
-                    val q = qualities[pos]
-                    prefs.edit().putString("default_quality", q?.let { label(it) }).apply()
-                    if (segments.isEmpty() && activeRecording == null) { preferredQuality = q; bindCamera() }
-                }
-                override fun onNothingSelected(p: android.widget.AdapterView<*>?) {}
-            }
+        sec.choice(getString(R.string.settings_default_quality),
+            qualities.map { q -> if (q == null) getString(R.string.settings_default_quality_highest) else label(q) },
+            qualities.indexOfFirst { q -> (q?.let { label(it) }) == prefs.getString("default_quality", null) }.coerceAtLeast(0)) { pos ->
+            val q = qualities[pos]
+            prefs.edit().putString("default_quality", q?.let { label(it) }).apply()
+            if (segments.isEmpty() && activeRecording == null) { preferredQuality = q; bindCamera() }
         }
-        box.addView(android.widget.TextView(this).apply { text = getString(R.string.settings_default_quality); textSize = 12f; alpha = 0.7f })
-        box.addView(qualitySpinner)
-        val previewSound = com.google.android.material.materialswitch.MaterialSwitch(this).apply {
-            text = getString(R.string.preview_sound); isChecked = previewSoundOn; setPadding(0, pad / 2, 0, 0)
-            setOnCheckedChangeListener { _, on -> if (on != previewSoundOn) binding.previewSoundButton.performClick() }
+        sec.switch(getString(R.string.preview_sound), previewSoundOn) { on -> if (on != previewSoundOn) binding.previewSoundButton.performClick() }
+        val zones = resources.getStringArray(R.array.safe_zones)
+        sec.choice(getString(R.string.settings_safe_zone), zones.toList(), prefs.getInt("safe_zone", 0), sub = getString(R.string.safe_zone_hint)) { pos ->
+            prefs.edit().putInt("safe_zone", pos).apply()
+            binding.safeZone.platform = pos; binding.review.reviewSafeZone.platform = pos
         }
-        box.addView(previewSound)
-
-        // Export-Sicherungen
-        box.addView(header(R.string.settings_backups))
-        val backupCounts = listOf(0, 1, 3, 5)
-        box.addView(android.widget.Spinner(this).apply {
-            adapter = android.widget.ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
-                backupCounts.map { if (it == 0) getString(R.string.off) else it.toString() })
-            setSelection(backupCounts.indexOf(prefs.getInt("auto_backups", 3)).coerceAtLeast(0))
-            onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(p: android.widget.AdapterView<*>?, v: android.view.View?, pos: Int, id: Long) {
-                    prefs.edit().putInt("auto_backups", backupCounts[pos]).apply(); drafts.pruneAuto(backupCounts[pos])
-                }
-                override fun onNothingSelected(p: android.widget.AdapterView<*>?) {}
-            }
-        })
-        box.addView(android.widget.TextView(this).apply { text = getString(R.string.backups_hint); textSize = 12f; alpha = 0.7f })
 
         // Mosaik
-        box.addView(header(R.string.settings_mosaic))
-        box.addView(com.google.android.material.materialswitch.MaterialSwitch(this).apply {
-            text = getString(R.string.mosaic_gap_white); isChecked = prefs.getBoolean("mosaic_gap_white", false)
-            setOnCheckedChangeListener { _, on -> prefs.edit().putBoolean("mosaic_gap_white", on).apply(); mosaic.gapWhite = on; publishMosaic() }
-        })
-        box.addView(com.google.android.material.materialswitch.MaterialSwitch(this).apply {
-            text = getString(R.string.mosaic_rainbow); isChecked = prefs.getBoolean("mosaic_rainbow", false)
-            setOnCheckedChangeListener { _, on -> prefs.edit().putBoolean("mosaic_rainbow", on).apply(); mosaic.rainbowGaps = on; publishMosaic() }
-        })
+        sec.section(getString(R.string.settings_mosaic))
+        sec.switch(getString(R.string.mosaic_gap_white), prefs.getBoolean("mosaic_gap_white", false)) { on ->
+            prefs.edit().putBoolean("mosaic_gap_white", on).apply(); mosaic.gapWhite = on; publishMosaic()
+        }
+        sec.switch(getString(R.string.mosaic_rainbow), prefs.getBoolean("mosaic_rainbow", false)) { on ->
+            prefs.edit().putBoolean("mosaic_rainbow", on).apply(); mosaic.rainbowGaps = on; publishMosaic()
+        }
+
+        // Export-Sicherungen
+        sec.section(getString(R.string.settings_backups))
+        val backupCounts = listOf(0, 1, 3, 5)
+        sec.choice(getString(R.string.settings_backups), backupCounts.map { if (it == 0) getString(R.string.off) else it.toString() },
+            backupCounts.indexOf(prefs.getInt("auto_backups", 3)).coerceAtLeast(0), sub = getString(R.string.backups_hint)) { pos ->
+            prefs.edit().putInt("auto_backups", backupCounts[pos]).apply(); drafts.pruneAuto(backupCounts[pos])
+        }
 
         // Gesten
-        box.addView(header(R.string.settings_gestures))
-        box.addView(android.widget.TextView(this).apply { text = getString(R.string.gestures_text); textSize = 13.5f; setLineSpacing(0f, 1.25f); setTextColor(0xFFDDDDE2.toInt()) })
+        sec.section(getString(R.string.settings_gestures))
+        sec.note(getString(R.string.gestures_text))
 
         // Hilfe
-        box.addView(header(R.string.settings_help))
-        box.addView(android.widget.Button(this, null, android.R.attr.borderlessButtonStyle).apply {
-            text = getString(R.string.settings_show_tips)
-            setOnClickListener { prefs.edit().putBoolean("tips_shown", false).putBoolean("tip_headphones_shown", false).apply(); showFirstRunTips() }
-        })
-        box.addView(android.widget.Button(this, null, android.R.attr.borderlessButtonStyle).apply {
-            text = getString(R.string.settings_crash)
-            setOnClickListener {
-                val rep = CrashLog.previous(this@MainActivity)
-                if (rep == null) Toast.makeText(this@MainActivity, R.string.settings_no_crash, Toast.LENGTH_SHORT).show()
-                else Sheet(this@MainActivity).setTitle(R.string.settings_crash)
-                    .setView(android.widget.ScrollView(this@MainActivity).apply { addView(android.widget.TextView(this@MainActivity).apply { text = rep; textSize = 11f; typeface = android.graphics.Typeface.MONOSPACE; setTextIsSelectable(true); setPadding(pad, 0, pad, 0) }) })
-                    .setPositiveButton(R.string.copy) { _, _ ->
-                        getSystemService(android.content.ClipboardManager::class.java).setPrimaryClip(android.content.ClipData.newPlainText("crash", rep))
-                        Toast.makeText(this@MainActivity, R.string.copied, Toast.LENGTH_SHORT).show()
-                    }.setNegativeButton(R.string.ok, null).show()
-            }
-        })
-        box.addView(android.widget.TextView(this).apply { text = getString(R.string.settings_version, BuildConfig.VERSION_NAME); textSize = 12f; alpha = 0.6f; setPadding(0, pad, 0, 0) })
+        sec.section(getString(R.string.settings_help))
+        sec.button(getString(R.string.settings_show_tips)) {
+            prefs.edit().putBoolean("tips_shown", false).putBoolean("tip_headphones_shown", false).putInt("file_browser_hint_count", 0).apply(); showFirstRunTips()
+        }
+        sec.button(getString(R.string.settings_crash)) {
+            val rep = CrashLog.previous(this)
+            if (rep == null) Toast.makeText(this, R.string.settings_no_crash, Toast.LENGTH_SHORT).show()
+            else Sheet(this).setTitle(R.string.settings_crash)
+                .setView(android.widget.TextView(this).apply { text = rep; textSize = 11f; typeface = android.graphics.Typeface.MONOSPACE; setTextIsSelectable(true); setTextColor(0xFFDDDDE2.toInt()) })
+                .setPositiveButton(R.string.copy) { _, _ ->
+                    getSystemService(android.content.ClipboardManager::class.java).setPrimaryClip(android.content.ClipData.newPlainText("crash", rep))
+                    Toast.makeText(this, R.string.copied, Toast.LENGTH_SHORT).show()
+                }.setNegativeButton(R.string.ok, null).show()
+        }
+        sec.note(getString(R.string.settings_version, BuildConfig.VERSION_NAME))
 
-        Sheet(this)
-            .setTitle(R.string.settings)
-            .setView(android.widget.ScrollView(this).apply { addView(box) })
-            .setPositiveButton(R.string.ok, null)
-            .show()
+        Sheet(this).setTitle(R.string.settings).setTall(true, selfScrolling = false).setSections(sec).show()
     }
 
     /** Drei kurze Tipp-Karten beim ersten Öffnen, nacheinander. */
@@ -1783,53 +1711,53 @@ class MainActivity : AppCompatActivity() {
 
     private fun showCaptionsDialog() {
         if (transcribing) return
-        val pad = (16 * resources.displayMetrics.density).toInt()
-        val savedLang = prefs.getString("captions_lang", null)
-        val spinner = android.widget.Spinner(this).apply {
-            adapter = android.widget.ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
-                captionLanguages.map { it.second })
-            setSelection(captionLanguages.indexOfFirst { it.first == savedLang }.coerceAtLeast(0))
-        }
-        // Vorschaukarten der Vorlagen (echter Renderer, Beispieltext)
-        val dp = resources.displayMetrics.density
+        val dp = resources.displayMetrics.density; val pad = (16 * dp).toInt()
+        val sec = Sections(this)
+
+        // Erkennung
+        var langIdx = captionLanguages.indexOfFirst { it.first == prefs.getString("captions_lang", null) }.coerceAtLeast(0)
+        var modelIdx = prefs.getInt("captions_model", 1)
+        val models = de.codinix.videoeditor.whisper.ModelManager.Model.values()
+        sec.section(getString(R.string.captions_title))
+        sec.choice(getString(R.string.captions_language), captionLanguages.map { it.second }, langIdx) { langIdx = it }
+        sec.choice(getString(R.string.captions_model),
+            models.mapIndexed { i, it -> resources.getStringArray(R.array.model_labels)[i] + if (modelManager.isAvailable(it)) "" else " · ${it.approxMb} MB" },
+            modelIdx) { modelIdx = it }
+        sec.switch(getString(R.string.captions_always), prefs.getBoolean("captions_auto", false)) { on -> prefs.edit().putBoolean("captions_auto", on).apply() }
+
+        // Stil
+        sec.section(getString(R.string.captions_template))
         val cardW = (150 * dp).toInt(); val cardH = (84 * dp).toInt()
         val cardRow = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.HORIZONTAL }
-        val cards = ArrayList<android.view.View>()
         fun renderCards() {
-            cardRow.removeAllViews(); cards.clear()
+            cardRow.removeAllViews()
             resources.getStringArray(R.array.caption_templates).forEachIndexed { idx, name ->
                 val img = android.widget.ImageView(this).apply {
                     scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
                     setPadding(pad / 2, pad / 2, pad / 2, pad / 2)
                     setImageBitmap(de.codinix.videoeditor.whisper.CaptionStyle.preview(idx, captionSettings.accentColor, 720, 720, getString(R.string.caption_preview_words)))
                 }
-                val label = android.widget.TextView(this).apply { text = name; textSize = 11f; gravity = android.view.Gravity.CENTER }
+                val label = android.widget.TextView(this).apply { text = name; textSize = 11f; gravity = android.view.Gravity.CENTER; setTextColor(0xFFFFFFFF.toInt()); setPadding(0, 0, 0, pad / 3) }
                 val card = android.widget.LinearLayout(this).apply {
                     orientation = android.widget.LinearLayout.VERTICAL
                     layoutParams = android.widget.LinearLayout.LayoutParams(cardW, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT).apply { setMargins(pad / 4, 0, pad / 4, 0) }
                     background = android.graphics.drawable.GradientDrawable().apply {
-                        cornerRadius = 10 * dp
-                        setColor(0xFF2A2A34.toInt())
+                        cornerRadius = 10 * dp; setColor(0xFF1C1D26.toInt())
                         setStroke((2.5f * dp).toInt(), if (idx == captionSettings.template) captionSettings.accentColor else 0x00000000)
                     }
-                    addView(img, android.widget.LinearLayout.LayoutParams(cardW, cardH))
-                    addView(label)
+                    addView(img, android.widget.LinearLayout.LayoutParams(cardW, cardH)); addView(label)
                     setOnClickListener {
                         captionSettings.template = idx
                         binding.review.captionView.settings = captionSettings
-                        saveDefaultCaptionSettings()
-                        persistSession()
-                        renderCards()
+                        saveDefaultCaptionSettings(); persistSession(); renderCards()
                     }
                 }
-                cards.add(card); cardRow.addView(card)
+                cardRow.addView(card)
             }
         }
         renderCards()
-        val cardScroll = android.widget.HorizontalScrollView(this).apply { addView(cardRow); isHorizontalScrollBarEnabled = false }
-
-        // Akzentfarbe
-        val accentRow = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.HORIZONTAL; setPadding(0, pad / 2, 0, 0) }
+        sec.custom(android.widget.HorizontalScrollView(this).apply { addView(cardRow); isHorizontalScrollBarEnabled = false; setPadding(0, pad / 2, 0, pad / 2) })
+        val accentRow = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.HORIZONTAL; setPadding(0, pad / 2, 0, pad / 2) }
         de.codinix.videoeditor.whisper.CaptionStyle.ACCENT_COLORS.forEach { c ->
             val size = (30 * dp).toInt()
             accentRow.addView(android.view.View(this).apply {
@@ -1841,8 +1769,7 @@ class MainActivity : AppCompatActivity() {
                 setOnClickListener {
                     captionSettings.accentColor = c
                     binding.review.captionView.settings = captionSettings
-                    saveDefaultCaptionSettings()
-                    persistSession(); renderCards()
+                    saveDefaultCaptionSettings(); persistSession(); renderCards()
                     for (i in 0 until accentRow.childCount) {
                         (accentRow.getChildAt(i).background as android.graphics.drawable.GradientDrawable)
                             .setStroke((if (de.codinix.videoeditor.whisper.CaptionStyle.ACCENT_COLORS[i] == c) 4 else 1) * dp.toInt().coerceAtLeast(1), 0xFFFFFFFF.toInt())
@@ -1850,66 +1777,29 @@ class MainActivity : AppCompatActivity() {
                 }
             })
         }
+        sec.custom(android.widget.HorizontalScrollView(this).apply { addView(accentRow); isHorizontalScrollBarEnabled = false })
+        sec.switch(getString(R.string.captions_emojis), captionSettings.emojis) { on ->
+            captionSettings.emojis = on; binding.review.captionView.settings = captionSettings; saveDefaultCaptionSettings(); persistSession()
+        }
+        sec.note(getString(R.string.captions_export_note))
 
-        val models = de.codinix.videoeditor.whisper.ModelManager.Model.values()
-        val modelSpinner = android.widget.Spinner(this).apply {
-            adapter = android.widget.ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
-                models.mapIndexed { i, it -> resources.getStringArray(R.array.model_labels)[i] + if (modelManager.isAvailable(it)) "" else " · ${it.approxMb} MB" })
-            setSelection(prefs.getInt("captions_model", 1))
+        lateinit var dlg: android.app.Dialog
+        if (captions.isNotEmpty()) {
+            sec.section(null)
+            sec.button(getString(R.string.captions_edit)) { dlg.dismiss(); showCaptionEditor(-1) }
+            sec.button(getString(R.string.captions_remove), destructive = true) { captions.clear(); refreshCaptionUi(); persistSession(); dlg.dismiss() }
         }
-        val emojiSwitch = com.google.android.material.materialswitch.MaterialSwitch(this).apply {
-            text = getString(R.string.captions_emojis)
-            isChecked = captionSettings.emojis
-            setPadding(0, pad / 2, 0, 0)
-            setOnCheckedChangeListener { _, on ->
-                captionSettings.emojis = on
-                binding.review.captionView.settings = captionSettings
-                saveDefaultCaptionSettings(); persistSession()
-            }
-        }
-        val auto = android.widget.CheckBox(this).apply {
-            text = getString(R.string.captions_always)
-            isChecked = prefs.getBoolean("captions_auto", false)
-        }
-        val note = android.widget.TextView(this).apply {
-            text = getString(R.string.captions_export_note); textSize = 12f; setPadding(0, pad / 2, 0, 0)
-        }
-        val box = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(pad, pad / 2, pad, 0)
-            addView(android.widget.TextView(this@MainActivity).apply { text = getString(R.string.captions_template) })
-            addView(cardScroll)
-            addView(android.widget.HorizontalScrollView(this@MainActivity).apply { addView(accentRow); isHorizontalScrollBarEnabled = false })
-            addView(emojiSwitch)
-            addView(android.widget.TextView(this@MainActivity).apply { text = getString(R.string.captions_language); setPadding(0, pad / 2, 0, 0) })
-            addView(spinner)
-            addView(android.widget.TextView(this@MainActivity).apply { text = getString(R.string.captions_model); setPadding(0, pad / 2, 0, 0) })
-            addView(modelSpinner)
-            addView(auto); addView(note)
-        }
-        val b = Sheet(this)
-            .setTitle(R.string.captions_title)
-            .setView(box)
+        dlg = Sheet(this)
+            .setTitle(R.string.captions)
+            .setTall(true, selfScrolling = false)
+            .setSections(sec)
             .setPositiveButton(if (captions.isEmpty()) R.string.captions_generate else R.string.captions_regenerate) { _, _ ->
-                val lang = captionLanguages[spinner.selectedItemPosition].first
-                prefs.edit().putString("captions_lang", lang).putBoolean("captions_auto", auto.isChecked)
-                    .putInt("captions_model", modelSpinner.selectedItemPosition).apply()
+                val lang = captionLanguages[langIdx].first
+                prefs.edit().putString("captions_lang", lang).putInt("captions_model", modelIdx).apply()
                 startTranscription(lang)
             }
-            .setNegativeButton(R.string.cancel) { _, _ -> prefs.edit().putBoolean("captions_auto", auto.isChecked).apply() }
-        var removeBtn: android.widget.Button? = null
-        if (captions.isNotEmpty()) {
-            b.setNeutralButton(R.string.captions_edit) { _, _ -> showCaptionEditor(-1) }
-            removeBtn = android.widget.Button(this, null, android.R.attr.borderlessButtonStyle).apply {
-                text = getString(R.string.captions_remove)
-            }
-            box.addView(removeBtn)
-        }
-        val dlg = b.create()
-        removeBtn?.setOnClickListener {
-            captions.clear(); refreshCaptionUi(); persistSession(); dlg.dismiss()
-        }
-        dlg.show()
+            .setNegativeButton(R.string.cancel, null)
+            .show()
     }
 
     /**
@@ -2293,29 +2183,16 @@ class MainActivity : AppCompatActivity() {
         val total = segments.sumOf { it.durationMs }
         var wholeVideo = false
 
-        val box = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.VERTICAL; setPadding(pad, pad / 2, pad, 0) }
-        val scopeSwitch = com.google.android.material.materialswitch.MaterialSwitch(this).apply {
-            text = getString(R.string.sound_scope_whole); isChecked = false
-            setOnCheckedChangeListener { _, on -> wholeVideo = on }
-        }
-        box.addView(android.widget.TextView(this).apply { text = getString(R.string.sound_scope_segment, segIdx + 1); textSize = 13f; alpha = 0.8f })
-        box.addView(scopeSwitch)
+        val sec = Sections(this)
+        sec.section(getString(R.string.sound_scope_segment, segIdx + 1))
+        sec.switch(getString(R.string.sound_scope_whole), false) { on -> wholeVideo = on }
+        sec.section(getString(R.string.review_sound))
 
         fun rangeFrom() = if (wholeVideo) 0L else segStart
         fun rangeTo() = if (wholeVideo) total else segEnd
         var dirty = false
         fun row(label: String, initial: Int, onApply: (Float) -> Unit) {
-            val value = android.widget.TextView(this).apply { textSize = 12f; alpha = 0.8f; text = getString(R.string.volume_percent, initial) }
-            box.addView(android.widget.TextView(this).apply { text = label; textSize = 14f; setPadding(0, pad, 0, 0) })
-            box.addView(value)
-            box.addView(android.widget.SeekBar(this).apply {
-                max = 200; progress = initial
-                setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
-                    override fun onProgressChanged(sb: android.widget.SeekBar, v: Int, fromUser: Boolean) { value.text = getString(R.string.volume_percent, v) }
-                    override fun onStartTrackingTouch(sb: android.widget.SeekBar) {}
-                    override fun onStopTrackingTouch(sb: android.widget.SeekBar) { onApply(sb.progress / 100f); dirty = true }
-                })
-            })
+            sec.slider(label, initial, max = 200, onChange = {}, onRelease = { v -> onApply(v / 100f); dirty = true })
         }
 
         // Mikrofon
@@ -2350,7 +2227,7 @@ class MainActivity : AppCompatActivity() {
                 if (idx >= 0) audioHistory[idx] = e.copy(timeline = ev.map { OverlayAudioRenderer.Segment(it.atMs, it.gain, it.playing, it.seekMs) })
             }
         }
-        box.addView(android.widget.TextView(this).apply { text = getString(R.string.tile_volume_hint); textSize = 12f; alpha = 0.7f; setPadding(0, pad, 0, 0) })
+        sec.note(getString(R.string.tile_volume_hint))
 
         fun finish() {
             if (dirty && allAudioMixes().isNotEmpty()) {
@@ -2361,7 +2238,7 @@ class MainActivity : AppCompatActivity() {
         }
         Sheet(this)
             .setTitle(R.string.review_sound)
-            .setView(android.widget.ScrollView(this).apply { addView(box) })
+            .setSections(sec)
             .setPositiveButton(R.string.ok) { _, _ -> finish() }
             .setOnCancelListener { finish() }
             .show()
@@ -2413,26 +2290,25 @@ class MainActivity : AppCompatActivity() {
                 override fun onStopTrackingTouch(sb: android.widget.SeekBar) {}
             })
         }
-        val bgSection = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            visibility = if (bgOn) android.view.View.VISIBLE else android.view.View.GONE
-            addView(label(R.string.bg_color)); addView(swatches({ bgRgb }) { bgRgb = it })
-            addView(label(R.string.bg_opacity)); addView(slider(bgAlpha * 100 / 255) { bgAlpha = it * 255 / 100 })
-        }
-        val bgSwitch = com.google.android.material.materialswitch.MaterialSwitch(this).apply {
-            text = getString(R.string.text_background); isChecked = bgOn; setPadding(0, pad, 0, 0)
-            setOnCheckedChangeListener { _, on -> bgOn = on; bgSection.visibility = if (on) android.view.View.VISIBLE else android.view.View.GONE; refreshPreview() }
-        }
-        val box = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL; setPadding(pad, pad / 2, pad, 0)
-            addView(input); addView(label(R.string.text_color)); addView(swatches({ textRgb }) { textRgb = it })
-            addView(label(R.string.text_opacity)); addView(slider(textAlpha * 100 / 255) { textAlpha = it * 255 / 100 })
-            addView(bgSwitch); addView(bgSection)
-        }
+        val sec = Sections(this)
+        sec.section(getString(R.string.text_dialog_title))
+        sec.custom(input)
+        sec.section(getString(R.string.text_color))
+        sec.custom(swatches({ textRgb }) { textRgb = it })
+        sec.slider(getString(R.string.text_opacity), textAlpha * 100 / 255, onChange = { textAlpha = it * 255 / 100; refreshPreview() })
+        sec.section(getString(R.string.text_background))
+        val bgCard = Sections(this)
+        bgCard.section(null)
+        bgCard.custom(swatches({ bgRgb }) { bgRgb = it })
+        bgCard.slider(getString(R.string.bg_opacity), bgAlpha * 100 / 255, onChange = { bgAlpha = it * 255 / 100; refreshPreview() })
+        bgCard.root.visibility = if (bgOn) android.view.View.VISIBLE else android.view.View.GONE
+        sec.switch(getString(R.string.text_background), bgOn) { on -> bgOn = on; bgCard.root.visibility = if (on) android.view.View.VISIBLE else android.view.View.GONE; refreshPreview() }
+        sec.root.addView(bgCard.root)
+        val box = sec.root
         refreshPreview()
         val b = Sheet(this)
             .setTitle(R.string.text_dialog_title)
-            .setView(android.widget.ScrollView(this).apply { addView(box) })
+            .setSections(sec)
             .setPositiveButton(R.string.ok) { _, _ ->
                 val text = input.text.toString().trim()
                 if (text.isNotEmpty()) {
@@ -2666,20 +2542,22 @@ class MainActivity : AppCompatActivity() {
             .forEach { options.add((it.second + "  " + sizeText(estimate(it.first))) to it.first) }
 
         val pad = (20 * resources.displayMetrics.density).toInt()
-        val radios = android.widget.RadioGroup(this)
-        options.forEachIndexed { i, (name, _) ->
-            radios.addView(android.widget.RadioButton(this).apply { id = 1000 + i; text = name; isChecked = i == 0 })
+        var selectedIdx = 0
+        val sec = Sections(this)
+        sec.section(getString(R.string.export_resolution))
+        val listView = android.widget.FrameLayout(this)
+        fun renderList() {
+            listView.removeAllViews()
+            listView.addView(Sections.radioList(this, options.map { it.first }, selectedIdx) { i -> selectedIdx = i; renderList() })
         }
-        val box = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(pad, pad / 2, pad, 0)
-            addView(radios)
-        }
+        renderList()
+        sec.custom(listView)
+        sec.note(getString(R.string.captions_export_note).takeIf { captions.isNotEmpty() } ?: getString(R.string.export_size_note))
         Sheet(this)
             .setTitle(R.string.export_title)
-            .setView(android.widget.ScrollView(this).apply { addView(box) })
+            .setSections(sec)
             .setPositiveButton(R.string.save) { _, _ ->
-                val idx = (radios.checkedRadioButtonId - 1000).coerceIn(0, options.lastIndex)
+                val idx = selectedIdx
                 runExport(options[idx].second, micGain)
             }
             .setNegativeButton(R.string.cancel) { _, _ -> player?.play() }

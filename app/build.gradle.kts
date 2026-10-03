@@ -12,8 +12,8 @@ android {
         applicationId = "de.codinix.videoeditor"
         minSdk = 26
         targetSdk = 35
-        versionCode = 71
-        versionName = "3.1.2-sheet-scroll"
+        versionCode = 72
+        versionName = "3.2-sections"
         ndk { abiFilters += listOf("arm64-v8a") }
     }
 

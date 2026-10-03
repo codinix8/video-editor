@@ -224,4 +224,5 @@
     <string name="tip_file_browser">Video nicht gefunden? Medien-Knopf gedrückt halten öffnet den Datei-Browser (z. B. Downloads).</string>
     <string name="settings_gestures">Gesten</string>
     <string name="gestures_text">• Medien-Knopf gedrückt halten: Datei-Browser (Downloads usw.)\n• Video antippen: Pause/Weiter\n• Zwei Finger: Größe und Drehung (rastet bei 90°)\n• Spulleiste: Segment lange drücken zum Verschieben oder auf den Papierkorb ziehen\n• Untertitel oder Review-Text doppelt antippen: bearbeiten\n• Mosaik-Kachel antippen: Werkzeuge links</string>
+    <string name="export_size_note">Dateigröße ist eine Schätzung; beim Original ist sie exakt.</string>
 </resources>

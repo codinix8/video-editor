@@ -224,4 +224,5 @@
     <string name="tip_file_browser">Vidéo introuvable ? Maintiens un bouton média pour ouvrir l\'explorateur de fichiers (ex. Téléchargements).</string>
     <string name="settings_gestures">Gestes</string>
     <string name="gestures_text">• Maintenir un bouton média : explorateur de fichiers (Téléchargements, etc.)\n• Toucher une vidéo : pause/reprise\n• Deux doigts : taille et rotation (aimanté à 90°)\n• Barre de relecture : appui long sur un segment pour le déplacer ou le lâcher sur la corbeille\n• Double-toucher un sous-titre ou un texte : modifier\n• Toucher une case de mosaïque : outils à gauche</string>
+    <string name="export_size_note">La taille est une estimation ; pour l\'original elle est exacte.</string>
 </resources>

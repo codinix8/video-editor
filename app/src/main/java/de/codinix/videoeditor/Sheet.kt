@@ -30,9 +30,15 @@ class Sheet(private val ctx: Context) {
     private var onDismiss: ((DialogInterface) -> Unit)? = null
     private var cancelable = true
     private var tall = false
+    private var plain = false
 
-    /** Feste Höhe (~80 % des Bildschirms); der Inhalt scrollt selbst (für Listen). */
-    fun setTall(t: Boolean) = apply { tall = t }
+    /** Inhalt bringt eigene Karten mit (Sections) – keine umschließende Karte. */
+    fun setSections(sec: Sections) = apply { content = sec.root; plain = true }
+
+    private var selfScrolling = true
+
+    /** Feste Höhe (~80 % des Bildschirms). [selfScrolling]: Inhalt scrollt selbst (Listen), sonst wird er eingebettet. */
+    fun setTall(t: Boolean, selfScrolling: Boolean = true) = apply { tall = t; this.selfScrolling = selfScrolling }
 
     fun setTitle(res: Int) = apply { title = ctx.getString(res) }
     fun setTitle(t: CharSequence) = apply { title = t }
@@ -80,8 +86,10 @@ class Sheet(private val ctx: Context) {
         // Inhalt: Nachricht und/oder eigene Ansicht in Karte
         val card = LinearLayout(ctx).apply {
             orientation = LinearLayout.VERTICAL
-            background = GradientDrawable().apply { setColor(CARD); cornerRadius = 16 * dp }
-            setPadding(pad, pad / 2, pad, pad / 2)
+            if (!plain) {
+                background = GradientDrawable().apply { setColor(CARD); cornerRadius = 16 * dp }
+                setPadding(pad, pad / 2, pad, pad / 2)
+            }
         }
         message?.let { card.addView(TextView(ctx).apply { text = it; textSize = 15f; setTextColor(0xFFDDDDE2.toInt()); setPadding(0, pad / 2, 0, pad / 2); setTextIsSelectable(true) }) }
         content?.let { v0 ->
@@ -92,7 +100,7 @@ class Sheet(private val ctx: Context) {
             card.addView(v, if (tall) LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f) else
                 LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
         }
-        if (tall) {
+        if (tall && selfScrolling) {
             root.addView(card, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f).apply { topMargin = (8 * dp).toInt() })
             val screenH = ctx.resources.displayMetrics.heightPixels
             root.layoutParams = android.view.ViewGroup.LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, (screenH * 0.82f).toInt())

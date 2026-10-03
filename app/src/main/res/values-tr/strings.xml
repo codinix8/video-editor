@@ -224,4 +224,5 @@
     <string name="tip_file_browser">Videoyu bulamıyor musun? Bir medya düğmesine basılı tut, dosya tarayıcısı açılır (örn. İndirilenler).</string>
     <string name="settings_gestures">Hareketler</string>
     <string name="gestures_text">• Medya düğmesine basılı tut: dosya tarayıcısı (İndirilenler vb.)\n• Videoya dokun: duraklat/devam\n• İki parmak: boyut ve döndürme (90°\'de yapışır)\n• Arama çubuğu: bölüme uzun bas, taşı veya çöp kutusuna bırak\n• Altyazıya veya inceleme metnine çift dokun: düzenle\n• Mozaik karosuna dokun: araçlar solda</string>
+    <string name="export_size_note">Dosya boyutu tahminidir; orijinalde kesindir.</string>
 </resources>
