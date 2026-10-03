@@ -27,6 +27,7 @@ class Sheet(private val ctx: Context) {
     private var negative: Pair<CharSequence, ((DialogInterface, Int) -> Unit)?>? = null
     private var neutral: Pair<CharSequence, ((DialogInterface, Int) -> Unit)?>? = null
     private var onCancel: ((DialogInterface) -> Unit)? = null
+    private var onDismiss: ((DialogInterface) -> Unit)? = null
     private var cancelable = true
 
     fun setTitle(res: Int) = apply { title = ctx.getString(res) }
@@ -42,6 +43,7 @@ class Sheet(private val ctx: Context) {
     fun setNeutralButton(res: Int, l: ((DialogInterface, Int) -> Unit)?) = apply { neutral = ctx.getString(res) to l }
     fun setNeutralButton(t: CharSequence, l: ((DialogInterface, Int) -> Unit)?) = apply { neutral = t to l }
     fun setOnCancelListener(l: (DialogInterface) -> Unit) = apply { onCancel = l }
+    fun setOnDismissListener(l: (DialogInterface) -> Unit) = apply { onDismiss = l }
 
     fun create(): BottomSheetDialog {
         val dlg = BottomSheetDialog(ctx)
@@ -101,6 +103,7 @@ class Sheet(private val ctx: Context) {
         dlg.setContentView(root)
         dlg.setCancelable(cancelable)
         dlg.setOnCancelListener { onCancel?.invoke(it) }
+        dlg.setOnDismissListener { onDismiss?.invoke(it) }
         dlg.window?.setBackgroundDrawableResource(android.R.color.transparent)
         (root.parent as? View)?.setBackgroundColor(Color.TRANSPARENT)
         dlg.behavior.skipCollapsed = true
