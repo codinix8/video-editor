@@ -106,6 +106,9 @@ class Exporter(private val context: Context) {
     /** Bild-/Text-Overlays, die für den Zeitraum vor ihrem Einfügen nachträglich aufgelegt werden. */
     var postOverlays: List<de.codinix.videoeditor.whisper.PostOverlaySpec> = emptyList()
 
+    /** Mikrofon-Lautstärke je Segment (Index wie [segments]); leer = überall 1. */
+    var micGains: List<Float> = emptyList()
+
     fun export(
         segments: List<File>, targetHeight: Int?, listener: Listener,
         audioMix: List<AudioMix> = emptyList(),
@@ -135,7 +138,7 @@ class Exporter(private val context: Context) {
             }
             return
         }
-        if (!isUnity(micGain) || captions.isNotEmpty() || postOverlays.isNotEmpty()) {
+        if (!isUnity(micGain) || micGains.any { !isUnity(it) } || captions.isNotEmpty() || postOverlays.isNotEmpty()) {
             transform(segments, targetHeight, outFile, listener, emptyList(), micGain)
             return
         }
@@ -164,7 +167,7 @@ class Exporter(private val context: Context) {
         val videoEffects = buildList {
             if (targetHeight != null) add(Presentation.createForHeight(targetHeight))
         }
-        val micProcessors = gainProcessors(micGain)
+        fun micProcessorsFor(i: Int) = gainProcessors(micGains.getOrNull(i) ?: micGain)
 
         // Ausgabegröße (aufrecht) für die Untertitel-Bitmaps
         val info0 = VideoConcat.inspect(segments.first())
@@ -175,7 +178,7 @@ class Exporter(private val context: Context) {
         val outW = if (visH > 0) (visW.toLong() * outH / visH).toInt() else visW
 
         var offsetUs = 0L
-        val items = segments.map { f ->
+        val items = segments.mapIndexed { i, f ->
             val effects = ArrayList<androidx.media3.common.Effect>(videoEffects)
             if (postOverlays.isNotEmpty() && outW > 0) {
                 val list = postOverlays.map { de.codinix.videoeditor.whisper.PostOverlay(it, outW, offsetUs) as androidx.media3.effect.TextureOverlay }
@@ -187,7 +190,7 @@ class Exporter(private val context: Context) {
             }
             offsetUs += VideoConcat.durationUs(f)
             EditedMediaItem.Builder(MediaItem.fromUri(Uri.fromFile(f)))
-                .setEffects(Effects(micProcessors, effects))
+                .setEffects(Effects(micProcessorsFor(i), effects))
                 .build()
         }
         val sequences = mutableListOf(EditedMediaItemSequence(items))

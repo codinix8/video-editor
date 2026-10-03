@@ -204,4 +204,18 @@
         <item>Instagram Reels</item>
         <item>YouTube Shorts</item>
     </string-array>
+    <string name="review_sound">Ses</string>
+    <string name="sound_scope_segment">Bölüm %1$d için geçerli (oynatma imlecinin olduğu yer)</string>
+    <string name="sound_scope_whole">Tüm videoya uygula</string>
+    <string name="sound_track_overlay">Resim içinde resim videosu</string>
+    <string name="sound_track_tile">Karo videosu %1$d</string>
+    <string name="sound_track_removed">Kaldırılan video %1$d</string>
+    <string name="settings_backups">Dışa aktarma yedekleri</string>
+    <string name="backups_hint">Her dışa aktarmadan sonra proje 7 gün yedek olarak kalır – bir hata fark edersen diye. Depolama kullanır.</string>
+    <string name="backup_label">Dışa aktarma yedeği</string>
+    <string name="backup_note">otomatik, değiştirilecek</string>
+    <string name="backup_keep">Sakla</string>
+    <string name="backup_kept_toast">Normal taslak olarak saklandı</string>
+    <string name="backup_kept">Proje, Taslaklar\'da dışa aktarma yedeği olarak kalır.</string>
+    <string name="backup_dropped">Depolama için %1$d yedek kaldırıldı</string>
 </resources>

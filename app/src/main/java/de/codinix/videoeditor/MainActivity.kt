@@ -72,7 +72,7 @@ class MainActivity : AppCompatActivity() {
     private var preferredQuality: Quality? = null
     private var supportedQualities: List<Quality> = emptyList()
 
-    private data class Segment(val file: File, val durationMs: Long)
+    private data class Segment(val file: File, val durationMs: Long, var micGain: Float = 1f)
     private val segments = mutableListOf<Segment>()
     private var liveDurationMs = 0L
     private var deleteArmed = false
@@ -277,6 +277,7 @@ class MainActivity : AppCompatActivity() {
         binding.filterButton.setOnClickListener { showFilterDialog() }
         binding.settingsButton.setOnClickListener { showSettings() }
         if (!prefs.getBoolean("tips_shown", false)) { main.postDelayed({ showFirstRunTips() }, 1200) }
+        bgExecutor.execute { try { drafts.pruneAuto(prefs.getInt("auto_backups", 3)) } catch (_: Exception) {} }
         compositor.colorFilter = prefs.getInt("color_filter", 0)
         updateFilterButton()
         binding.tileMediaButton.setOnClickListener {
@@ -358,6 +359,7 @@ class MainActivity : AppCompatActivity() {
         binding.review.captionsButton.setOnClickListener { showCaptionsDialog() }
         binding.review.captionsEditButton.setOnClickListener { showCaptionEditor(-1) }
         binding.review.reviewTextButton.setOnClickListener { showReviewTextDialog(null) }
+        binding.review.reviewSoundButton.setOnClickListener { showReviewSoundDialog() }
         binding.review.captionView.reviewTexts = reviewTexts
         binding.review.captionView.onReviewTextChanged = { persistSession() }
         binding.review.captionView.onReviewTextEdit = { t -> showReviewTextDialog(t) }
@@ -528,7 +530,11 @@ class MainActivity : AppCompatActivity() {
             val perMinMb = if (preferredQuality == Quality.UHD || (preferredQuality == null && supportedQualities.firstOrNull() == Quality.UHD)) 600 else 150
             val remainingMin = ((MAX_TOTAL_MS - currentTotalMs()) / 60000.0).coerceAtLeast(0.5)
             val neededMb = (perMinMb * remainingMin * 2).toLong()   // Aufnahme + Export
-            if (freeMb < neededMb) Toast.makeText(this, getString(R.string.low_space, freeMb / 1024.0), Toast.LENGTH_LONG).show()
+            var free = freeMb
+            var dropped = 0
+            while (free < neededMb && drafts.dropOldestAuto()) { dropped++; free = android.os.StatFs(cacheDir.absolutePath).availableBytes / (1024 * 1024) }
+            if (dropped > 0) Toast.makeText(this, getString(R.string.backup_dropped, dropped), Toast.LENGTH_LONG).show()
+            if (free < neededMb) Toast.makeText(this, getString(R.string.low_space, free / 1024.0), Toast.LENGTH_LONG).show()
         } catch (_: Exception) { }
     }
 
@@ -542,7 +548,7 @@ class MainActivity : AppCompatActivity() {
         // Auch bei manchen "Fehlern" (z.B. App in den Hintergrund) ist die Datei brauchbar.
         val usable = file.exists() && file.length() > 0 && durationMs > 200
         if (usable) {
-            segments.add(Segment(file, durationMs))
+            segments.add(Segment(file, durationMs, micGain))
         } else {
             file.delete()
             if (event.hasError()) {
@@ -863,6 +869,22 @@ class MainActivity : AppCompatActivity() {
             setOnCheckedChangeListener { _, on -> if (on != previewSoundOn) binding.previewSoundButton.performClick() }
         }
         box.addView(previewSound)
+
+        // Export-Sicherungen
+        box.addView(header(R.string.settings_backups))
+        val backupCounts = listOf(0, 1, 3, 5)
+        box.addView(android.widget.Spinner(this).apply {
+            adapter = android.widget.ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
+                backupCounts.map { if (it == 0) getString(R.string.off) else it.toString() })
+            setSelection(backupCounts.indexOf(prefs.getInt("auto_backups", 3)).coerceAtLeast(0))
+            onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(p: android.widget.AdapterView<*>?, v: android.view.View?, pos: Int, id: Long) {
+                    prefs.edit().putInt("auto_backups", backupCounts[pos]).apply(); drafts.pruneAuto(backupCounts[pos])
+                }
+                override fun onNothingSelected(p: android.widget.AdapterView<*>?) {}
+            }
+        })
+        box.addView(android.widget.TextView(this).apply { text = getString(R.string.backups_hint); textSize = 12f; alpha = 0.7f })
 
         // Mosaik
         box.addView(header(R.string.settings_mosaic))
@@ -2188,6 +2210,110 @@ class MainActivity : AppCompatActivity() {
         persistSession()
     }
 
+    // ---------------------------------------------------------------- Ton in der Review
+
+    /** Lautstärke [gain] für den Bereich [fromMs, toMs) in ein Protokoll schreiben; außerhalb bleibt alles. */
+    private fun applyGainRange(events: List<VideoOverlay.Event>, fromMs: Long, toMs: Long, gain: Float): List<VideoOverlay.Event> {
+        fun stateAt(t: Long) = events.lastOrNull { it.atMs <= t }
+        val before = events.filter { it.atMs < fromMs }
+        val inside = events.filter { it.atMs >= fromMs && it.atMs < toMs }.map { it.copy(gain = gain) }
+        val after = events.filter { it.atMs >= toMs }
+        val out = ArrayList<VideoOverlay.Event>(before)
+        stateAt(fromMs)?.let { st -> if (inside.none { it.atMs == fromMs }) out.add(VideoOverlay.Event(fromMs, gain, st.playing)) }
+        out.addAll(inside)
+        stateAt(toMs)?.let { st -> if (after.none { it.atMs == toMs }) out.add(VideoOverlay.Event(toMs, st.gain, st.playing)) }
+        out.addAll(after)
+        return out.sortedBy { it.atMs }
+    }
+
+    private fun gainAt(events: List<VideoOverlay.Event>, t: Long, fallback: Float) = events.lastOrNull { it.atMs <= t }?.gain ?: fallback
+
+    /** Ton-Übersicht der Review: Mikrofon und alle Overlay-Spuren, je Segment oder fürs ganze Video. */
+    private fun showReviewSoundDialog() {
+        val p = player ?: return
+        if (segments.isEmpty()) return
+        p.pause()
+        val dp = resources.displayMetrics.density; val pad = (16 * dp).toInt()
+        val segIdx = p.currentMediaItemIndex.coerceIn(0, segments.lastIndex)
+        var segStart = 0L; for (i in 0 until segIdx) segStart += segments[i].durationMs
+        val segEnd = segStart + segments[segIdx].durationMs
+        val total = segments.sumOf { it.durationMs }
+        var wholeVideo = false
+
+        val box = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.VERTICAL; setPadding(pad, pad / 2, pad, 0) }
+        val scopeSwitch = com.google.android.material.materialswitch.MaterialSwitch(this).apply {
+            text = getString(R.string.sound_scope_whole); isChecked = false
+            setOnCheckedChangeListener { _, on -> wholeVideo = on }
+        }
+        box.addView(android.widget.TextView(this).apply { text = getString(R.string.sound_scope_segment, segIdx + 1); textSize = 13f; alpha = 0.8f })
+        box.addView(scopeSwitch)
+
+        fun rangeFrom() = if (wholeVideo) 0L else segStart
+        fun rangeTo() = if (wholeVideo) total else segEnd
+        var dirty = false
+        fun row(label: String, initial: Int, onApply: (Float) -> Unit) {
+            val value = android.widget.TextView(this).apply { textSize = 12f; alpha = 0.8f; text = getString(R.string.volume_percent, initial) }
+            box.addView(android.widget.TextView(this).apply { text = label; textSize = 14f; setPadding(0, pad, 0, 0) })
+            box.addView(value)
+            box.addView(android.widget.SeekBar(this).apply {
+                max = 200; progress = initial
+                setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
+                    override fun onProgressChanged(sb: android.widget.SeekBar, v: Int, fromUser: Boolean) { value.text = getString(R.string.volume_percent, v) }
+                    override fun onStartTrackingTouch(sb: android.widget.SeekBar) {}
+                    override fun onStopTrackingTouch(sb: android.widget.SeekBar) { onApply(sb.progress / 100f); dirty = true }
+                })
+            })
+        }
+
+        // Mikrofon
+        row(getString(R.string.tile_mic_volume), (segments[segIdx].micGain * 100).toInt()) { g ->
+            if (wholeVideo) segments.forEach { it.micGain = g } else segments[segIdx].micGain = g
+            p.volume = Loudness.gain(segments[p.currentMediaItemIndex.coerceIn(0, segments.lastIndex)].micGain).coerceIn(0f, 1f)
+            persistSession()
+        }
+        // Aktuelles Overlay / Hintergrund
+        overlayStore.videoOverlay()?.let { v ->
+            val name = if (v.isBackground) getString(R.string.tile_bg_volume) else getString(R.string.sound_track_overlay)
+            row(name, (gainAt(v.timeline(), segStart, v.volume) * 100).toInt()) { g ->
+                val ev = applyGainRange(v.timeline(), rangeFrom(), rangeTo(), g)
+                v.events.clear(); v.events.addAll(ev); if (wholeVideo) v.volume = g
+            }
+        }
+        // Kachelvideos
+        tileVideos().forEachIndexed { i, v ->
+            row(getString(R.string.sound_track_tile, i + 1), (gainAt(v.timeline(), segStart, v.volume) * 100).toInt()) { g ->
+                val ev = applyGainRange(v.timeline(), rangeFrom(), rangeTo(), g)
+                v.events.clear(); v.events.addAll(ev); if (wholeVideo) v.volume = g
+            }
+        }
+        // Historie (entfernte Videos)
+        audioHistory.forEachIndexed { i, e ->
+            if (e.startOffsetMs >= total) return@forEachIndexed
+            val base = e.timeline.takeIf { it.isNotEmpty() }?.map { VideoOverlay.Event(it.fromMs, it.gain, it.playing, it.seekMs) }
+                ?: listOf(VideoOverlay.Event(e.startOffsetMs, e.volume, true))
+            row(getString(R.string.sound_track_removed, i + 1), (gainAt(base, segStart, e.volume) * 100).toInt()) { g ->
+                val ev = applyGainRange(base, rangeFrom(), rangeTo(), g)
+                val idx = audioHistory.indexOf(e)
+                if (idx >= 0) audioHistory[idx] = e.copy(timeline = ev.map { OverlayAudioRenderer.Segment(it.atMs, it.gain, it.playing, it.seekMs) })
+            }
+        }
+        box.addView(android.widget.TextView(this).apply { text = getString(R.string.tile_volume_hint); textSize = 12f; alpha = 0.7f; setPadding(0, pad, 0, 0) })
+
+        fun finish() {
+            if (dirty && allAudioMixes().isNotEmpty()) {
+                Toast.makeText(this, R.string.preparing_audio, Toast.LENGTH_SHORT).show()
+                buildReviewOverlayPlayer()
+            } else p.play()
+            if (dirty) persistSession()
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.review_sound)
+            .setView(android.widget.ScrollView(this).apply { addView(box) })
+            .setPositiveButton(R.string.ok) { _, _ -> finish() }
+            .setOnCancelListener { finish() }
+            .show()
+    }
+
     /** Text über das ganze Video (Review). existing == null: neu. */
     private fun showReviewTextDialog(existing: de.codinix.videoeditor.whisper.ReviewText?) {
         player?.pause()
@@ -2330,8 +2456,12 @@ class MainActivity : AppCompatActivity() {
         p.prepare()
         p.playWhenReady = true
         binding.review.playerView.player = p
-        // Mikrofon-Regler in der Review hörbar machen (Anhebung über 100 % kann ein Player nicht)
-        p.volume = Loudness.gain(micGain).coerceIn(0f, 1f)
+        // Mikrofon-Lautstärke je Segment (Anhebung über 100 % kann ein Player nicht)
+        fun applyMicVolume() { p.volume = Loudness.gain(segments.getOrNull(p.currentMediaItemIndex)?.micGain ?: 1f).coerceIn(0f, 1f) }
+        applyMicVolume()
+        p.addListener(object : Player.Listener {
+            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) { applyMicVolume() }
+        })
         player = p
         buildReviewOverlayPlayer()
     }
@@ -2468,7 +2598,7 @@ class MainActivity : AppCompatActivity() {
         val info = VideoConcat.inspect(segments.first().file)
         val recordedHeight = if (info.rotation == 90 || info.rotation == 270) info.width else info.height
         val totalSec = segments.sumOf { it.durationMs } / 1000.0
-        val needsReencode = allAudioMixes().isNotEmpty() || captions.isNotEmpty() || kotlin.math.abs(micGain - 1f) >= 0.01f
+        val needsReencode = allAudioMixes().isNotEmpty() || captions.isNotEmpty() || reviewTexts.isNotEmpty() || segments.any { kotlin.math.abs(it.micGain - 1f) >= 0.01f }
         fun sizeText(bytes: Double) = if (bytes >= 1e9) "≈ %.1f GB".format(Locale.getDefault(), bytes / 1e9) else "≈ %.0f MB".format(Locale.getDefault(), bytes / 1e6)
         fun estimate(height: Int) = (Exporter.videoBitrateFor(height) + Exporter.AUDIO_BITRATE) / 8.0 * totalSec
         val originalSize = if (needsReencode) estimate(recordedHeight) else segments.sumOf { it.file.length() }.toDouble()
@@ -2516,14 +2646,11 @@ class MainActivity : AppCompatActivity() {
         ex.captions = captions.toList()
         ex.captionSettings = captionSettings.copy()
         ex.postOverlays = reviewTexts.map { it.spec() }
+        ex.micGains = segments.map { it.micGain }
         exporter = ex
         val audioMix = allAudioMixes()
-        val progressRes = if (audioMix.isEmpty() && kotlin.math.abs(micGain - 1f) < 0.01f)
+        val progressRes = if (audioMix.isEmpty() && segments.all { kotlin.math.abs(it.micGain - 1f) < 0.01f })
             R.string.export_running else R.string.export_running_mix
-        if (audioMix.isNotEmpty()) {
-            val levels = audioMix.joinToString("/") { "${(it.gain * 100).toInt()} %" }
-            Toast.makeText(this, getString(R.string.export_levels, audioMix.size, levels, (micGain * 100).toInt()), Toast.LENGTH_LONG).show()
-        }
         ex.export(segments.map { it.file }, targetHeight, object : Exporter.Listener {
             override fun onProgress(percent: Int) {
                 dialog.setMessage(getString(progressRes, percent))
@@ -2531,20 +2658,26 @@ class MainActivity : AppCompatActivity() {
             override fun onDone(uri: Uri) {
                 dialog.dismiss()
                 ex.release(); exporter = null
-                segments.forEach { it.file.delete() }
-                segments.clear()
-                audioHistory.forEach { it.file.delete() }
-                audioHistory.clear()
-                captions.clear()
-                reviewTexts.clear()
-                captionSettings = loadDefaultCaptionSettings()
-                clearOverlays()
-                resetMosaic()
+                val keep = prefs.getInt("auto_backups", 3)
+                val backedUp = keep > 0 && saveProjectAsDraft(auto = true)
+                if (backedUp) {
+                    drafts.pruneAuto(keep)
+                } else {
+                    segments.forEach { it.file.delete() }
+                    segments.clear()
+                    audioHistory.forEach { it.file.delete() }
+                    audioHistory.clear()
+                    captions.clear()
+                    reviewTexts.clear()
+                    captionSettings = loadDefaultCaptionSettings()
+                    clearOverlays()
+                    resetMosaic()
+                }
                 setControlsEnabled(true)
                 if (inReview) exitReview() else refreshUi()
                 MaterialAlertDialogBuilder(this@MainActivity)
                     .setTitle(R.string.saved_title)
-                    .setMessage(R.string.saved_msg)
+                    .setMessage(getString(R.string.saved_msg) + if (backedUp) "\n\n" + getString(R.string.backup_kept) else "")
                     .setPositiveButton(R.string.share) { _, _ -> shareVideo(uri) }
                     .setNegativeButton(R.string.ok, null)
                     .show()
@@ -2608,7 +2741,7 @@ class MainActivity : AppCompatActivity() {
         try {
             if (segments.isEmpty()) { sessionFile.delete(); return }
             val segs = org.json.JSONArray()
-            segments.forEach { segs.put(org.json.JSONObject().put("path", it.file.absolutePath).put("durationMs", it.durationMs)) }
+            segments.forEach { segs.put(org.json.JSONObject().put("path", it.file.absolutePath).put("durationMs", it.durationMs).put("micGain", it.micGain.toDouble())) }
             val ovs = org.json.JSONArray()
             overlayStore.items.forEach { o ->
                 val j = org.json.JSONObject()
@@ -2714,6 +2847,17 @@ class MainActivity : AppCompatActivity() {
         if (segments.isEmpty()) {
             Toast.makeText(this, R.string.no_segments, Toast.LENGTH_SHORT).show(); return
         }
+        if (saveProjectAsDraft(auto = false)) {
+            Toast.makeText(this, R.string.draft_saved, Toast.LENGTH_SHORT).show()
+            if (inReview) exitReview() else refreshUi()
+        }
+    }
+
+    /**
+     * Projekt vollständig in einen Entwurf verschieben (Segmente, Overlays, Ton, Untertitel, Mosaik,
+     * Review-Texte) und den Arbeitszustand leeren. [auto] = Export-Sicherung.
+     */
+    private fun saveProjectAsDraft(auto: Boolean): Boolean {
         try {
             drafts.save(
                 segments.map { it.file to it.durationMs },
@@ -2724,7 +2868,9 @@ class MainActivity : AppCompatActivity() {
                     it.timeline.map { t -> VideoOverlay.Event(t.fromMs, t.gain, t.playing, t.seekMs) }) },
                 captions.toList(), captionSettings,
                 if (mosaicActive) mosaic else null,
-                reviewTexts.toList()
+                reviewTexts.toList(),
+                segments.map { it.micGain },
+                auto
             )
             captions.clear(); reviewTexts.clear()
             resetMosaic()
@@ -2736,13 +2882,16 @@ class MainActivity : AppCompatActivity() {
                 compositor.releaseVideoLayer(it.id)
             }
             overlayStore.clear()
+            compositor.backgroundOverlayId = 0L
+            binding.greenscreenButton.setBackgroundResource(R.drawable.bg_round_button)
             updateOverlayButtons(null)
+            captionSettings = loadDefaultCaptionSettings()
             clearSession()
-            Toast.makeText(this, R.string.draft_saved, Toast.LENGTH_SHORT).show()
-            if (inReview) exitReview() else refreshUi()
+            return true
         } catch (e: Exception) {
             Log.e(TAG, "Entwurf speichern fehlgeschlagen", e)
             Toast.makeText(this, getString(R.string.error, e.message ?: "Entwurf"), Toast.LENGTH_LONG).show()
+            return false
         }
     }
 
@@ -2781,9 +2930,12 @@ class MainActivity : AppCompatActivity() {
                 val img = row.getChildAt(0) as android.widget.ImageView
                 val texts = row.getChildAt(1) as android.widget.LinearLayout
                 if (info.thumb.exists()) img.setImageBitmap(BitmapFactory.decodeFile(info.thumb.absolutePath)) else img.setImageDrawable(null)
-                (texts.getChildAt(0) as android.widget.TextView).text = fmtDate.format(info.createdAt)
+                (texts.getChildAt(0) as android.widget.TextView).text =
+                    (if (info.auto) getString(R.string.backup_label) + " · " else "") + fmtDate.format(info.createdAt)
                 (texts.getChildAt(1) as android.widget.TextView).text =
-                    resources.getQuantityString(R.plurals.segments, info.segmentCount, info.segmentCount) + " · " + fmt(info.durationMs)
+                    resources.getQuantityString(R.plurals.segments, info.segmentCount, info.segmentCount) + " · " + fmt(info.durationMs) +
+                    (if (info.auto) " · " + String.format(Locale.getDefault(), "%.1f GB", info.sizeBytes / 1e9) + " · " + getString(R.string.backup_note) else "")
+                row.alpha = if (info.auto) 0.85f else 1f
                 return row
             }
         }
@@ -2802,7 +2954,9 @@ class MainActivity : AppCompatActivity() {
                 info.segmentCount, fmt(info.durationMs)))
             .setPositiveButton(R.string.open) { _, _ -> loadDraft(info) }
             .setNeutralButton(R.string.delete) { _, _ -> drafts.delete(info) }
-            .setNegativeButton(R.string.cancel, null)
+            .setNegativeButton(if (info.auto) R.string.backup_keep else R.string.cancel) { _, _ ->
+                if (info.auto) { drafts.keep(info); Toast.makeText(this, R.string.backup_kept_toast, Toast.LENGTH_SHORT).show() }
+            }
             .show()
     }
 
@@ -2810,7 +2964,7 @@ class MainActivity : AppCompatActivity() {
         try {
             val loaded = drafts.load(info, segmentDir)
             segments.clear()
-            loaded.segments.forEach { (f, d) -> segments.add(Segment(f, d)) }
+            loaded.segments.forEachIndexed { i, (f, d) -> segments.add(Segment(f, d, loaded.micGains.getOrNull(i) ?: 1f)) }
             clearOverlays()
             loaded.overlays.forEach { overlayStore.add(it) }
             captions.clear(); captions.addAll(loaded.captions)

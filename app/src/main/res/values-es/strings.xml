@@ -204,4 +204,18 @@
         <item>Instagram Reels</item>
         <item>YouTube Shorts</item>
     </string-array>
+    <string name="review_sound">Sonido</string>
+    <string name="sound_scope_segment">Se aplica al segmento %1$d (donde está el cursor)</string>
+    <string name="sound_scope_whole">Aplicar a todo el vídeo</string>
+    <string name="sound_track_overlay">Vídeo en miniatura</string>
+    <string name="sound_track_tile">Vídeo del recuadro %1$d</string>
+    <string name="sound_track_removed">Vídeo eliminado %1$d</string>
+    <string name="settings_backups">Copias de exportación</string>
+    <string name="backups_hint">Tras cada exportación el proyecto se conserva 7 días como copia – por si detectas un error. Ocupa espacio.</string>
+    <string name="backup_label">Copia de exportación</string>
+    <string name="backup_note">automática, se reemplazará</string>
+    <string name="backup_keep">Conservar</string>
+    <string name="backup_kept_toast">Conservado como borrador normal</string>
+    <string name="backup_kept">El proyecto se conserva como copia de exportación en Borradores.</string>
+    <string name="backup_dropped">%1$d copia(s) eliminadas para liberar espacio</string>
 </resources>

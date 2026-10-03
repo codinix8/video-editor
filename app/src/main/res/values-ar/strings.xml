@@ -204,4 +204,18 @@
         <item>Instagram Reels</item>
         <item>YouTube Shorts</item>
     </string-array>
+    <string name="review_sound">الصوت</string>
+    <string name="sound_scope_segment">ينطبق على المقطع %1$d (موضع مؤشر التشغيل)</string>
+    <string name="sound_scope_whole">تطبيق على الفيديو كله</string>
+    <string name="sound_track_overlay">فيديو الصورة داخل الصورة</string>
+    <string name="sound_track_tile">فيديو البلاطة %1$d</string>
+    <string name="sound_track_removed">فيديو محذوف %1$d</string>
+    <string name="settings_backups">نسخ التصدير الاحتياطية</string>
+    <string name="backups_hint">بعد كل تصدير يُحتفظ بالمشروع 7 أيام كنسخة احتياطية – إن لاحظت خطأ. يشغل مساحة.</string>
+    <string name="backup_label">نسخة تصدير احتياطية</string>
+    <string name="backup_note">تلقائية، ستُستبدل</string>
+    <string name="backup_keep">احتفظ</string>
+    <string name="backup_kept_toast">احتُفظ بها كمسودة عادية</string>
+    <string name="backup_kept">يُحتفظ بالمشروع كنسخة تصدير احتياطية في المسودات.</string>
+    <string name="backup_dropped">أُزيلت %1$d نسخة احتياطية لتحرير المساحة</string>
 </resources>

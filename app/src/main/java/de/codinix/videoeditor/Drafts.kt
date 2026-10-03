@@ -25,10 +25,33 @@ class DraftStore(context: Context) {
         val dir: File,
         val createdAt: Long,
         val segmentCount: Int,
-        val durationMs: Long
+        val durationMs: Long,
+        /** Automatische Export-Sicherung (wird nach Anzahl/Alter ersetzt). */
+        val auto: Boolean = false
     ) {
         val thumb: File get() = File(dir, "thumb.jpg")
+        val sizeBytes: Long get() = dir.listFiles()?.sumOf { it.length() } ?: 0L
     }
+
+    /** Sicherung zu einem normalen Entwurf machen (nicht mehr automatisch löschen). */
+    fun keep(info: Info) {
+        val meta = File(info.dir, "meta.json"); if (!meta.exists()) return
+        val j = JSONObject(meta.readText()); j.put("auto", false); meta.writeText(j.toString())
+    }
+
+    /** Export-Sicherungen aufräumen: höchstens [keep] behalten, keine älter als [maxAgeDays]. */
+    fun pruneAuto(keep: Int, maxAgeDays: Int = 7): Int {
+        val autos = list().filter { it.auto }
+        val now = System.currentTimeMillis()
+        var removed = 0
+        autos.forEachIndexed { i, info ->
+            if (i >= keep || now - info.createdAt > maxAgeDays * 86_400_000L) { delete(info); removed++ }
+        }
+        return removed
+    }
+
+    /** Älteste Sicherung löschen (bei Speichermangel). */
+    fun dropOldestAuto(): Boolean { val a = list().filter { it.auto }.lastOrNull() ?: return false; delete(a); return true }
 
     /**
      * Vorschaubild aus der Mitte des ersten Segments (bereits fertig gerendert, also inklusive
@@ -71,6 +94,7 @@ class DraftStore(context: Context) {
 
     class Loaded(
         val segments: List<Pair<File, Long>>,
+        val micGains: List<Float>,
         val overlays: List<Overlay>,
         val lensFacing: Int,
         val qualityLabel: String?,
@@ -89,7 +113,7 @@ class DraftStore(context: Context) {
             val segs = j.getJSONArray("segments")
             var dur = 0L
             for (i in 0 until segs.length()) dur += segs.getJSONObject(i).getLong("durationMs")
-            Info(dir.name, dir, j.getLong("createdAt"), segs.length(), dur)
+            Info(dir.name, dir, j.getLong("createdAt"), segs.length(), dur, j.optBoolean("auto", false))
         } catch (e: Exception) { null }
     }?.sortedByDescending { it.createdAt } ?: emptyList()
 
@@ -102,7 +126,9 @@ class DraftStore(context: Context) {
         captions: List<de.codinix.videoeditor.whisper.Caption> = emptyList(),
         captionSettings: de.codinix.videoeditor.whisper.CaptionSettings = de.codinix.videoeditor.whisper.CaptionSettings(),
         mosaic: de.codinix.videoeditor.overlay.Mosaic? = null,
-        reviewTexts: List<de.codinix.videoeditor.whisper.ReviewText> = emptyList()
+        reviewTexts: List<de.codinix.videoeditor.whisper.ReviewText> = emptyList(),
+        micGains: List<Float> = emptyList(),
+        auto: Boolean = false
     ): Info {
         val id = System.currentTimeMillis().toString()
         val dir = File(root, id).apply { mkdirs() }
@@ -111,7 +137,7 @@ class DraftStore(context: Context) {
         segments.forEachIndexed { i, (file, dur) ->
             val dest = File(dir, "seg_$i.mp4")
             if (!file.renameTo(dest)) { file.copyTo(dest, overwrite = true); file.delete() }
-            segArr.put(JSONObject().put("file", dest.name).put("durationMs", dur))
+            segArr.put(JSONObject().put("file", dest.name).put("durationMs", dur).put("micGain", (micGains.getOrNull(i) ?: 1f).toDouble()))
         }
 
         val ovArr = JSONArray()
@@ -167,6 +193,7 @@ class DraftStore(context: Context) {
             .put("captions", de.codinix.videoeditor.whisper.Caption.listToJson(captions))
             .put("captionSettings", captionSettings.toJson())
             .put("reviewTexts", de.codinix.videoeditor.whisper.ReviewText.listToJson(reviewTexts))
+            .put("auto", auto)
         if (mosaic != null) {
             val files = mosaic.tiles.mapIndexed { i, t ->
                 t.video?.let { v ->
@@ -204,7 +231,7 @@ class DraftStore(context: Context) {
             if (!src.exists()) continue
             val dest = File(dir, "seg_$i.mp4")
             if (!src.renameTo(dest)) { src.copyTo(dest, overwrite = true); src.delete() }
-            segArr.put(JSONObject().put("file", dest.name).put("durationMs", o.getLong("durationMs")))
+            segArr.put(JSONObject().put("file", dest.name).put("durationMs", o.getLong("durationMs")).put("micGain", o.optDouble("micGain", 1.0)))
         }
         if (segArr.length() == 0) { dir.deleteRecursively(); return null }
         val ovArr = JSONArray()
@@ -273,12 +300,14 @@ class DraftStore(context: Context) {
         val j = JSONObject(File(info.dir, "meta.json").readText())
         val segs = j.getJSONArray("segments")
         val segments = ArrayList<Pair<File, Long>>()
+        val micGains = ArrayList<Float>()
         for (i in 0 until segs.length()) {
             val o = segs.getJSONObject(i)
             val src = File(info.dir, o.getString("file"))
             val dest = File(targetDir, "seg_${System.currentTimeMillis()}_$i.mp4")
             if (!src.renameTo(dest)) { src.copyTo(dest, overwrite = true) }
             segments.add(dest to o.getLong("durationMs"))
+            micGains.add(o.optDouble("micGain", 1.0).toFloat())
         }
         val ovs = j.getJSONArray("overlays")
         val overlays = ArrayList<Overlay>()
@@ -338,7 +367,7 @@ class DraftStore(context: Context) {
                     }
                 })
         }
-        val loaded = Loaded(segments, overlays, j.getInt("lensFacing"), quality, tracks,
+        val loaded = Loaded(segments, micGains, overlays, j.getInt("lensFacing"), quality, tracks,
             de.codinix.videoeditor.whisper.Caption.listFromJson(j.optJSONArray("captions")),
             de.codinix.videoeditor.whisper.CaptionSettings.fromJson(j.optJSONObject("captionSettings")), mosaic,
             de.codinix.videoeditor.whisper.ReviewText.listFromJson(j.optJSONArray("reviewTexts")))

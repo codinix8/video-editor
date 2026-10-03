@@ -204,4 +204,18 @@
         <item>Instagram Reels</item>
         <item>YouTube Shorts</item>
     </string-array>
+    <string name="review_sound">Sound</string>
+    <string name="sound_scope_segment">Applies to segment %1$d (where the playhead is)</string>
+    <string name="sound_scope_whole">Apply to the whole video</string>
+    <string name="sound_track_overlay">Picture-in-picture video</string>
+    <string name="sound_track_tile">Tile video %1$d</string>
+    <string name="sound_track_removed">Removed video %1$d</string>
+    <string name="settings_backups">Export backups</string>
+    <string name="backups_hint">After each export the project is kept as a backup for 7 days – in case you spot a mistake. Takes storage space.</string>
+    <string name="backup_label">Export backup</string>
+    <string name="backup_note">auto, will be replaced</string>
+    <string name="backup_keep">Keep</string>
+    <string name="backup_kept_toast">Kept as a regular draft</string>
+    <string name="backup_kept">The project is kept as an export backup in Drafts.</string>
+    <string name="backup_dropped">%1$d export backup(s) removed to free storage</string>
 </resources>

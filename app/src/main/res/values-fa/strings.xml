@@ -204,4 +204,18 @@
         <item>Instagram Reels</item>
         <item>YouTube Shorts</item>
     </string-array>
+    <string name="review_sound">صدا</string>
+    <string name="sound_scope_segment">برای بخش %1$d (جای نشانگر پخش)</string>
+    <string name="sound_scope_whole">اعمال روی کل ویدیو</string>
+    <string name="sound_track_overlay">ویدیوی تصویر‌در‌تصویر</string>
+    <string name="sound_track_tile">ویدیوی کاشی %1$d</string>
+    <string name="sound_track_removed">ویدیوی حذف‌شده %1$d</string>
+    <string name="settings_backups">پشتیبان‌های خروجی</string>
+    <string name="backups_hint">پس از هر خروجی، پروژه ۷ روز به‌عنوان پشتیبان می‌ماند – اگر اشتباهی دیدی. فضا می‌گیرد.</string>
+    <string name="backup_label">پشتیبان خروجی</string>
+    <string name="backup_note">خودکار، جایگزین می‌شود</string>
+    <string name="backup_keep">نگه دار</string>
+    <string name="backup_kept_toast">به‌عنوان پیش‌نویس عادی نگه داشته شد</string>
+    <string name="backup_kept">پروژه به‌عنوان پشتیبان خروجی در پیش‌نویس‌ها می‌ماند.</string>
+    <string name="backup_dropped">%1$d پشتیبان برای آزادسازی فضا حذف شد</string>
 </resources>

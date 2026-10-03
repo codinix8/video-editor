@@ -96,6 +96,18 @@
         app:layout_constraintTop_toBottomOf="@id/captionsEditButton" />
 
     <ImageButton
+        android:id="@+id/reviewSoundButton"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_round_button"
+        android:contentDescription="@string/review_sound"
+        android:src="@drawable/ic_overlay_volume"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/reviewTextButton" />
+
+    <ImageButton
         android:id="@+id/saveDraftButton"
         android:layout_width="52dp"
         android:layout_height="52dp"

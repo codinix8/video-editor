@@ -204,4 +204,18 @@
         <item>Instagram Reels</item>
         <item>YouTube Shorts</item>
     </string-array>
+    <string name="review_sound">Ton</string>
+    <string name="sound_scope_segment">Gilt für Segment %1$d (dort steht der Abspielkopf)</string>
+    <string name="sound_scope_whole">Auf das ganze Video anwenden</string>
+    <string name="sound_track_overlay">Bild-im-Bild-Video</string>
+    <string name="sound_track_tile">Kachelvideo %1$d</string>
+    <string name="sound_track_removed">Entferntes Video %1$d</string>
+    <string name="settings_backups">Export-Sicherungen</string>
+    <string name="backups_hint">Nach jedem Export bleibt das Projekt 7 Tage als Sicherung erhalten – falls dir ein Fehler auffällt. Belegt Speicherplatz.</string>
+    <string name="backup_label">Export-Sicherung</string>
+    <string name="backup_note">automatisch, wird ersetzt</string>
+    <string name="backup_keep">Behalten</string>
+    <string name="backup_kept_toast">Als normaler Entwurf behalten</string>
+    <string name="backup_kept">Das Projekt bleibt als Export-Sicherung in den Entwürfen.</string>
+    <string name="backup_dropped">%1$d Export-Sicherung(en) entfernt, um Speicher freizugeben</string>
 </resources>

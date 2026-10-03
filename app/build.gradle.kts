@@ -12,8 +12,8 @@ android {
         applicationId = "de.codinix.videoeditor"
         minSdk = 26
         targetSdk = 35
-        versionCode = 66
-        versionName = "2.2.3-per-segment"
+        versionCode = 67
+        versionName = "3.0-backups-sound"
         ndk { abiFilters += listOf("arm64-v8a") }
     }
 

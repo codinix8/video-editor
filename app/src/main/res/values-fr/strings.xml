@@ -204,4 +204,18 @@
         <item>Instagram Reels</item>
         <item>YouTube Shorts</item>
     </string-array>
+    <string name="review_sound">Son</string>
+    <string name="sound_scope_segment">S\'applique au segment %1$d (position de la tête de lecture)</string>
+    <string name="sound_scope_whole">Appliquer à toute la vidéo</string>
+    <string name="sound_track_overlay">Vidéo incrustée</string>
+    <string name="sound_track_tile">Vidéo de case %1$d</string>
+    <string name="sound_track_removed">Vidéo retirée %1$d</string>
+    <string name="settings_backups">Sauvegardes d\'export</string>
+    <string name="backups_hint">Après chaque export, le projet est conservé 7 jours en sauvegarde – au cas où tu repères une erreur. Prend de la place.</string>
+    <string name="backup_label">Sauvegarde d\'export</string>
+    <string name="backup_note">auto, sera remplacée</string>
+    <string name="backup_keep">Garder</string>
+    <string name="backup_kept_toast">Gardée comme brouillon normal</string>
+    <string name="backup_kept">Le projet est conservé comme sauvegarde d\'export dans les brouillons.</string>
+    <string name="backup_dropped">%1$d sauvegarde(s) supprimée(s) pour libérer de l\'espace</string>
 </resources>
