@@ -3015,6 +3015,11 @@ class MainActivity : AppCompatActivity() {
             addTab(newTab().setIcon(R.drawable.ic_save).setText(R.string.drafts))
             addTab(newTab().setIcon(R.drawable.ic_history).setText(R.string.history))
             tabGravity = com.google.android.material.tabs.TabLayout.GRAVITY_FILL
+            setSelectedTabIndicatorColor(Sheet.ACCENT)
+            setTabTextColors(0xFF9A9BA6.toInt(), 0xFFFFFFFF.toInt())
+            tabIconTint = android.content.res.ColorStateList(
+                arrayOf(intArrayOf(android.R.attr.state_selected), intArrayOf()), intArrayOf(0xFFFFFFFF.toInt(), 0xFF9A9BA6.toInt()))
+            setBackgroundColor(0x00000000)
             addOnTabSelectedListener(object : com.google.android.material.tabs.TabLayout.OnTabSelectedListener {
                 override fun onTabSelected(tab: com.google.android.material.tabs.TabLayout.Tab) {
                     current = if (tab.position == 0) manual else history
@@ -3029,11 +3034,14 @@ class MainActivity : AppCompatActivity() {
         }
         val box = android.widget.LinearLayout(this).apply {
             orientation = android.widget.LinearLayout.VERTICAL
-            addView(tabs); addView(listView); addView(empty)
+            addView(tabs)
+            addView(listView, android.widget.LinearLayout.LayoutParams(android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
+            addView(empty)
         }
         dlg = Sheet(this)
+            .setTitle(R.string.drafts)
+            .setTall(true)
             .setView(box)
-            .setNegativeButton(R.string.cancel, null)
             .create()
         dlg.show()
         if (current === history) tabs.selectTab(tabs.getTabAt(1)) else { empty.visibility = if (manual.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE }

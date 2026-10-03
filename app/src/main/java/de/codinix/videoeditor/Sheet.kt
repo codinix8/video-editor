@@ -29,6 +29,10 @@ class Sheet(private val ctx: Context) {
     private var onCancel: ((DialogInterface) -> Unit)? = null
     private var onDismiss: ((DialogInterface) -> Unit)? = null
     private var cancelable = true
+    private var tall = false
+
+    /** Feste Höhe (~80 % des Bildschirms); der Inhalt scrollt selbst (für Listen). */
+    fun setTall(t: Boolean) = apply { tall = t }
 
     fun setTitle(res: Int) = apply { title = ctx.getString(res) }
     fun setTitle(t: CharSequence) = apply { title = t }
@@ -80,9 +84,19 @@ class Sheet(private val ctx: Context) {
             setPadding(pad, pad / 2, pad, pad / 2)
         }
         message?.let { card.addView(TextView(ctx).apply { text = it; textSize = 15f; setTextColor(0xFFDDDDE2.toInt()); setPadding(0, pad / 2, 0, pad / 2); setTextIsSelectable(true) }) }
-        content?.let { v -> (v.parent as? android.view.ViewGroup)?.removeView(v); card.addView(v) }
-        val scroll = ScrollView(ctx).apply { isVerticalScrollBarEnabled = false; addView(card) }
-        root.addView(scroll, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f).apply { topMargin = (8 * dp).toInt() })
+        content?.let { v ->
+            (v.parent as? android.view.ViewGroup)?.removeView(v)
+            card.addView(v, if (tall) LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f) else
+                LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+        }
+        if (tall) {
+            root.addView(card, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f).apply { topMargin = (8 * dp).toInt() })
+            val screenH = ctx.resources.displayMetrics.heightPixels
+            root.layoutParams = android.view.ViewGroup.LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, (screenH * 0.82f).toInt())
+        } else {
+            val scroll = ScrollView(ctx).apply { isVerticalScrollBarEnabled = false; addView(card) }
+            root.addView(scroll, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f).apply { topMargin = (8 * dp).toInt() })
+        }
 
         // Aktionen
         if (positive != null || negative != null || neutral != null) {
@@ -101,6 +115,11 @@ class Sheet(private val ctx: Context) {
             root.addView(row)
         }
         dlg.setContentView(root)
+        if (tall) {
+            val screenH = ctx.resources.displayMetrics.heightPixels
+            (root.parent as? View)?.layoutParams?.height = (screenH * 0.82f).toInt()
+            dlg.behavior.peekHeight = (screenH * 0.82f).toInt()
+        }
         dlg.setCancelable(cancelable)
         dlg.setOnCancelListener { onCancel?.invoke(it) }
         dlg.setOnDismissListener { onDismiss?.invoke(it) }
