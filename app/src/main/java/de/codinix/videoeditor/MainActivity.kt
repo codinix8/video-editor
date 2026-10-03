@@ -162,6 +162,14 @@ class MainActivity : AppCompatActivity() {
             VideoTarget.TILE -> setTileVideo(uri)
         }
     }
+    /** Beim Antippen eines Medien-Knopfs: die ersten drei Male auf den Datei-Browser hinweisen. */
+    private fun hintFileBrowser() {
+        val n = prefs.getInt("file_browser_hint_count", 0)
+        if (n >= 3) return
+        prefs.edit().putInt("file_browser_hint_count", n + 1).apply()
+        showTip(getString(R.string.tip_file_browser), 6000, gesture = false)
+    }
+
     private fun openVideoDocument(target: VideoTarget) {
         pendingVideoTarget = target
         Toast.makeText(this, R.string.file_browser_hint, Toast.LENGTH_SHORT).show()
@@ -260,6 +268,7 @@ class MainActivity : AppCompatActivity() {
         binding.gestureView.store = overlayStore
         binding.gestureView.onSelectionChanged = { sel -> updateOverlayButtons(sel) }
         binding.addVideoButton.setOnClickListener {
+            hintFileBrowser()
             pickVideo.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
         }
         binding.soundButton.setOnClickListener {
@@ -294,7 +303,7 @@ class MainActivity : AppCompatActivity() {
             mosaic.tiles.getOrNull(mosaic.selected)?.let { t -> showTileFillDialog(t) }
         }
         binding.tileVideoButton.setOnClickListener {
-            if (mosaic.selected >= 0) pickTileVideo.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
+            if (mosaic.selected >= 0) { hintFileBrowser(); pickTileVideo.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)) }
         }
         binding.tileVideoButton.setOnLongClickListener { if (mosaic.selected >= 0) openVideoDocument(VideoTarget.TILE); true }
         binding.addVideoButton.setOnLongClickListener { openVideoDocument(VideoTarget.OVERLAY); true }
@@ -361,7 +370,13 @@ class MainActivity : AppCompatActivity() {
         binding.review.reviewTextButton.setOnClickListener { showReviewTextDialog(null) }
         binding.review.reviewSoundButton.setOnClickListener { showReviewSoundDialog() }
         binding.review.captionView.reviewTexts = reviewTexts
-        binding.review.captionView.onReviewTextChanged = { persistSession() }
+        binding.review.captionView.onReviewTextChanged = {
+            reviewTexts.lastOrNull()?.let { t ->
+                prefs.edit().putFloat("review_text_cx", t.cx).putFloat("review_text_cy", t.cy)
+                    .putFloat("text_default_width", t.widthFrac).putFloat("review_text_rot", t.rotationDeg).apply()
+            }
+            persistSession()
+        }
         binding.review.captionView.onReviewTextEdit = { t -> showReviewTextDialog(t) }
         binding.review.scrubBar.onScrubStart = { player?.pause(); reviewOverlayPlayer?.pause() }
         binding.review.scrubBar.onScrub = { ms -> seekReviewTo(ms, play = false) }
@@ -464,15 +479,37 @@ class MainActivity : AppCompatActivity() {
         if (activeRecording != null) return
         val labels = supportedQualities.map { label(it) }.toTypedArray()
         val current = supportedQualities.indexOf(preferredQuality ?: supportedQualities.first()).coerceAtLeast(0)
-        MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.quality_title)
-            .setSingleChoiceItems(labels, current) { d, which ->
-                preferredQuality = supportedQualities[which]
-                bindCamera()
-                d.dismiss()
+        lateinit var dlg: android.app.Dialog
+        val list = radioList(labels.toList(), current) { which ->
+            preferredQuality = supportedQualities[which]
+            bindCamera()
+            dlg.dismiss()
+        }
+        dlg = Sheet(this).setTitle(R.string.quality_title).setView(list).show()
+    }
+
+    /** Auswahlliste im Karten-Stil: Zeile mit Text, rechts roter Auswahlpunkt. */
+    private fun radioList(labels: List<String>, selected: Int, onPick: (Int) -> Unit): android.view.View {
+        val dp = resources.displayMetrics.density
+        val col = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.VERTICAL }
+        labels.forEachIndexed { i, label ->
+            val row = android.widget.LinearLayout(this).apply {
+                orientation = android.widget.LinearLayout.HORIZONTAL; gravity = android.view.Gravity.CENTER_VERTICAL
+                setPadding(0, (14 * dp).toInt(), 0, (14 * dp).toInt())
+                addView(android.widget.TextView(this@MainActivity).apply { text = label; textSize = 16f; setTextColor(0xFFFFFFFF.toInt()) },
+                    android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+                addView(com.google.android.material.radiobutton.MaterialRadioButton(this@MainActivity).apply {
+                    isChecked = i == selected; isClickable = false
+                    buttonTintList = android.content.res.ColorStateList.valueOf(if (i == selected) Sheet.ACCENT else 0xFF8A8B96.toInt())
+                })
+                setOnClickListener { onPick(i) }
             }
-            .setNegativeButton(R.string.cancel, null)
-            .show()
+            col.addView(row)
+            if (i < labels.lastIndex) col.addView(android.view.View(this).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 1); setBackgroundColor(0x22FFFFFF)
+            })
+        }
+        return col
     }
 
     // ---------------------------------------------------------------- Aufnahme
@@ -633,16 +670,25 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** Zuletzt gewählten Textstil als Standard für den nächsten Text merken. */
+    private fun rememberTextStyle(color: Int, bg: Int?) {
+        val e = prefs.edit().putInt("text_default_color", color)
+        if (bg != null) e.putInt("text_default_bg", bg) else e.remove("text_default_bg")
+        e.apply()
+    }
+
     /** Text-Overlay anlegen (existing == null) oder bearbeiten. */
     private fun showTextDialog(existing: TextOverlay?) {
         val dp = resources.displayMetrics.density
         val pad = (16 * dp).toInt()
 
-        var textRgb = (existing?.colorArgb ?: android.graphics.Color.WHITE) or 0xFF000000.toInt()
-        var textAlpha = existing?.let { android.graphics.Color.alpha(it.colorArgb) } ?: 255
-        var bgOn = existing?.bgColorArgb != null
-        var bgRgb = (existing?.bgColorArgb ?: android.graphics.Color.BLACK) or 0xFF000000.toInt()
-        var bgAlpha = existing?.bgColorArgb?.let { android.graphics.Color.alpha(it) } ?: 200
+        val defColor = prefs.getInt("text_default_color", android.graphics.Color.WHITE)
+        val defBg = if (prefs.contains("text_default_bg")) prefs.getInt("text_default_bg", 0) else null
+        var textRgb = (existing?.colorArgb ?: defColor) or 0xFF000000.toInt()
+        var textAlpha = existing?.let { android.graphics.Color.alpha(it.colorArgb) } ?: android.graphics.Color.alpha(defColor)
+        var bgOn = if (existing != null) existing.bgColorArgb != null else defBg != null
+        var bgRgb = (existing?.bgColorArgb ?: defBg ?: android.graphics.Color.BLACK) or 0xFF000000.toInt()
+        var bgAlpha = existing?.bgColorArgb?.let { android.graphics.Color.alpha(it) } ?: defBg?.let { android.graphics.Color.alpha(it) } ?: 200
 
         fun textColor() = (textRgb and 0x00FFFFFF) or (textAlpha shl 24)
         fun bgColor(): Int? = if (bgOn) (bgRgb and 0x00FFFFFF) or (bgAlpha shl 24) else null
@@ -741,16 +787,17 @@ class MainActivity : AppCompatActivity() {
             if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE) { hideKeyboard(); true } else false
         }
 
-        val textDialog = MaterialAlertDialogBuilder(this)
+        val textDialog = Sheet(this)
             .setTitle(R.string.text_dialog_title)
             .setView(android.widget.ScrollView(this).apply { addView(box) })
             .setPositiveButton(R.string.ok) { _, _ ->
                 val text = input.text.toString().trim()
                 if (text.isEmpty()) return@setPositiveButton
                 if (existing == null) {
-                    val o = TextOverlay(Overlay.newId(), text, textColor(), bgColor(), widthFrac = 0.6f)
+                    val o = TextOverlay(Overlay.newId(), text, textColor(), bgColor(), widthFrac = prefs.getFloat("text_default_width", 0.6f))
                     o.createdAtMs = currentTotalMs()
                     overlayStore.add(o)
+                    rememberTextStyle(textColor(), bgColor())
                     updateOverlayButtons(o)
                 } else {
                     existing.text = text; existing.colorArgb = textColor(); existing.bgColorArgb = bgColor()
@@ -774,7 +821,7 @@ class MainActivity : AppCompatActivity() {
     private fun showSettings() {
         val dp = resources.displayMetrics.density
         val pad = (16 * dp).toInt()
-        fun header(res: Int) = android.widget.TextView(this).apply { text = getString(res); textSize = 13f; alpha = 0.7f; setPadding(0, pad, 0, pad / 4) }
+        fun header(res: Int) = Sheet.header(this, getString(res))
         val box = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.VERTICAL; setPadding(pad, 0, pad, pad) }
 
         // App-Sprache
@@ -897,6 +944,10 @@ class MainActivity : AppCompatActivity() {
             setOnCheckedChangeListener { _, on -> prefs.edit().putBoolean("mosaic_rainbow", on).apply(); mosaic.rainbowGaps = on; publishMosaic() }
         })
 
+        // Gesten
+        box.addView(header(R.string.settings_gestures))
+        box.addView(android.widget.TextView(this).apply { text = getString(R.string.gestures_text); textSize = 13.5f; setLineSpacing(0f, 1.25f); setTextColor(0xFFDDDDE2.toInt()) })
+
         // Hilfe
         box.addView(header(R.string.settings_help))
         box.addView(android.widget.Button(this, null, android.R.attr.borderlessButtonStyle).apply {
@@ -908,7 +959,7 @@ class MainActivity : AppCompatActivity() {
             setOnClickListener {
                 val rep = CrashLog.previous(this@MainActivity)
                 if (rep == null) Toast.makeText(this@MainActivity, R.string.settings_no_crash, Toast.LENGTH_SHORT).show()
-                else MaterialAlertDialogBuilder(this@MainActivity).setTitle(R.string.settings_crash)
+                else Sheet(this@MainActivity).setTitle(R.string.settings_crash)
                     .setView(android.widget.ScrollView(this@MainActivity).apply { addView(android.widget.TextView(this@MainActivity).apply { text = rep; textSize = 11f; typeface = android.graphics.Typeface.MONOSPACE; setTextIsSelectable(true); setPadding(pad, 0, pad, 0) }) })
                     .setPositiveButton(R.string.copy) { _, _ ->
                         getSystemService(android.content.ClipboardManager::class.java).setPrimaryClip(android.content.ClipData.newPlainText("crash", rep))
@@ -918,7 +969,7 @@ class MainActivity : AppCompatActivity() {
         })
         box.addView(android.widget.TextView(this).apply { text = getString(R.string.settings_version, BuildConfig.VERSION_NAME); textSize = 12f; alpha = 0.6f; setPadding(0, pad, 0, 0) })
 
-        MaterialAlertDialogBuilder(this)
+        Sheet(this)
             .setTitle(R.string.settings)
             .setView(android.widget.ScrollView(this).apply { addView(box) })
             .setPositiveButton(R.string.ok, null)
@@ -931,6 +982,7 @@ class MainActivity : AppCompatActivity() {
         showTip(getString(R.string.tip_record), 4500, gesture = false)
         main.postDelayed({ showTip(getString(R.string.tip_toolbar), 4500, gesture = false) }, 5000)
         main.postDelayed({ showTip(getString(R.string.tip_overlays), 5500, gesture = true) }, 10_000)
+        main.postDelayed({ showTip(getString(R.string.tip_file_browser), 6000, gesture = false) }, 16_000)
     }
 
     /** Einmaliger Hinweis beim ersten Video im Bild; Punkt am Kopfhörer-Knopf, solange Ton nur mit Kopfhörern hörbar wäre. */
@@ -955,7 +1007,7 @@ class MainActivity : AppCompatActivity() {
         val pad = (12 * dp).toInt()
         val cardW = (104 * dp).toInt(); val cardH = (74 * dp).toInt()
         val row = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.HORIZONTAL; setPadding(pad, pad, pad, 0) }
-        lateinit var dlg: AlertDialog
+        lateinit var dlg: android.app.Dialog
         fun render() {
             row.removeAllViews()
             resources.getStringArray(R.array.filter_names).forEachIndexed { idx, name ->
@@ -986,7 +1038,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         render()
-        dlg = MaterialAlertDialogBuilder(this)
+        dlg = Sheet(this)
             .setTitle(R.string.filter)
             .setView(android.widget.HorizontalScrollView(this).apply { addView(row); isHorizontalScrollBarEnabled = false })
             .setPositiveButton(R.string.ok, null)
@@ -1104,7 +1156,7 @@ class MainActivity : AppCompatActivity() {
             orientation = android.widget.LinearLayout.VERTICAL; setPadding(pad, pad / 2, pad, 0)
             addView(gapWhite); addView(rainbow)
         }
-        MaterialAlertDialogBuilder(this)
+        Sheet(this)
             .setTitle(R.string.mosaic_title)
             .setView(box)
             .setPositiveButton(R.string.ok) { _, _ ->
@@ -1119,7 +1171,7 @@ class MainActivity : AppCompatActivity() {
         val dp = resources.displayMetrics.density
         val pad = (16 * dp).toInt()
         val row = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.HORIZONTAL; setPadding(pad, pad, pad, pad) }
-        lateinit var dlg: AlertDialog
+        lateinit var dlg: android.app.Dialog
         TextRenderer.COLORS.forEach { c ->
             val size = (36 * dp).toInt()
             row.addView(android.view.View(this).apply {
@@ -1131,7 +1183,7 @@ class MainActivity : AppCompatActivity() {
                 setOnClickListener { t.fillColor = c; publishMosaic(); dlg.dismiss() }
             })
         }
-        dlg = MaterialAlertDialogBuilder(this)
+        dlg = Sheet(this)
             .setTitle(R.string.tile_fill)
             .setView(android.widget.HorizontalScrollView(this).apply { addView(row); isHorizontalScrollBarEnabled = false })
             .setNegativeButton(R.string.cancel, null)
@@ -1292,7 +1344,7 @@ class MainActivity : AppCompatActivity() {
             gapWhite = prefs.getBoolean("mosaic_gap_white", false); rainbowGaps = prefs.getBoolean("mosaic_rainbow", false)
         }
         binding.tileVideoButton.setOnClickListener {
-            if (mosaic.selected >= 0) pickTileVideo.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
+            if (mosaic.selected >= 0) { hintFileBrowser(); pickTileVideo.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)) }
         }
         binding.tileVideoButton.setOnLongClickListener { if (mosaic.selected >= 0) openVideoDocument(VideoTarget.TILE); true }
         binding.addVideoButton.setOnLongClickListener { openVideoDocument(VideoTarget.OVERLAY); true }
@@ -1312,9 +1364,10 @@ class MainActivity : AppCompatActivity() {
         if (mosaicActive) { Toast.makeText(this, R.string.mosaic_first_off, Toast.LENGTH_SHORT).show(); return }
         val bg = overlayStore.videoOverlay()?.takeIf { it.isBackground }
         if (bg == null) {
+            hintFileBrowser()
             pickBackground.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
         } else {
-            MaterialAlertDialogBuilder(this)
+            Sheet(this)
                 .setTitle(R.string.greenscreen_remove_title)
                 .setMessage(R.string.greenscreen_remove_msg)
                 .setPositiveButton(R.string.remove) { _, _ ->
@@ -1518,7 +1571,7 @@ class MainActivity : AppCompatActivity() {
             setPadding(pad, pad, pad, 0)
             addView(label); addView(seek); addView(hint)
         }
-        MaterialAlertDialogBuilder(this)
+        Sheet(this)
             .setTitle(titleRes)
             .setView(box)
             .setPositiveButton(R.string.ok, null)
@@ -1563,7 +1616,7 @@ class MainActivity : AppCompatActivity() {
                 textSize = 12f; text = getString(R.string.tile_volume_hint); setPadding(0, pad / 2, 0, 0)
             })
         }
-        MaterialAlertDialogBuilder(this)
+        Sheet(this)
             .setTitle(R.string.tile_volume_title)
             .setView(box)
             .setPositiveButton(R.string.ok) { _, _ -> persistSession() }
@@ -1612,7 +1665,7 @@ class MainActivity : AppCompatActivity() {
             setPadding(pad, pad, pad, 0)
             addView(label); addView(seek); addView(hint)
         }
-        MaterialAlertDialogBuilder(this)
+        Sheet(this)
             .setTitle(R.string.overlay_volume_title)
             .setView(box)
             .setPositiveButton(R.string.ok) { _, _ -> persistSession() }
@@ -1834,7 +1887,7 @@ class MainActivity : AppCompatActivity() {
             addView(modelSpinner)
             addView(auto); addView(note)
         }
-        val b = MaterialAlertDialogBuilder(this)
+        val b = Sheet(this)
             .setTitle(R.string.captions_title)
             .setView(box)
             .setPositiveButton(if (captions.isEmpty()) R.string.captions_generate else R.string.captions_regenerate) { _, _ ->
@@ -1930,7 +1983,7 @@ class MainActivity : AppCompatActivity() {
         }
         rebuild()
         val scroll = android.widget.ScrollView(this).apply { addView(list) }
-        val dlg = MaterialAlertDialogBuilder(this)
+        val dlg = Sheet(this)
             .setTitle(R.string.captions_edit_title)
             .setView(scroll)
             .setPositiveButton(R.string.ok) { _, _ ->
@@ -2306,7 +2359,7 @@ class MainActivity : AppCompatActivity() {
             } else p.play()
             if (dirty) persistSession()
         }
-        MaterialAlertDialogBuilder(this)
+        Sheet(this)
             .setTitle(R.string.review_sound)
             .setView(android.widget.ScrollView(this).apply { addView(box) })
             .setPositiveButton(R.string.ok) { _, _ -> finish() }
@@ -2318,11 +2371,13 @@ class MainActivity : AppCompatActivity() {
     private fun showReviewTextDialog(existing: de.codinix.videoeditor.whisper.ReviewText?) {
         player?.pause()
         val dp = resources.displayMetrics.density; val pad = (16 * dp).toInt()
-        var textRgb = (existing?.colorArgb ?: android.graphics.Color.WHITE) or 0xFF000000.toInt()
-        var textAlpha = existing?.let { android.graphics.Color.alpha(it.colorArgb) } ?: 255
-        var bgOn = existing?.bgColorArgb != null
-        var bgRgb = (existing?.bgColorArgb ?: android.graphics.Color.BLACK) or 0xFF000000.toInt()
-        var bgAlpha = existing?.bgColorArgb?.let { android.graphics.Color.alpha(it) } ?: 200
+        val defColor = prefs.getInt("text_default_color", android.graphics.Color.WHITE)
+        val defBg = if (prefs.contains("text_default_bg")) prefs.getInt("text_default_bg", 0) else null
+        var textRgb = (existing?.colorArgb ?: defColor) or 0xFF000000.toInt()
+        var textAlpha = existing?.let { android.graphics.Color.alpha(it.colorArgb) } ?: android.graphics.Color.alpha(defColor)
+        var bgOn = if (existing != null) existing.bgColorArgb != null else defBg != null
+        var bgRgb = (existing?.bgColorArgb ?: defBg ?: android.graphics.Color.BLACK) or 0xFF000000.toInt()
+        var bgAlpha = existing?.bgColorArgb?.let { android.graphics.Color.alpha(it) } ?: defBg?.let { android.graphics.Color.alpha(it) } ?: 200
         fun textColor() = (textRgb and 0x00FFFFFF) or (textAlpha shl 24)
         fun bgColor(): Int? = if (bgOn) (bgRgb and 0x00FFFFFF) or (bgAlpha shl 24) else null
         val input = android.widget.EditText(this).apply {
@@ -2375,14 +2430,17 @@ class MainActivity : AppCompatActivity() {
             addView(bgSwitch); addView(bgSection)
         }
         refreshPreview()
-        val b = MaterialAlertDialogBuilder(this)
+        val b = Sheet(this)
             .setTitle(R.string.text_dialog_title)
             .setView(android.widget.ScrollView(this).apply { addView(box) })
             .setPositiveButton(R.string.ok) { _, _ ->
                 val text = input.text.toString().trim()
                 if (text.isNotEmpty()) {
-                    if (existing == null) reviewTexts.add(de.codinix.videoeditor.whisper.ReviewText(System.nanoTime(), text, textColor(), bgColor()))
+                    if (existing == null) reviewTexts.add(de.codinix.videoeditor.whisper.ReviewText(System.nanoTime(), text, textColor(), bgColor(),
+                        cx = prefs.getFloat("review_text_cx", 0.5f), cy = prefs.getFloat("review_text_cy", 0.5f),
+                        widthFrac = prefs.getFloat("text_default_width", 0.6f), rotationDeg = prefs.getFloat("review_text_rot", 0f)))
                     else { existing.text = text; existing.colorArgb = textColor(); existing.bgColorArgb = bgColor(); existing.rerender() }
+                    rememberTextStyle(textColor(), bgColor())
                     binding.review.captionView.invalidate(); persistSession()
                 }
                 if (inReview) player?.play()
@@ -2617,7 +2675,7 @@ class MainActivity : AppCompatActivity() {
             setPadding(pad, pad / 2, pad, 0)
             addView(radios)
         }
-        MaterialAlertDialogBuilder(this)
+        Sheet(this)
             .setTitle(R.string.export_title)
             .setView(android.widget.ScrollView(this).apply { addView(box) })
             .setPositiveButton(R.string.save) { _, _ ->
@@ -2675,7 +2733,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 setControlsEnabled(true)
                 if (inReview) exitReview() else refreshUi()
-                MaterialAlertDialogBuilder(this@MainActivity)
+                Sheet(this@MainActivity)
                     .setTitle(R.string.saved_title)
                     .setMessage(getString(R.string.saved_msg) + if (backedUp) "\n\n" + getString(R.string.backup_kept) else "")
                     .setPositiveButton(R.string.share) { _, _ -> shareVideo(uri) }
@@ -2687,7 +2745,7 @@ class MainActivity : AppCompatActivity() {
                 ex.release(); exporter = null
                 setControlsEnabled(true)
                 if (inReview) { buildPlayer(); main.post(playbackTicker) }
-                MaterialAlertDialogBuilder(this@MainActivity)
+                Sheet(this@MainActivity)
                     .setTitle(getString(R.string.error, ""))
                     .setMessage(message)
                     .setPositiveButton(R.string.ok, null)
@@ -2706,7 +2764,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun confirmDiscard() {
-        MaterialAlertDialogBuilder(this)
+        Sheet(this)
             .setTitle(R.string.discard_title)
             .setMessage(getString(R.string.discard_msg, segments.size))
             .setPositiveButton(R.string.discard) { _, _ ->
@@ -2827,7 +2885,7 @@ class MainActivity : AppCompatActivity() {
                 setTextIsSelectable(true)
             })
         }
-        MaterialAlertDialogBuilder(this)
+        Sheet(this)
             .setTitle(R.string.crash_title)
             .setMessage(R.string.crash_msg)
             .setView(view)
@@ -2907,7 +2965,7 @@ class MainActivity : AppCompatActivity() {
         val dp = resources.displayMetrics.density
         val pad = (12 * dp).toInt()
         var current: List<DraftStore.Info> = if (manual.isNotEmpty() || history.isEmpty()) manual else history
-        lateinit var dlg: AlertDialog
+        lateinit var dlg: android.app.Dialog
 
         val adapter = object : android.widget.BaseAdapter() {
             override fun getCount() = current.size
@@ -2973,7 +3031,7 @@ class MainActivity : AppCompatActivity() {
             orientation = android.widget.LinearLayout.VERTICAL
             addView(tabs); addView(listView); addView(empty)
         }
-        dlg = MaterialAlertDialogBuilder(this)
+        dlg = Sheet(this)
             .setView(box)
             .setNegativeButton(R.string.cancel, null)
             .create()
@@ -2982,7 +3040,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun askDraftAction(info: DraftStore.Info) {
-        MaterialAlertDialogBuilder(this)
+        Sheet(this)
             .setTitle(R.string.drafts)
             .setMessage(getString(R.string.draft_item,
                 java.text.SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(info.createdAt),
@@ -3007,7 +3065,7 @@ class MainActivity : AppCompatActivity() {
             captionSettings = loaded.captionSettings
             mosaic = loaded.mosaic ?: de.codinix.videoeditor.overlay.Mosaic(de.codinix.videoeditor.overlay.Mosaic.LAYOUT_NONE)
             binding.tileVideoButton.setOnClickListener {
-            if (mosaic.selected >= 0) pickTileVideo.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
+            if (mosaic.selected >= 0) { hintFileBrowser(); pickTileVideo.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)) }
         }
         binding.tileVideoButton.setOnLongClickListener { if (mosaic.selected >= 0) openVideoDocument(VideoTarget.TILE); true }
         binding.addVideoButton.setOnLongClickListener { openVideoDocument(VideoTarget.OVERLAY); true }

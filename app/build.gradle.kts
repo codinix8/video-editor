@@ -12,8 +12,8 @@ android {
         applicationId = "de.codinix.videoeditor"
         minSdk = 26
         targetSdk = 35
-        versionCode = 68
-        versionName = "3.0.1-history-tabs"
+        versionCode = 69
+        versionName = "3.1-sheets"
         ndk { abiFilters += listOf("arm64-v8a") }
     }
 

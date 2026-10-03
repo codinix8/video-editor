@@ -221,4 +221,7 @@
     <string name="history">Verlauf</string>
     <string name="history_empty">Noch keine Export-Sicherungen – nach jedem Export bleibt das Projekt hier 7 Tage erhalten.</string>
     <string name="backup_days_left">noch %1$d Tage</string>
+    <string name="tip_file_browser">Video nicht gefunden? Medien-Knopf gedrückt halten öffnet den Datei-Browser (z. B. Downloads).</string>
+    <string name="settings_gestures">Gesten</string>
+    <string name="gestures_text">• Medien-Knopf gedrückt halten: Datei-Browser (Downloads usw.)\n• Video antippen: Pause/Weiter\n• Zwei Finger: Größe und Drehung (rastet bei 90°)\n• Spulleiste: Segment lange drücken zum Verschieben oder auf den Papierkorb ziehen\n• Untertitel oder Review-Text doppelt antippen: bearbeiten\n• Mosaik-Kachel antippen: Werkzeuge links</string>
 </resources>

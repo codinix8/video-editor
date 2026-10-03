@@ -221,4 +221,7 @@
     <string name="history">History</string>
     <string name="history_empty">No export backups yet – after each export the project is kept here for 7 days.</string>
     <string name="backup_days_left">%1$d days left</string>
+    <string name="tip_file_browser">Can\'t find a video? Press and hold a media button to open the file browser (e.g. Downloads).</string>
+    <string name="settings_gestures">Gestures</string>
+    <string name="gestures_text">• Press and hold a media button: file browser (Downloads etc.)\n• Tap a video: pause/resume\n• Two fingers: resize and rotate (snaps at 90°)\n• Review bar: long-press a segment to move it or drop it on the trash\n• Double-tap a caption or review text: edit\n• Tap a mosaic tile: tools on the left</string>
 </resources>

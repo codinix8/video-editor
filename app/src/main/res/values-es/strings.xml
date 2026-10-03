@@ -221,4 +221,7 @@
     <string name="history">Historial</string>
     <string name="history_empty">Aún no hay copias de exportación – tras cada exportación el proyecto se conserva aquí 7 días.</string>
     <string name="backup_days_left">quedan %1$d días</string>
+    <string name="tip_file_browser">¿No encuentras el vídeo? Mantén pulsado un botón de medios para abrir el explorador de archivos (p. ej. Descargas).</string>
+    <string name="settings_gestures">Gestos</string>
+    <string name="gestures_text">• Mantener pulsado un botón de medios: explorador de archivos (Descargas, etc.)\n• Tocar un vídeo: pausa/continuar\n• Dos dedos: tamaño y rotación (ajuste a 90°)\n• Barra de revisión: mantén pulsado un segmento para moverlo o soltarlo en la papelera\n• Doble toque en subtítulo o texto: editar\n• Tocar un recuadro del mosaico: herramientas a la izquierda</string>
 </resources>

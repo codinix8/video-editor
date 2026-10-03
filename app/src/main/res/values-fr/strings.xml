@@ -221,4 +221,7 @@
     <string name="history">Historique</string>
     <string name="history_empty">Pas encore de sauvegardes d\'export – après chaque export, le projet reste ici 7 jours.</string>
     <string name="backup_days_left">%1$d jours restants</string>
+    <string name="tip_file_browser">Vidéo introuvable ? Maintiens un bouton média pour ouvrir l\'explorateur de fichiers (ex. Téléchargements).</string>
+    <string name="settings_gestures">Gestes</string>
+    <string name="gestures_text">• Maintenir un bouton média : explorateur de fichiers (Téléchargements, etc.)\n• Toucher une vidéo : pause/reprise\n• Deux doigts : taille et rotation (aimanté à 90°)\n• Barre de relecture : appui long sur un segment pour le déplacer ou le lâcher sur la corbeille\n• Double-toucher un sous-titre ou un texte : modifier\n• Toucher une case de mosaïque : outils à gauche</string>
 </resources>
