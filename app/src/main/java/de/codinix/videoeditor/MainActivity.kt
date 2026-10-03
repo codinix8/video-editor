@@ -755,32 +755,17 @@ class MainActivity : AppCompatActivity() {
         sec.section(getString(R.string.text_dialog_title))
         sec.custom(input)
         sec.section(getString(R.string.text_color))
-        sec.custom(swatches({ textRgb }) { textRgb = it })
+        sec.custom(swatchGrid({ textRgb }) { textRgb = it })
         sec.slider(getString(R.string.text_opacity), textAlpha * 100 / 255, onChange = { textAlpha = it * 255 / 100; refreshPreview() })
         sec.section(getString(R.string.text_background))
         val bgCard = Sections(this)
         bgCard.section(null)
-        bgCard.custom(swatches({ bgRgb }) { bgRgb = it })
+        bgCard.custom(swatchGrid({ bgRgb }) { bgRgb = it })
         bgCard.slider(getString(R.string.bg_opacity), bgAlpha * 100 / 255, onChange = { bgAlpha = it * 255 / 100; refreshPreview() })
         bgCard.root.visibility = if (bgOn) android.view.View.VISIBLE else android.view.View.GONE
         sec.switch(getString(R.string.text_background), bgOn) { on -> bgOn = on; bgCard.root.visibility = if (on) android.view.View.VISIBLE else android.view.View.GONE; refreshPreview() }
         sec.root.addView(bgCard.root)
         val box = sec.root
-        refreshPreview()
-            }
-        }
-
-        val box = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(pad, pad / 2, pad, 0)
-            addView(input)
-            addView(label(R.string.text_color))
-            addView(swatchGrid({ textRgb }) { textRgb = it })
-            addView(label(R.string.text_opacity))
-            addView(slider(textAlpha * 100 / 255) { textAlpha = it * 255 / 100 })
-            addView(bgSwitch)
-            addView(bgSection)
-        }
         refreshPreview()
         input.imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_DONE or android.view.inputmethod.EditorInfo.IME_FLAG_NO_ENTER_ACTION
         input.setOnEditorActionListener { _, actionId, _ ->
