@@ -12,8 +12,8 @@ android {
         applicationId = "de.codinix.videoeditor"
         minSdk = 26
         targetSdk = 35
-        versionCode = 72
-        versionName = "3.2-sections"
+        versionCode = 73
+        versionName = "3.2.1-caption-cache"
         ndk { abiFilters += listOf("arm64-v8a") }
     }
 

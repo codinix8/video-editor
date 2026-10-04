@@ -111,7 +111,7 @@
     <string name="tile_bg_volume">ویدیوی پس‌زمینه</string>
     <string name="tile_mic_volume">صدای من (میکروفون)</string>
     <string name="tile_volume_hint">درصد = بلندی درک‌شده: ۵۰٪ نصف بلندی، ۰٪ بی‌صدا.</string>
-    <string name="captions_emojis">نمایش ایموجی (مثلاً ایران 🇮🇷، انفجار 💥)</string>
+    <string name="captions_emojis">نمایش ایموجی (مثلاً ایران 🇮🇷، عشق ❤️)</string>
     <string name="captions_edit">ویرایش</string>
     <string name="captions_edit_title">ویرایش زیرنویس‌ها</string>
     <string name="limit_reached">حداکثر ۵ دقیقه رسید – برای ادامه بخش‌ها را حذف کن</string>

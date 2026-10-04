@@ -111,7 +111,7 @@
     <string name="tile_bg_volume">فيديو الخلفية</string>
     <string name="tile_mic_volume">صوتي (الميكروفون)</string>
     <string name="tile_volume_hint">النسبة = الارتفاع المُدرَك: 50 %% نصف الارتفاع، 0 %% صمت.</string>
-    <string name="captions_emojis">إظهار الرموز التعبيرية (مثل إيران 🇮🇷، انفجار 💥)</string>
+    <string name="captions_emojis">إظهار الرموز التعبيرية (مثل إيران 🇮🇷، حب ❤️)</string>
     <string name="captions_edit">تعديل</string>
     <string name="captions_edit_title">تعديل الترجمة</string>
     <string name="limit_reached">تم الوصول إلى الحد الأقصى 5 دقائق – احذف مقاطع للمتابعة</string>

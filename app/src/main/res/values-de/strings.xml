@@ -111,7 +111,7 @@
     <string name="tile_bg_volume">Hintergrundvideo</string>
     <string name="tile_mic_volume">Meine Stimme (Mikrofon)</string>
     <string name="tile_volume_hint">Prozent = empfundene Lautstärke: 50 % klingt halb so laut, 0 % ist still.</string>
-    <string name="captions_emojis">Emojis einblenden (z. B. Iran 🇮🇷, Explosion 💥)</string>
+    <string name="captions_emojis">Emojis anzeigen (z. B. Iran 🇮🇷, Liebe ❤️)</string>
     <string name="captions_edit">Bearbeiten</string>
     <string name="captions_edit_title">Untertitel bearbeiten</string>
     <string name="limit_reached">Maximale Länge von 5 Minuten erreicht – Segmente löschen, um weiter aufzunehmen</string>

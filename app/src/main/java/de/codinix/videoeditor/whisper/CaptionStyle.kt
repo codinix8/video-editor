@@ -80,10 +80,14 @@ object CaptionStyle {
     }
 
     /** Schlüssel für den Bitmap-Cache: ändert sich nur, wenn sich das Bild ändern muss. */
-    fun cacheKey(c: Caption, timeMs: Long, s: CaptionSettings): Int = when (s.template) {
-        TEMPLATE_KARAOKE, TEMPLATE_WORD, TEMPLATE_HIGHLIGHT, TEMPLATE_BIG_SMALL -> activeWordIndex(c, timeMs)
-        TEMPLATE_TYPEWRITER -> typewriterChars(c, timeMs)
-        else -> 0
+    fun cacheKey(c: Caption, timeMs: Long, s: CaptionSettings): Int {
+        val state = when (s.template) {
+            TEMPLATE_KARAOKE, TEMPLATE_WORD, TEMPLATE_HIGHLIGHT, TEMPLATE_BIG_SMALL -> activeWordIndex(c, timeMs)
+            TEMPLATE_TYPEWRITER -> typewriterChars(c, timeMs)
+            else -> 0
+        }
+        // Inhaltsabhängig: Text und Startzeit, damit nach Umordnen/Löschen kein fremdes Bild wiederverwendet wird
+        return (c.text.hashCode() * 31 + c.startMs.toInt()) * 64 + (state and 63)
     }
 
     /** Pop-Skalierung (1.0 = normal) für wortweise Vorlagen. */

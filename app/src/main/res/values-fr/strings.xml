@@ -111,7 +111,7 @@
     <string name="tile_bg_volume">Vidéo de fond</string>
     <string name="tile_mic_volume">Ma voix (micro)</string>
     <string name="tile_volume_hint">Pourcentage = volume perçu : 50 %% sonne deux fois moins fort, 0 %% est silencieux.</string>
-    <string name="captions_emojis">Afficher des emojis (ex. Iran 🇮🇷, explosion 💥)</string>
+    <string name="captions_emojis">Afficher des emojis (ex. Iran 🇮🇷, amour ❤️)</string>
     <string name="captions_edit">Modifier</string>
     <string name="captions_edit_title">Modifier les sous-titres</string>
     <string name="limit_reached">Durée maximale de 5 minutes atteinte – supprime des segments pour continuer</string>

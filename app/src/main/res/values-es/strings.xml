@@ -111,7 +111,7 @@
     <string name="tile_bg_volume">Vídeo de fondo</string>
     <string name="tile_mic_volume">Mi voz (micrófono)</string>
     <string name="tile_volume_hint">Porcentaje = sonoridad percibida: 50 %% suena la mitad, 0 %% es silencio.</string>
-    <string name="captions_emojis">Mostrar emojis (p. ej. Irán 🇮🇷, explosión 💥)</string>
+    <string name="captions_emojis">Mostrar emojis (p. ej. Irán 🇮🇷, amor ❤️)</string>
     <string name="captions_edit">Editar</string>
     <string name="captions_edit_title">Editar subtítulos</string>
     <string name="limit_reached">Límite de 5 minutos alcanzado – borra segmentos para seguir grabando</string>

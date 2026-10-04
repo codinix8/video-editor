@@ -111,7 +111,7 @@
     <string name="tile_bg_volume">Arka plan videosu</string>
     <string name="tile_mic_volume">Sesim (mikrofon)</string>
     <string name="tile_volume_hint">Yüzde = algılanan ses: %%50 yarı yüksek, %%0 sessiz.</string>
-    <string name="captions_emojis">Emoji göster (örn. İran 🇮🇷, patlama 💥)</string>
+    <string name="captions_emojis">Emoji göster (örn. İran 🇮🇷, aşk ❤️)</string>
     <string name="captions_edit">Düzenle</string>
     <string name="captions_edit_title">Altyazıları düzenle</string>
     <string name="limit_reached">En fazla 5 dakikaya ulaşıldı – devam etmek için bölüm sil</string>

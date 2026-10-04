@@ -111,7 +111,7 @@
     <string name="tile_bg_volume">Background video</string>
     <string name="tile_mic_volume">My voice (microphone)</string>
     <string name="tile_volume_hint">Percent = perceived loudness: 50 % sounds half as loud, 0 % is silent.</string>
-    <string name="captions_emojis">Show emojis (e.g. Iran 🇮🇷, explosion 💥)</string>
+    <string name="captions_emojis">Show emojis (e.g. Iran 🇮🇷, love ❤️)</string>
     <string name="captions_edit">Edit</string>
     <string name="captions_edit_title">Edit captions</string>
     <string name="limit_reached">Maximum length of 5 minutes reached – delete segments to continue recording</string>
