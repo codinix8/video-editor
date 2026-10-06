@@ -5,14 +5,14 @@ plugins {
 
 android {
     namespace = "de.codinix.videoeditor"
-    compileSdk = 35
+    compileSdk = 36
     ndkVersion = "27.2.12479018"
 
     defaultConfig {
         applicationId = "de.codinix.babacut"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 74
+        targetSdk = 36
+        versionCode = 75
         versionName = "1.0.0"
         ndk { abiFilters += listOf("arm64-v8a") }
     }
