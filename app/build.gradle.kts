@@ -9,11 +9,11 @@ android {
     ndkVersion = "27.2.12479018"
 
     defaultConfig {
-        applicationId = "de.codinix.videoeditor"
+        applicationId = "de.codinix.babacut"
         minSdk = 26
         targetSdk = 35
-        versionCode = 73
-        versionName = "3.2.1-caption-cache"
+        versionCode = 74
+        versionName = "1.0.0"
         ndk { abiFilters += listOf("arm64-v8a") }
     }
 
@@ -27,6 +27,16 @@ android {
             keyAlias = "videoeditor"
             keyPassword = "videoeditor"
         }
+        // Upload-Schlüssel für den Play Store – kommt aus GitHub-Secrets (Umgebungsvariablen im CI).
+        create("upload") {
+            val path = System.getenv("UPLOAD_KEYSTORE_PATH")
+            if (path != null) {
+                storeFile = file(path)
+                storePassword = System.getenv("UPLOAD_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("UPLOAD_KEY_ALIAS")
+                keyPassword = System.getenv("UPLOAD_KEYSTORE_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
@@ -35,8 +45,10 @@ android {
             signingConfig = signingConfigs.getByName("fixed")
         }
         release {
+            // Bewusst ohne Code-Verkleinerung: der native Whisper-Teil und JNI bleiben so garantiert intakt.
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("fixed")
+            isShrinkResources = false
+            signingConfig = if (System.getenv("UPLOAD_KEYSTORE_PATH") != null) signingConfigs.getByName("upload") else signingConfigs.getByName("fixed")
         }
     }
 

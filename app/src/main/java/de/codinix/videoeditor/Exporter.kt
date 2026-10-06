@@ -294,7 +294,7 @@ class Exporter(private val context: Context) {
             val values = ContentValues().apply {
                 put(MediaStore.MediaColumns.DISPLAY_NAME, name)
                 put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
-                put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/VideoEditor")
+                put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/BabaCut")
                 put(MediaStore.Video.Media.IS_PENDING, 1)
             }
             val uri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values)
@@ -305,7 +305,7 @@ class Exporter(private val context: Context) {
             resolver.update(uri, values, null, null)
             return uri
         } else {
-            val dir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), "VideoEditor")
+            val dir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), "BabaCut")
             dir.mkdirs()
             val dest = File(dir, name)
             file.copyTo(dest, overwrite = true)

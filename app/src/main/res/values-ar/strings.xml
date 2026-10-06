@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Babacut</string>
+    <string name="app_name">BabaCut</string>
     <string name="record">بدء التسجيل</string>
     <string name="stop">إيقاف التسجيل مؤقتًا</string>
     <string name="flip_camera">تبديل الكاميرا</string>
@@ -52,7 +52,7 @@
     <string name="headphones_on">تم اكتشاف سماعة رأس – صوت الطبقة مفعّل في المعاينة</string>
     <string name="share">مشاركة</string>
     <string name="saved_title">تم حفظ الفيديو</string>
-    <string name="saved_msg">الفيديو في المعرض ضمن Movies/VideoEditor.</string>
+    <string name="saved_msg">الفيديو في المعرض ضمن Movies/BabaCut.</string>
     <string name="export_running_mix">جارٍ إنتاج الفيديو (مع صوت الطبقة)… %1$d %%</string>
     <string name="ok">حسنًا</string>
     <string name="mic_volume_title">مستوى صوت الميكروفون</string>
@@ -225,4 +225,7 @@
     <string name="settings_gestures">الإيماءات</string>
     <string name="gestures_text">• الضغط المطوّل على زر وسائط: مستعرض الملفات (التنزيلات وغيرها)\n• النقر على فيديو: إيقاف/متابعة\n• إصبعان: الحجم والتدوير (يلتصق عند 90°)\n• شريط المراجعة: اضغط مطوّلًا على مقطع لنقله أو إفلاته في السلة\n• النقر المزدوج على ترجمة أو نص: تعديل\n• النقر على بلاطة الفسيفساء: الأدوات على اليسار</string>
     <string name="export_size_note">حجم الملف تقديري؛ في الأصل يكون دقيقًا.</string>
+    <string name="licenses_title">تراخيص المصادر المفتوحة</string>
+    <string name="privacy_title">الخصوصية</string>
+    <string name="privacy_text">يعالج BabaCut جميع الفيديوهات والصور والصوت والترجمة محليًا على جهازك. لا يُرسل أي شيء إلى المطوّر أو إلى أطراف ثالثة. يتصل التطبيق بالإنترنت فقط لتنزيل نموذج التعرّف على الكلام مرة واحدة (من huggingface.co) عند أول استخدام للترجمة. تُستخدم الكاميرا والميكروفون أثناء التسجيل فقط. تُخزَّن المسودات والنسخ الاحتياطية في مساحة التطبيق الخاصة ويمكن حذفها في أي وقت. تُحفظ الفيديوهات المصدَّرة في معرضك ضمن Movies/BabaCut.</string>
 </resources>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Babacut</string>
+    <string name="app_name">BabaCut</string>
     <string name="record">شروع ضبط</string>
     <string name="stop">توقف موقت ضبط</string>
     <string name="flip_camera">تغییر دوربین</string>
@@ -52,7 +52,7 @@
     <string name="headphones_on">هدفون شناسایی شد – صدای لایه در پیش‌نمایش روشن</string>
     <string name="share">اشتراک‌گذاری</string>
     <string name="saved_title">ویدیو ذخیره شد</string>
-    <string name="saved_msg">ویدیو در گالری در Movies/VideoEditor است.</string>
+    <string name="saved_msg">ویدیو در گالری در Movies/BabaCut است.</string>
     <string name="export_running_mix">رندر ویدیو (با صدای لایه)… %1$d %%</string>
     <string name="ok">باشه</string>
     <string name="mic_volume_title">صدای میکروفون</string>
@@ -225,4 +225,7 @@
     <string name="settings_gestures">حرکت‌ها</string>
     <string name="gestures_text">• نگه‌داشتن دکمهٔ رسانه: مرورگر فایل (دانلودها و…)\n• لمس ویدیو: مکث/ادامه\n• دو انگشت: اندازه و چرخش (در ۹۰° می‌چسبد)\n• نوار بازبینی: فشار طولانی روی بخش برای جابه‌جایی یا انداختن در سطل\n• دوبار لمس زیرنویس یا متن: ویرایش\n• لمس کاشی موزاییک: ابزارها در چپ</string>
     <string name="export_size_note">حجم فایل تخمینی است؛ در اصلی دقیق است.</string>
+    <string name="licenses_title">مجوزهای متن‌باز</string>
+    <string name="privacy_title">حریم خصوصی</string>
+    <string name="privacy_text">BabaCut همهٔ ویدیوها، تصاویر، صداها و زیرنویس‌ها را به‌صورت محلی روی دستگاهت پردازش می‌کند. هیچ‌چیز به توسعه‌دهنده یا اشخاص ثالث فرستاده نمی‌شود. برنامه فقط برای دانلود یک‌بارهٔ مدل تشخیص گفتار (از huggingface.co) هنگام اولین استفاده از زیرنویس به اینترنت وصل می‌شود. دوربین و میکروفون فقط هنگام ضبط استفاده می‌شوند. پیش‌نویس‌ها و پشتیبان‌ها در فضای خصوصی برنامه ذخیره می‌شوند و هر زمان قابل حذف‌اند. ویدیوهای خروجی در گالری در Movies/BabaCut ذخیره می‌شوند.</string>
 </resources>

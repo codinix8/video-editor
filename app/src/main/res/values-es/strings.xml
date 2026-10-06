@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Babacut</string>
+    <string name="app_name">BabaCut</string>
     <string name="record">Iniciar grabación</string>
     <string name="stop">Pausar grabación</string>
     <string name="flip_camera">Cambiar cámara</string>
@@ -52,7 +52,7 @@
     <string name="headphones_on">Auriculares detectados – sonido de superposición en la vista previa</string>
     <string name="share">Compartir</string>
     <string name="saved_title">Vídeo guardado</string>
-    <string name="saved_msg">El vídeo está en la galería en Movies/VideoEditor.</string>
+    <string name="saved_msg">El vídeo está en la galería en Movies/BabaCut.</string>
     <string name="export_running_mix">Renderizando (con sonido de superposición)… %1$d %%</string>
     <string name="ok">OK</string>
     <string name="mic_volume_title">Volumen del micrófono</string>
@@ -225,4 +225,7 @@
     <string name="settings_gestures">Gestos</string>
     <string name="gestures_text">• Mantener pulsado un botón de medios: explorador de archivos (Descargas, etc.)\n• Tocar un vídeo: pausa/continuar\n• Dos dedos: tamaño y rotación (ajuste a 90°)\n• Barra de revisión: mantén pulsado un segmento para moverlo o soltarlo en la papelera\n• Doble toque en subtítulo o texto: editar\n• Tocar un recuadro del mosaico: herramientas a la izquierda</string>
     <string name="export_size_note">El tamaño es una estimación; en el original es exacto.</string>
+    <string name="licenses_title">Licencias de código abierto</string>
+    <string name="privacy_title">Privacidad</string>
+    <string name="privacy_text">BabaCut procesa todos los vídeos, imágenes, audio y subtítulos localmente en tu dispositivo. Nada se envía al desarrollador ni a terceros. La app solo se conecta a internet para descargar una vez el modelo de reconocimiento de voz (desde huggingface.co) al usar los subtítulos por primera vez. La cámara y el micrófono solo se usan mientras grabas. Los borradores y las copias se guardan en el almacenamiento privado de la app y pueden borrarse en cualquier momento. Los vídeos exportados se guardan en tu galería en Movies/BabaCut.</string>
 </resources>

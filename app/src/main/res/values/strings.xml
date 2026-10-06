@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Babacut</string>
+    <string name="app_name">BabaCut</string>
     <string name="record">Start recording</string>
     <string name="stop">Pause recording</string>
     <string name="flip_camera">Switch camera</string>
@@ -52,7 +52,7 @@
     <string name="headphones_on">Headphones detected – overlay sound on in preview</string>
     <string name="share">Share</string>
     <string name="saved_title">Video saved</string>
-    <string name="saved_msg">The video is in your gallery under Movies/VideoEditor.</string>
+    <string name="saved_msg">The video is in your gallery under Movies/BabaCut.</string>
     <string name="export_running_mix">Rendering video (with overlay sound)… %1$d %%</string>
     <string name="ok">OK</string>
     <string name="mic_volume_title">Microphone volume</string>
@@ -225,4 +225,7 @@
     <string name="settings_gestures">Gestures</string>
     <string name="gestures_text">• Press and hold a media button: file browser (Downloads etc.)\n• Tap a video: pause/resume\n• Two fingers: resize and rotate (snaps at 90°)\n• Review bar: long-press a segment to move it or drop it on the trash\n• Double-tap a caption or review text: edit\n• Tap a mosaic tile: tools on the left</string>
     <string name="export_size_note">File size is an estimate; the original is exact.</string>
+    <string name="licenses_title">Open-source licenses</string>
+    <string name="privacy_title">Privacy</string>
+    <string name="privacy_text">BabaCut processes all videos, images, audio and captions locally on your device. Nothing is uploaded to the developer or to third parties. The app connects to the internet only to download the speech-recognition model once (from huggingface.co) when you first use captions. Camera and microphone are used only while you record. Drafts and export backups are stored in the app\'s private storage and can be deleted in the app at any time. Exported videos are saved to your gallery under Movies/BabaCut.</string>
 </resources>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Babacut</string>
+    <string name="app_name">BabaCut</string>
     <string name="record">Kaydı başlat</string>
     <string name="stop">Kaydı duraklat</string>
     <string name="flip_camera">Kamerayı değiştir</string>
@@ -52,7 +52,7 @@
     <string name="headphones_on">Kulaklık algılandı – önizlemede katman sesi açık</string>
     <string name="share">Paylaş</string>
     <string name="saved_title">Video kaydedildi</string>
-    <string name="saved_msg">Video galeride Movies/VideoEditor altında.</string>
+    <string name="saved_msg">Video galeride Movies/BabaCut altında.</string>
     <string name="export_running_mix">Video işleniyor (katman sesiyle)… %1$d %%</string>
     <string name="ok">Tamam</string>
     <string name="mic_volume_title">Mikrofon ses düzeyi</string>
@@ -225,4 +225,7 @@
     <string name="settings_gestures">Hareketler</string>
     <string name="gestures_text">• Medya düğmesine basılı tut: dosya tarayıcısı (İndirilenler vb.)\n• Videoya dokun: duraklat/devam\n• İki parmak: boyut ve döndürme (90°\'de yapışır)\n• Arama çubuğu: bölüme uzun bas, taşı veya çöp kutusuna bırak\n• Altyazıya veya inceleme metnine çift dokun: düzenle\n• Mozaik karosuna dokun: araçlar solda</string>
     <string name="export_size_note">Dosya boyutu tahminidir; orijinalde kesindir.</string>
+    <string name="licenses_title">Açık kaynak lisansları</string>
+    <string name="privacy_title">Gizlilik</string>
+    <string name="privacy_text">BabaCut tüm videoları, resimleri, sesleri ve altyazıları cihazında yerel olarak işler. Geliştiriciye veya üçüncü taraflara hiçbir şey gönderilmez. Uygulama yalnızca altyazıları ilk kullandığında konuşma tanıma modelini bir kez indirmek için internete bağlanır (huggingface.co). Kamera ve mikrofon yalnızca kayıt sırasında kullanılır. Taslaklar ve yedekler uygulamanın özel alanında saklanır ve istediğin zaman silinebilir. Dışa aktarılan videolar galeride Movies/BabaCut altına kaydedilir.</string>
 </resources>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Babacut</string>
+    <string name="app_name">BabaCut</string>
     <string name="record">Aufnahme starten</string>
     <string name="stop">Aufnahme pausieren</string>
     <string name="flip_camera">Kamera wechseln</string>
@@ -52,7 +52,7 @@
     <string name="headphones_on">Kopfhörer erkannt – Overlay-Ton in der Vorschau an</string>
     <string name="share">Teilen</string>
     <string name="saved_title">Video gespeichert</string>
-    <string name="saved_msg">Das Video liegt in der Galerie unter Movies/VideoEditor.</string>
+    <string name="saved_msg">Das Video liegt in der Galerie unter Movies/BabaCut.</string>
     <string name="export_running_mix">Video wird gerendert (mit Overlay-Ton)… %1$d %%</string>
     <string name="ok">OK</string>
     <string name="mic_volume_title">Mikrofon-Lautstärke</string>
@@ -225,4 +225,7 @@
     <string name="settings_gestures">Gesten</string>
     <string name="gestures_text">• Medien-Knopf gedrückt halten: Datei-Browser (Downloads usw.)\n• Video antippen: Pause/Weiter\n• Zwei Finger: Größe und Drehung (rastet bei 90°)\n• Spulleiste: Segment lange drücken zum Verschieben oder auf den Papierkorb ziehen\n• Untertitel oder Review-Text doppelt antippen: bearbeiten\n• Mosaik-Kachel antippen: Werkzeuge links</string>
     <string name="export_size_note">Dateigröße ist eine Schätzung; beim Original ist sie exakt.</string>
+    <string name="licenses_title">Open-Source-Lizenzen</string>
+    <string name="privacy_title">Datenschutz</string>
+    <string name="privacy_text">BabaCut verarbeitet alle Videos, Bilder, Tonaufnahmen und Untertitel lokal auf deinem Gerät. Nichts wird an den Entwickler oder an Dritte übertragen. Die App verbindet sich nur mit dem Internet, um bei der ersten Nutzung der Untertitel einmalig das Spracherkennungs-Modell herunterzuladen (von huggingface.co). Kamera und Mikrofon werden nur während der Aufnahme genutzt. Entwürfe und Export-Sicherungen liegen im privaten Speicher der App und können dort jederzeit gelöscht werden. Exportierte Videos landen in deiner Galerie unter Movies/BabaCut.</string>
 </resources>

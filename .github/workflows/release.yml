@@ -1,0 +1,70 @@
+name: Release (Play Store)
+
+on:
+  workflow_dispatch:
+  push:
+    tags: [ 'v*' ]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code holen
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: NDK und CMake installieren
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null 2>&1 || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;27.2.12479018" "cmake;3.22.1" >/dev/null
+
+      - name: Java 17 einrichten
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Gradle einrichten
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Upload-Schlüssel aus Secret
+        run: |
+          echo "${{ secrets.UPLOAD_KEYSTORE_B64 }}" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          echo "UPLOAD_KEYSTORE_PATH=$RUNNER_TEMP/upload.jks" >> "$GITHUB_ENV"
+          echo "UPLOAD_KEYSTORE_PASSWORD=${{ secrets.UPLOAD_KEYSTORE_PASSWORD }}" >> "$GITHUB_ENV"
+          echo "UPLOAD_KEY_ALIAS=${{ secrets.UPLOAD_KEY_ALIAS }}" >> "$GITHUB_ENV"
+
+      - name: App Bundle und Release-APK bauen
+        run: |
+          chmod +x gradlew
+          ./gradlew bundleRelease assembleRelease --no-daemon --stacktrace 2>&1 | tee release.log
+
+      - name: Fehlerprotokoll veröffentlichen
+        if: failure()
+        run: |
+          git config user.name "babacut-ci"; git config user.email "ci@babacut.local"
+          git fetch origin build-logs 2>/dev/null || true
+          git checkout -B build-logs
+          cp release.log build.log
+          git add build.log; git commit -m "Release-Build ${{ github.run_number }} fehlgeschlagen" || true
+          git push -f origin build-logs
+
+      - name: Dateien sammeln
+        run: |
+          mkdir -p out
+          V=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          cp app/build/outputs/bundle/release/app-release.aab "out/BabaCut-$V.aab"
+          cp app/build/outputs/apk/release/app-release.apk "out/BabaCut-$V-release.apk"
+          echo "VERSION=$V" >> "$GITHUB_ENV"
+
+      - name: Release anlegen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="release-$VERSION-${{ github.run_number }}"
+          gh release create "$TAG" out/* --title "BabaCut $VERSION (Store-Build ${{ github.run_number }})" \
+            --notes "App Bundle (.aab) für die Play Console und Release-APK zum Testen. Signiert mit dem Upload-Schlüssel."

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Babacut</string>
+    <string name="app_name">BabaCut</string>
     <string name="record">Démarrer l\'enregistrement</string>
     <string name="stop">Mettre en pause</string>
     <string name="flip_camera">Changer de caméra</string>
@@ -52,7 +52,7 @@
     <string name="headphones_on">Casque détecté – son de la superposition dans l\'aperçu</string>
     <string name="share">Partager</string>
     <string name="saved_title">Vidéo enregistrée</string>
-    <string name="saved_msg">La vidéo est dans la galerie sous Movies/VideoEditor.</string>
+    <string name="saved_msg">La vidéo est dans la galerie sous Movies/BabaCut.</string>
     <string name="export_running_mix">Rendu de la vidéo (avec son superposé)… %1$d %%</string>
     <string name="ok">OK</string>
     <string name="mic_volume_title">Volume du micro</string>
@@ -225,4 +225,7 @@
     <string name="settings_gestures">Gestes</string>
     <string name="gestures_text">• Maintenir un bouton média : explorateur de fichiers (Téléchargements, etc.)\n• Toucher une vidéo : pause/reprise\n• Deux doigts : taille et rotation (aimanté à 90°)\n• Barre de relecture : appui long sur un segment pour le déplacer ou le lâcher sur la corbeille\n• Double-toucher un sous-titre ou un texte : modifier\n• Toucher une case de mosaïque : outils à gauche</string>
     <string name="export_size_note">La taille est une estimation ; pour l\'original elle est exacte.</string>
+    <string name="licenses_title">Licences open source</string>
+    <string name="privacy_title">Confidentialité</string>
+    <string name="privacy_text">BabaCut traite toutes les vidéos, images, pistes audio et sous-titres localement sur ton appareil. Rien n\'est transmis au développeur ni à des tiers. L\'appli ne se connecte à Internet que pour télécharger une fois le modèle de reconnaissance vocale (depuis huggingface.co) lors de la première utilisation des sous-titres. La caméra et le micro ne sont utilisés que pendant l\'enregistrement. Les brouillons et sauvegardes sont stockés dans l\'espace privé de l\'appli et peuvent être supprimés à tout moment. Les vidéos exportées sont enregistrées dans ta galerie sous Movies/BabaCut.</string>
 </resources>

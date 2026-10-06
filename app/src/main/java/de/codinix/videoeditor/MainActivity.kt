@@ -884,9 +884,33 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this, R.string.copied, Toast.LENGTH_SHORT).show()
                 }.setNegativeButton(R.string.ok, null).show()
         }
+        sec.button(getString(R.string.licenses_title)) { showLicenses() }
+        sec.button(getString(R.string.privacy_title)) {
+            Sheet(this).setTitle(R.string.privacy_title).setMessage(getString(R.string.privacy_text)).setPositiveButton(R.string.ok, null).show()
+        }
         sec.note(getString(R.string.settings_version, BuildConfig.VERSION_NAME))
 
         Sheet(this).setTitle(R.string.settings).setTall(true, selfScrolling = false).setSections(sec).show()
+    }
+
+    /** Open-Source-Lizenzen der verwendeten Bibliotheken. */
+    private fun showLicenses() {
+        val text = """
+BabaCut uses the following open-source software:
+
+whisper.cpp — Copyright (c) 2023-2024 The ggml authors. MIT License.
+Whisper models (ggml) — OpenAI, MIT License.
+AndroidX, CameraX, Media3 (ExoPlayer, Transformer, Effect) — The Android Open Source Project, Apache License 2.0.
+Material Components for Android — Google LLC, Apache License 2.0.
+Kotlin Standard Library — JetBrains s.r.o., Apache License 2.0.
+
+MIT License: Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+
+Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0. Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        """.trimIndent()
+        Sheet(this).setTitle(R.string.licenses_title).setTall(true, selfScrolling = false)
+            .setView(android.widget.TextView(this).apply { this.text = text; textSize = 12.5f; setTextColor(0xFFDDDDE2.toInt()); setTextIsSelectable(true); setLineSpacing(0f, 1.2f) })
+            .setPositiveButton(R.string.ok, null).show()
     }
 
     /** Drei kurze Tipp-Karten beim ersten Öffnen, nacheinander. */
@@ -2015,7 +2039,7 @@ class MainActivity : AppCompatActivity() {
                     persistSession()
                     Toast.makeText(this, if (chunks.isEmpty()) getString(R.string.captions_none)
                         else getString(R.string.captions_done, chunks.size, result.language) + "\n" + getString(R.string.captions_hint), Toast.LENGTH_LONG).show()
-                    if (audioCheck.isNotEmpty()) main.postDelayed({ Toast.makeText(this, "Ton-Kontrolle: $audioCheck", Toast.LENGTH_LONG).show() }, 3500)
+                    if (BuildConfig.DEBUG && audioCheck.isNotEmpty()) main.postDelayed({ Toast.makeText(this, "Ton-Kontrolle: $audioCheck", Toast.LENGTH_LONG).show() }, 3500)
                     if (inReview) player?.play()
                 }
             } catch (e: Throwable) {
