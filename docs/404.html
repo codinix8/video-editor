@@ -7,6 +7,7 @@
 <meta name="description" content="BabaCut – record, cut and caption short videos on your phone. Mosaic, tile mode, on-device captions. No account, no upload.">
 <link rel="icon" href="assets/icon-512.png">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap">
 <script src="lang.js"></script>
 </head>
 <body>
@@ -14,17 +15,21 @@
 <header>
   <a class="brand" href="/"><img src="assets/b.png" alt=""> BabaCut</a>
   <nav>
-    <a href="/#features"><span data-lang="en">Features</span><span data-lang="de">Funktionen</span></a>
-    <a href="/support"><span data-lang="en">Support</span><span data-lang="de">Support</span></a>
-    <a href="/privacy"><span data-lang="en">Privacy</span><span data-lang="de">Datenschutz</span></a>
-    <a href="/imprint"><span data-lang="en">Imprint</span><span data-lang="de">Impressum</span></a>
-    <button class="lang" id="langbtn" onclick="setLang(document.documentElement.lang==='de'?'en':'de')">DE</button>
+    <a href="/#features"><span data-lang="en">Features</span><span data-lang="de">Funktionen</span><span data-lang="fa">امکانات</span></a>
+    <a href="/support"><span data-lang="en">Support</span><span data-lang="de">Support</span><span data-lang="fa">پشتیبانی</span></a>
+    <a href="/privacy"><span data-lang="en">Privacy</span><span data-lang="de">Datenschutz</span><span data-lang="fa">حریم خصوصی</span></a>
+    <a href="/imprint"><span data-lang="en">Imprint</span><span data-lang="de">Impressum</span><span data-lang="fa">شناسنامهٔ سایت</span></a>
+    <span class="flags">
+      <button data-l="de" onclick="setLang('de')" title="Deutsch">🇩🇪</button>
+      <button data-l="en" onclick="setLang('en')" title="English">🇬🇧</button>
+      <button data-l="fa" onclick="setLang('fa')" title="فارسی">🇮🇷</button>
+    </span>
   </nav>
 </header>
 <section class="page"><h1>404</h1><p><a href="/">BabaCut</a></p></section>
 <footer>
-  <a href="/privacy"><span data-lang="en">Privacy</span><span data-lang="de">Datenschutz</span></a>
-  <a href="/imprint"><span data-lang="en">Imprint</span><span data-lang="de">Impressum</span></a>
+  <a href="/privacy"><span data-lang="en">Privacy</span><span data-lang="de">Datenschutz</span><span data-lang="fa">حریم خصوصی</span></a>
+  <a href="/imprint"><span data-lang="en">Imprint</span><span data-lang="de">Impressum</span><span data-lang="fa">شناسنامهٔ سایت</span></a>
   <a href="/support">Support</a>
   <a href="https://github.com/codinix8/video-editor">GitHub</a>
   <span>© 2026 Codinix · BabaCut</span>

@@ -1,8 +1,13 @@
 (function(){
   var saved = localStorage.getItem('babacut-lang');
-  var lang = saved || ((navigator.language||'en').toLowerCase().startsWith('de') ? 'de' : 'en');
-  document.documentElement.lang = lang;
-  window.setLang = function(l){ localStorage.setItem('babacut-lang', l); document.documentElement.lang = l; update(); };
-  function update(){ var b=document.getElementById('langbtn'); if(b) b.textContent = document.documentElement.lang==='de' ? 'EN' : 'DE'; }
-  document.addEventListener('DOMContentLoaded', update);
+  var nav = (navigator.language||'en').toLowerCase();
+  var lang = saved || (nav.startsWith('de') ? 'de' : nav.startsWith('fa') ? 'fa' : 'en');
+  apply(lang);
+  window.setLang = function(l){ localStorage.setItem('babacut-lang', l); apply(l); };
+  function apply(l){
+    document.documentElement.lang = l;
+    document.documentElement.dir = (l==='fa') ? 'rtl' : 'ltr';
+    document.querySelectorAll('.flags button').forEach(function(b){ b.classList.toggle('active', b.dataset.l===l); });
+  }
+  document.addEventListener('DOMContentLoaded', function(){ apply(document.documentElement.lang); });
 })();

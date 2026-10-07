@@ -7,6 +7,7 @@
 <meta name="description" content="BabaCut – record, cut and caption short videos on your phone. Mosaic, tile mode, on-device captions. No account, no upload.">
 <link rel="icon" href="assets/icon-512.png">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap">
 <script src="lang.js"></script>
 </head>
 <body>
@@ -14,11 +15,15 @@
 <header>
   <a class="brand" href="/"><img src="assets/b.png" alt=""> BabaCut</a>
   <nav>
-    <a href="/#features"><span data-lang="en">Features</span><span data-lang="de">Funktionen</span></a>
-    <a href="/support"><span data-lang="en">Support</span><span data-lang="de">Support</span></a>
-    <a href="/privacy"><span data-lang="en">Privacy</span><span data-lang="de">Datenschutz</span></a>
-    <a href="/imprint"><span data-lang="en">Imprint</span><span data-lang="de">Impressum</span></a>
-    <button class="lang" id="langbtn" onclick="setLang(document.documentElement.lang==='de'?'en':'de')">DE</button>
+    <a href="/#features"><span data-lang="en">Features</span><span data-lang="de">Funktionen</span><span data-lang="fa">امکانات</span></a>
+    <a href="/support"><span data-lang="en">Support</span><span data-lang="de">Support</span><span data-lang="fa">پشتیبانی</span></a>
+    <a href="/privacy"><span data-lang="en">Privacy</span><span data-lang="de">Datenschutz</span><span data-lang="fa">حریم خصوصی</span></a>
+    <a href="/imprint"><span data-lang="en">Imprint</span><span data-lang="de">Impressum</span><span data-lang="fa">شناسنامهٔ سایت</span></a>
+    <span class="flags">
+      <button data-l="de" onclick="setLang('de')" title="Deutsch">🇩🇪</button>
+      <button data-l="en" onclick="setLang('en')" title="English">🇬🇧</button>
+      <button data-l="fa" onclick="setLang('fa')" title="فارسی">🇮🇷</button>
+    </span>
   </nav>
 </header>
 
@@ -26,43 +31,52 @@
   <div>
     <h1 data-lang="en">Record. Cut. <span>Caption.</span><br>All on your phone.</h1>
     <h1 data-lang="de">Aufnehmen. Schneiden. <span>Untertiteln.</span><br>Alles auf dem Handy.</h1>
+    <h1 data-lang="fa">ضبط کن. برش بزن. <span>زیرنویس بگذار.</span><br>همه روی گوشی.</h1>
     <p data-lang="en">BabaCut is a fast editor for short videos: segments, tile mode, mosaic, overlays and on-device captions – exported in up to 4K. No account, no upload, no ads.</p>
     <p data-lang="de">BabaCut ist ein schneller Editor für Kurzvideos: Segmente, Kachel-Modus, Mosaik, Overlays und Untertitel auf dem Gerät – exportiert in bis zu 4K. Kein Konto, kein Upload, keine Werbung.</p>
-    <a class="btn" href="https://play.google.com/store/apps/details?id=de.codinix.babacut"><span data-lang="en">Get it on Google Play</span><span data-lang="de">Bei Google Play laden</span></a>
-    <a class="btn secondary" href="#features"><span data-lang="en">See features</span><span data-lang="de">Funktionen ansehen</span></a>
+    <p data-lang="fa">BabaCut ویرایشگری سریع برای ویدیوهای کوتاه است: بخش‌ها، حالت کاشی، موزاییک، لایه‌ها و زیرنویس روی دستگاه – با خروجی تا 4K. بدون حساب، بدون آپلود، بدون تبلیغ.</p>
+    <a class="btn" href="https://play.google.com/store/apps/details?id=de.codinix.babacut"><span data-lang="en">Get it on Google Play</span><span data-lang="de">Bei Google Play laden</span><span data-lang="fa">دریافت از Google Play</span></a>
+    <a class="btn secondary" href="#features"><span data-lang="en">See features</span><span data-lang="de">Funktionen ansehen</span><span data-lang="fa">دیدن امکانات</span></a>
   </div>
   <img src="assets/b.png" alt="BabaCut">
 </section>
 
 <section id="features" class="grid">
-  <div class="card"><h3 data-lang="en">Segment recording</h3><h3 data-lang="de">Segment-Aufnahme</h3>
+  <div class="card"><h3 data-lang="en">Segment recording</h3><h3 data-lang="de">Segment-Aufnahme</h3><h3 data-lang="fa">ضبط بخشی</h3>
     <p data-lang="en">Start, pause, continue. Reorder or delete any segment later – captions and sound follow every cut.</p>
-    <p data-lang="de">Starten, pausieren, weiter. Segmente später umordnen oder löschen – Untertitel und Ton folgen jedem Schnitt.</p></div>
-  <div class="card"><h3 data-lang="en">Tile mode &amp; Baba Rainbow</h3><h3 data-lang="de">Kachel-Modus &amp; Baba Regenbogen</h3>
+    <p data-lang="de">Starten, pausieren, weiter. Segmente später umordnen oder löschen – Untertitel und Ton folgen jedem Schnitt.</p>
+    <p data-lang="fa">شروع، مکث، ادامه. بخش‌ها را بعداً جابه‌جا یا حذف کن – زیرنویس و صدا هر برش را دنبال می‌کنند.</p></div>
+  <div class="card"><h3 data-lang="en">Tile mode &amp; Baba Rainbow</h3><h3 data-lang="de">Kachel-Modus &amp; Baba Regenbogen</h3><h3 data-lang="fa">حالت کاشی و رنگین‌کمان بابا</h3>
     <p data-lang="en">React to any video: your camera as a square, 3:4 or circle tile with the signature rainbow frame.</p>
-    <p data-lang="de">Auf jedes Video reagieren: deine Kamera als Quadrat, 3:4 oder Kreis mit dem Signatur-Regenbogenrahmen.</p></div>
-  <div class="card"><h3 data-lang="en">Mosaic</h3><h3 data-lang="de">Mosaik</h3>
+    <p data-lang="de">Auf jedes Video reagieren: deine Kamera als Quadrat, 3:4 oder Kreis mit dem Signatur-Regenbogenrahmen.</p>
+    <p data-lang="fa">به هر ویدیویی واکنش نشان بده: دوربین تو به‌شکل مربع، ۳:۴ یا دایره با قاب رنگین‌کمان امضایی.</p></div>
+  <div class="card"><h3 data-lang="en">Mosaic</h3><h3 data-lang="de">Mosaik</h3><h3 data-lang="fa">موزاییک</h3>
     <p data-lang="en">Two, three or four tiles – each one camera, image or video, with zoom, pan and rotation.</p>
-    <p data-lang="de">Zwei, drei oder vier Kacheln – jede Kamera, Bild oder Video, mit Zoom, Verschieben und Drehen.</p></div>
-  <div class="card"><h3 data-lang="en">Captions on your device</h3><h3 data-lang="de">Untertitel auf dem Gerät</h3>
+    <p data-lang="de">Zwei, drei oder vier Kacheln – jede Kamera, Bild oder Video, mit Zoom, Verschieben und Drehen.</p>
+    <p data-lang="fa">دو، سه یا چهار کاشی – هر کدام دوربین، عکس یا ویدیو، با زوم، جابه‌جایی و چرخش.</p></div>
+  <div class="card"><h3 data-lang="en">Captions on your device</h3><h3 data-lang="de">Untertitel auf dem Gerät</h3><h3 data-lang="fa">زیرنویس روی دستگاه</h3>
     <p data-lang="en">Speech recognition runs locally. Eleven styles, karaoke included, full editor for words and timing.</p>
-    <p data-lang="de">Spracherkennung läuft lokal. Elf Vorlagen, Karaoke inklusive, vollständiger Editor für Wörter und Timing.</p></div>
-  <div class="card"><h3 data-lang="en">Overlays &amp; filters</h3><h3 data-lang="de">Overlays &amp; Filter</h3>
+    <p data-lang="de">Spracherkennung läuft lokal. Elf Vorlagen, Karaoke inklusive, vollständiger Editor für Wörter und Timing.</p>
+    <p data-lang="fa">تشخیص گفتار محلی اجرا می‌شود. یازده سبک، شامل کارائوکه، ویرایشگر کامل برای کلمات و زمان‌بندی.</p></div>
+  <div class="card"><h3 data-lang="en">Overlays &amp; filters</h3><h3 data-lang="de">Overlays &amp; Filter</h3><h3 data-lang="fa">لایه‌ها و فیلترها</h3>
     <p data-lang="en">Images, text, picture-in-picture videos with their own volume, nine color filters, platform guides.</p>
-    <p data-lang="de">Bilder, Text, Bild-im-Bild-Videos mit eigener Lautstärke, neun Farbfilter, Plattform-Hilfslinien.</p></div>
-  <div class="card"><h3 data-lang="en">Export without surprises</h3><h3 data-lang="de">Export ohne Überraschungen</h3>
+    <p data-lang="de">Bilder, Text, Bild-im-Bild-Videos mit eigener Lautstärke, neun Farbfilter, Plattform-Hilfslinien.</p>
+    <p data-lang="fa">عکس، متن، ویدیوهای تصویر‌در‌تصویر با صدای مستقل، نه فیلتر رنگ، راهنمای پلتفرم.</p></div>
+  <div class="card"><h3 data-lang="en">Export without surprises</h3><h3 data-lang="de">Export ohne Überraschungen</h3><h3 data-lang="fa">خروجی بدون غافلگیری</h3>
     <p data-lang="en">Pick the resolution, see the file size first. Export backups keep your last projects for 7 days.</p>
-    <p data-lang="de">Auflösung wählen, Dateigröße vorab sehen. Export-Sicherungen bewahren deine letzten Projekte 7 Tage auf.</p></div>
+    <p data-lang="de">Auflösung wählen, Dateigröße vorab sehen. Export-Sicherungen bewahren deine letzten Projekte 7 Tage auf.</p>
+    <p data-lang="fa">وضوح را انتخاب کن و اندازهٔ فایل را پیش از ذخیره ببین. پشتیبان‌های خروجی آخرین پروژه‌ها را ۷ روز نگه می‌دارند.</p></div>
 </section>
 </div>
 <div class="strip"><div class="wrap">
   <span data-lang="en"><b>Private by design.</b> Nothing leaves your phone – except the videos you choose to share.</span>
   <span data-lang="de"><b>Privat von Haus aus.</b> Nichts verlässt dein Handy – außer den Videos, die du selbst teilst.</span>
+  <span data-lang="fa"><b>خصوصی از پایه.</b> هیچ‌چیز گوشی‌ات را ترک نمی‌کند – جز ویدیوهایی که خودت به اشتراک می‌گذاری.</span>
 </div></div>
 <div class="wrap">
 <footer>
-  <a href="/privacy"><span data-lang="en">Privacy</span><span data-lang="de">Datenschutz</span></a>
-  <a href="/imprint"><span data-lang="en">Imprint</span><span data-lang="de">Impressum</span></a>
+  <a href="/privacy"><span data-lang="en">Privacy</span><span data-lang="de">Datenschutz</span><span data-lang="fa">حریم خصوصی</span></a>
+  <a href="/imprint"><span data-lang="en">Imprint</span><span data-lang="de">Impressum</span><span data-lang="fa">شناسنامهٔ سایت</span></a>
   <a href="/support">Support</a>
   <a href="https://github.com/codinix8/video-editor">GitHub</a>
   <span>© 2026 Codinix · BabaCut</span>

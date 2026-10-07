@@ -7,6 +7,7 @@
 <meta name="description" content="BabaCut – record, cut and caption short videos on your phone. Mosaic, tile mode, on-device captions. No account, no upload.">
 <link rel="icon" href="assets/icon-512.png">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap">
 <script src="lang.js"></script>
 </head>
 <body>
@@ -14,11 +15,15 @@
 <header>
   <a class="brand" href="/"><img src="assets/b.png" alt=""> BabaCut</a>
   <nav>
-    <a href="/#features"><span data-lang="en">Features</span><span data-lang="de">Funktionen</span></a>
-    <a href="/support"><span data-lang="en">Support</span><span data-lang="de">Support</span></a>
-    <a href="/privacy"><span data-lang="en">Privacy</span><span data-lang="de">Datenschutz</span></a>
-    <a href="/imprint"><span data-lang="en">Imprint</span><span data-lang="de">Impressum</span></a>
-    <button class="lang" id="langbtn" onclick="setLang(document.documentElement.lang==='de'?'en':'de')">DE</button>
+    <a href="/#features"><span data-lang="en">Features</span><span data-lang="de">Funktionen</span><span data-lang="fa">امکانات</span></a>
+    <a href="/support"><span data-lang="en">Support</span><span data-lang="de">Support</span><span data-lang="fa">پشتیبانی</span></a>
+    <a href="/privacy"><span data-lang="en">Privacy</span><span data-lang="de">Datenschutz</span><span data-lang="fa">حریم خصوصی</span></a>
+    <a href="/imprint"><span data-lang="en">Imprint</span><span data-lang="de">Impressum</span><span data-lang="fa">شناسنامهٔ سایت</span></a>
+    <span class="flags">
+      <button data-l="de" onclick="setLang('de')" title="Deutsch">🇩🇪</button>
+      <button data-l="en" onclick="setLang('en')" title="English">🇬🇧</button>
+      <button data-l="fa" onclick="setLang('fa')" title="فارسی">🇮🇷</button>
+    </span>
   </nav>
 </header>
 <section class="page"><div data-lang="en">
@@ -83,10 +88,33 @@
 
 <h2>Kontakt</h2>
 <p>Codinix · <a href="https://github.com/codinix8/video-editor">github.com/codinix8/video-editor</a></p>
+</div><div data-lang="fa">
+<h1>سیاست حریم خصوصی</h1>
+<small>آخرین به‌روزرسانی: ۷ اکتبر ۲۰۲۶</small>
+<h2>خلاصه</h2>
+<p>BabaCut ویرایشگر ویدیویی است که کاملاً روی دستگاه تو کار می‌کند. ما هیچ دادهٔ شخصی را جمع‌آوری، ذخیره یا منتقل نمی‌کنیم. حسابی لازم نیست، تبلیغی وجود ندارد و هیچ ابزار تحلیل یا ردیابی گنجانده نشده است.</p>
+<h2>داده‌هایی که روی دستگاه تو پردازش می‌شوند</h2>
+<ul>
+<li><strong>دوربین و میکروفون</strong> فقط هنگام ضبط استفاده می‌شوند. ضبط‌ها تا زمان خروجی گرفتن یا حذف، در فضای خصوصی برنامه ذخیره می‌شوند.</li>
+<li><strong>عکس‌ها و ویدیوهایی</strong> که از گالری یا مرورگر فایل انتخاب می‌کنی، برای ویرایش به فضای خصوصی برنامه کپی و با حذف پروژه پاک می‌شوند.</li>
+<li><strong>زیرنویس‌ها</strong> با تشخیص گفتار روی دستگاه (whisper.cpp) ساخته می‌شوند. صدای تو هرگز دستگاه را ترک نمی‌کند.</li>
+<li><strong>پیش‌نویس‌ها و پشتیبان‌های خروجی</strong> در فضای خصوصی برنامه نگه داشته می‌شوند و هر زمان قابل حذف‌اند. پشتیبان‌های خروجی پس از ۷ روز خودکار حذف می‌شوند.</li>
+<li><strong>ویدیوهای خروجی</strong> در گالری تو (Movies/BabaCut) ذخیره می‌شوند و در اختیار خودت هستند.</li>
+</ul>
+<h2>دسترسی به اینترنت</h2>
+<p>برنامه فقط برای یک هدف به اینترنت وصل می‌شود: دانلود مدل تشخیص گفتار (یک‌بار، ۷۵ تا ۴۷۰ مگابایت بسته به انتخابت) از <a href="https://huggingface.co">huggingface.co</a> هنگام اولین استفاده از زیرنویس. این درخواست مانند هر دانلودی، نشانی IP تو را برای Hugging Face آشکار می‌کند؛ به <a href="https://huggingface.co/privacy">سیاست حریم خصوصی</a> آن‌ها مراجعه کن. هیچ درخواست شبکهٔ دیگری انجام نمی‌شود.</p>
+<h2>گزارش خرابی</h2>
+<p>اگر برنامه از کار بیفتد، گزارشی فنی در فضای خصوصی برنامه نوشته و در شروع بعدی به تو نشان داده می‌شود. این گزارش به هیچ‌جا فرستاده نمی‌شود، مگر خودت آن را کپی و ارسال کنی.</p>
+<h2>کودکان</h2>
+<p>BabaCut برای کودکان زیر ۱۳ سال نیست و آگاهانه هیچ داده‌ای از هیچ‌کس جمع‌آوری نمی‌کند.</p>
+<h2>حقوق تو</h2>
+<p>چون هیچ دادهٔ شخصی جمع‌آوری یا منتقل نمی‌شود، در سمت ما چیزی برای دسترسی، اصلاح یا حذف وجود ندارد. همهٔ داده‌ها روی دستگاه توست؛ با حذف برنامه پاک می‌شوند (ویدیوهای خروجی در گالری باقی می‌مانند).</p>
+<h2>تماس</h2>
+<p>Codinix · <a href="mailto:support@babacut.io">support@babacut.io</a> · <a href="https://github.com/codinix8/video-editor">github.com/codinix8/video-editor</a></p>
 </div></section>
 <footer>
-  <a href="/privacy"><span data-lang="en">Privacy</span><span data-lang="de">Datenschutz</span></a>
-  <a href="/imprint"><span data-lang="en">Imprint</span><span data-lang="de">Impressum</span></a>
+  <a href="/privacy"><span data-lang="en">Privacy</span><span data-lang="de">Datenschutz</span><span data-lang="fa">حریم خصوصی</span></a>
+  <a href="/imprint"><span data-lang="en">Imprint</span><span data-lang="de">Impressum</span><span data-lang="fa">شناسنامهٔ سایت</span></a>
   <a href="/support">Support</a>
   <a href="https://github.com/codinix8/video-editor">GitHub</a>
   <span>© 2026 Codinix · BabaCut</span>
