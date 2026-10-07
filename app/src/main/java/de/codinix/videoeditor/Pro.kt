@@ -56,6 +56,7 @@ class Pro(private val context: Context) : PurchasesUpdatedListener {
         val c = BillingClient.newBuilder(context)
             .setListener(this)
             .enablePendingPurchases(com.android.billingclient.api.PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
+            .enableAutoServiceReconnection()
             .build()
         client = c
         c.startConnection(object : BillingClientStateListener {
@@ -73,9 +74,11 @@ class Pro(private val context: Context) : PurchasesUpdatedListener {
         val params = QueryProductDetailsParams.newBuilder().setProductList(listOf(
             QueryProductDetailsParams.Product.newBuilder().setProductId(SUB_ID).setProductType(BillingClient.ProductType.SUBS).build()
         )).build()
-        c.queryProductDetailsAsync(params) { result, list ->
-            if (result.responseCode == BillingClient.BillingResponseCode.OK) { product = list.firstOrNull(); onChanged?.invoke() }
-            else { lastError = result.debugMessage; Log.w(TAG, "Products: ${result.debugMessage}") }
+        c.queryProductDetailsAsync(params) { result, queryResult ->
+            if (result.responseCode == BillingClient.BillingResponseCode.OK) {
+                product = queryResult.productDetailsList.firstOrNull(); onChanged?.invoke()
+                if (product == null) Log.w(TAG, "Produkt nicht gefunden: ${queryResult.unfetchedProductList}")
+            } else { lastError = result.debugMessage; Log.w(TAG, "Products: ${result.debugMessage}") }
         }
         c.queryPurchasesAsync(QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.SUBS).build()) { result, purchases ->
             if (result.responseCode == BillingClient.BillingResponseCode.OK) applyPurchases(purchases, fromPlay = true)
