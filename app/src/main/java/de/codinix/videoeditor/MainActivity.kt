@@ -832,7 +832,7 @@ class MainActivity : AppCompatActivity() {
                 setPadding(pad, (13 * dp).toInt(), pad, (13 * dp).toInt())
                 background = android.graphics.drawable.GradientDrawable().apply { setColor(Sheet.CARD); cornerRadius = 12 * dp }
                 setOnClickListener {
-                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/account/subscriptions?sku=${Pro.SUB_ID}&package=$packageName")))
+                    startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/account/subscriptions?sku=${Pro.SUB_ID}&package=$packageName")))
                 }
             })
         } else {
