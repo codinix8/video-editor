@@ -228,4 +228,35 @@
     <string name="licenses_title">تراخيص المصادر المفتوحة</string>
     <string name="privacy_title">الخصوصية</string>
     <string name="privacy_text">يعالج BabaCut جميع الفيديوهات والصور والصوت والترجمة محليًا على جهازك. لا يُرسل أي شيء إلى المطوّر أو إلى أطراف ثالثة. يتصل التطبيق بالإنترنت فقط لتنزيل نموذج التعرّف على الكلام مرة واحدة (من huggingface.co) عند أول استخدام للترجمة. تُستخدم الكاميرا والميكروفون أثناء التسجيل فقط. تُخزَّن المسودات والنسخ الاحتياطية في مساحة التطبيق الخاصة ويمكن حذفها في أي وقت. تُحفظ الفيديوهات المصدَّرة في معرضك ضمن Movies/BabaCut.</string>
+    <string name="pro_title">BabaCut Pro</string>
+    <string name="pro_title_upsell">احصل على BabaCut Pro</string>
+    <string name="pro_active_title">BabaCut Pro مفعّل</string>
+    <string name="pro_active_short">شكرًا لدعمك BabaCut</string>
+    <string name="pro_upsell_short">تصدير 4K، وضع البلاطة، كل الترجمات والمرشّحات، بلا علامة مائية</string>
+    <string name="pro_active_text">كل ميزات Pro مفتوحة على هذا الجهاز.</string>
+    <string name="pro_manage">إدارة الاشتراك</string>
+    <string name="pro_yearly">سنوي</string>
+    <string name="pro_monthly">شهري</string>
+    <string name="pro_year">سنة</string>
+    <string name="pro_month">شهر</string>
+    <string name="pro_trial_then">%1$d أيام مجانًا، ثم %2$s سنويًا</string>
+    <string name="pro_per_year">أفضل قيمة</string>
+    <string name="pro_cancel_anytime">إلغاء في أي وقت</string>
+    <string name="pro_terms">تتجدد الاشتراكات تلقائيًا ما لم تُلغَ قبل 24 ساعة على الأقل من نهاية الفترة. أدِر أو ألغِ من Google Play. الأسعار شاملة الضريبة.</string>
+    <string name="pro_restore">استعادة المشتريات</string>
+    <string name="pro_restoring">جارٍ التحقق من مشترياتك…</string>
+    <string name="pro_prices_loading">جارٍ تحميل الأسعار…</string>
+    <string name="pro_prices_error">Google Play غير متاح الآن. حاول لاحقًا.</string>
+    <string name="pro_thanks">مرحبًا بك في BabaCut Pro – شكرًا!</string>
+    <string name="pro_locked">هذه ميزة Pro</string>
+    <string-array name="pro_benefits">
+        <item>تصدير 4K و2K</item>
+        <item>وضع البلاطة مع قوس قزح بابا</item>
+        <item>فسيفساء مع فيديو</item>
+        <item>كل أنماط الترجمة الأحد عشر والرموز ونموذج بابا</item>
+        <item>كل مرشّحات الألوان التسعة</item>
+        <item>إرشادات المنصة لـ TikTok وReels وShorts</item>
+        <item>حتى 5 نسخ تصدير احتياطية</item>
+        <item>بلا علامة مائية</item>
+    </string-array>
 </resources>

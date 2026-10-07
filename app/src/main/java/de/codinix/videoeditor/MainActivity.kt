@@ -145,6 +145,10 @@ class MainActivity : AppCompatActivity() {
     // ---- Mosaik ----
     private var mosaic = de.codinix.videoeditor.overlay.Mosaic(de.codinix.videoeditor.overlay.Mosaic.LAYOUT_NONE)
     private val mosaicActive: Boolean get() = mosaic.layout != de.codinix.videoeditor.overlay.Mosaic.LAYOUT_NONE
+    /** BabaCut Pro (Google Play Billing). */
+    private val pro by lazy { Pro(this).also { it.onChanged = { main.post { onProChanged() } } } }
+    private val isPro: Boolean get() = Pro.isActive(this)
+
     private val pickTileImage = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) setTileImage(uri)
     }
@@ -285,6 +289,7 @@ class MainActivity : AppCompatActivity() {
         binding.mosaicButton.setOnClickListener { showMosaicDialog() }
         binding.filterButton.setOnClickListener { showFilterDialog() }
         binding.settingsButton.setOnClickListener { showSettings() }
+        pro.connect()
         if (!prefs.getBoolean("tips_shown", false)) { main.postDelayed({ showFirstRunTips() }, 1200) }
         bgExecutor.execute { try { drafts.pruneAuto(prefs.getInt("auto_backups", 3)) } catch (_: Exception) {} }
         compositor.colorFilter = prefs.getInt("color_filter", 0)
@@ -803,8 +808,90 @@ class MainActivity : AppCompatActivity() {
 
     // ---------------------------------------------------------------- Einstellungen & Tipps
 
+    private var proSheet: android.app.Dialog? = null
+    private fun onProChanged() {
+        // Offenes Pro-Fenster aktualisieren (Preise geladen / Kauf abgeschlossen)
+        if (proSheet?.isShowing == true) { proSheet?.dismiss(); showProSheet() }
+        if (isPro && proJustBought) { proJustBought = false; Toast.makeText(this, R.string.pro_thanks, Toast.LENGTH_LONG).show() }
+    }
+    private var proJustBought = false
+
+    /** Pro-Seite: Vorteile, zwei Preiskarten (Jahr hervorgehoben), Wiederherstellen. */
+    fun showProSheet() {
+        val dp = resources.displayMetrics.density; val pad = (16 * dp).toInt()
+        val box = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.VERTICAL }
+        fun text(t: CharSequence, size: Float, color: Int, bold: Boolean = false, center: Boolean = false) = android.widget.TextView(this).apply {
+            this.text = t; textSize = size; setTextColor(color); if (bold) typeface = android.graphics.Typeface.DEFAULT_BOLD
+            if (center) gravity = android.view.Gravity.CENTER
+        }
+        if (isPro) {
+            box.addView(text(getString(R.string.pro_active_title), 20f, 0xFFFFFFFF.toInt(), bold = true, center = true).apply { setPadding(0, pad, 0, pad / 2) })
+            box.addView(text(getString(R.string.pro_active_text), 14f, 0xFFB7CFCB.toInt(), center = true).apply { setPadding(0, 0, 0, pad) })
+            box.addView(android.widget.TextView(this).apply {
+                text = getString(R.string.pro_manage); textSize = 15f; setTextColor(0xFFFFFFFF.toInt()); gravity = android.view.Gravity.CENTER
+                setPadding(pad, (13 * dp).toInt(), pad, (13 * dp).toInt())
+                background = android.graphics.drawable.GradientDrawable().apply { setColor(Sheet.CARD); cornerRadius = 12 * dp }
+                setOnClickListener {
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/account/subscriptions?sku=${Pro.SUB_ID}&package=$packageName")))
+                }
+            })
+        } else {
+            // Vorteile
+            val benefits = resources.getStringArray(R.array.pro_benefits)
+            benefits.forEach { b ->
+                box.addView(android.widget.LinearLayout(this).apply {
+                    orientation = android.widget.LinearLayout.HORIZONTAL; setPadding(0, (5 * dp).toInt(), 0, (5 * dp).toInt())
+                    addView(text("👑", 15f, 0xFFE4B85A.toInt()).apply { setPadding(0, 0, (10 * dp).toInt(), 0) })
+                    addView(text(b, 15f, 0xFFFFFFFF.toInt()))
+                })
+            }
+            // Preiskarten
+            val plans = pro.plans()
+            val yearly = plans.firstOrNull { it.planId == Pro.PLAN_YEARLY }
+            val monthly = plans.firstOrNull { it.planId == Pro.PLAN_MONTHLY }
+            fun card(title: CharSequence, price: CharSequence, sub: CharSequence?, highlight: Boolean, onClick: () -> Unit) = android.widget.LinearLayout(this).apply {
+                orientation = android.widget.LinearLayout.VERTICAL
+                setPadding(pad, pad, pad, pad)
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    setColor(if (highlight) 0xFF3A1F2A.toInt() else Sheet.CARD); cornerRadius = 16 * dp
+                    setStroke((2 * dp).toInt(), if (highlight) Sheet.ACCENT else 0x33FFFFFF)
+                }
+                addView(text(title, 16f, 0xFFFFFFFF.toInt(), bold = true))
+                addView(text(price, 22f, if (highlight) 0xFFE4B85A.toInt() else 0xFFFFFFFF.toInt(), bold = true).apply { setPadding(0, (4 * dp).toInt(), 0, 0) })
+                sub?.let { addView(text(it, 13f, 0xFFB7CFCB.toInt()).apply { setPadding(0, (4 * dp).toInt(), 0, 0) }) }
+                setOnClickListener { onClick() }
+            }
+            val lp = android.widget.LinearLayout.LayoutParams(android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = (12 * dp).toInt() }
+            if (plans.isEmpty()) {
+                box.addView(text(if (pro.lastError != null) getString(R.string.pro_prices_error) else getString(R.string.pro_prices_loading), 14f, 0xFFB7CFCB.toInt(), center = true).apply { setPadding(0, pad, 0, pad) })
+            } else {
+                yearly?.let { y ->
+                    val sub = if (y.hasTrial) getString(R.string.pro_trial_then, y.trialDays, y.price) else getString(R.string.pro_per_year)
+                    box.addView(card(getString(R.string.pro_yearly), y.price + " / " + getString(R.string.pro_year), sub, true) { proJustBought = true; if (!pro.buy(this, Pro.PLAN_YEARLY)) Toast.makeText(this, R.string.pro_prices_error, Toast.LENGTH_SHORT).show() }, lp)
+                }
+                monthly?.let { m ->
+                    box.addView(card(getString(R.string.pro_monthly), m.price + " / " + getString(R.string.pro_month), getString(R.string.pro_cancel_anytime), false) { proJustBought = true; if (!pro.buy(this, Pro.PLAN_MONTHLY)) Toast.makeText(this, R.string.pro_prices_error, Toast.LENGTH_SHORT).show() }, lp)
+                }
+            }
+            box.addView(text(getString(R.string.pro_terms), 11.5f, 0xFF8A8B96.toInt()).apply { setPadding(0, pad, 0, 0) })
+            box.addView(android.widget.TextView(this).apply {
+                text = getString(R.string.pro_restore); textSize = 14f; setTextColor(0xFFE4B85A.toInt()); gravity = android.view.Gravity.CENTER
+                setPadding(0, pad, 0, 0); setOnClickListener { pro.refresh(); Toast.makeText(this@MainActivity, R.string.pro_restoring, Toast.LENGTH_SHORT).show() }
+            })
+        }
+        proSheet = Sheet(this).setTitle(if (isPro) R.string.pro_title else R.string.pro_title_upsell).setView(box).show()
+    }
+
+    private fun isProFromPlay(): Boolean = getSharedPreferences("pro_prefs", MODE_PRIVATE).getLong("pro_valid_until", 0L) > System.currentTimeMillis()
+
     private fun showSettings() {
         val sec = Sections(this)
+
+        // BabaCut Pro
+        sec.section("BabaCut Pro")
+        sec.button(getString(if (isPro) R.string.pro_active_title else R.string.pro_title_upsell),
+            getString(if (isPro) R.string.pro_active_short else R.string.pro_upsell_short)) { showProSheet() }
+        if (BuildConfig.DEBUG) sec.switch("Debug: Pro simulieren", Pro.isActive(this) && !isProFromPlay()) { on -> Pro.setDebugOverride(this, on) }
 
         // Sprache
         val langTags = listOf("", "en", "de", "tr", "es", "fr", "fa", "ar")
@@ -3083,6 +3170,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
         exporter?.release()
         overlayPlayer?.release(); overlayPlayer = null
         tilePlayers.values.forEach { it.release() }; tilePlayers.clear()
+        pro.release()
         compositor.release()
         whisperExecutor.shutdown()
         bgExecutor.shutdown()

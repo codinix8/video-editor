@@ -228,4 +228,35 @@
     <string name="licenses_title">Açık kaynak lisansları</string>
     <string name="privacy_title">Gizlilik</string>
     <string name="privacy_text">BabaCut tüm videoları, resimleri, sesleri ve altyazıları cihazında yerel olarak işler. Geliştiriciye veya üçüncü taraflara hiçbir şey gönderilmez. Uygulama yalnızca altyazıları ilk kullandığında konuşma tanıma modelini bir kez indirmek için internete bağlanır (huggingface.co). Kamera ve mikrofon yalnızca kayıt sırasında kullanılır. Taslaklar ve yedekler uygulamanın özel alanında saklanır ve istediğin zaman silinebilir. Dışa aktarılan videolar galeride Movies/BabaCut altına kaydedilir.</string>
+    <string name="pro_title">BabaCut Pro</string>
+    <string name="pro_title_upsell">BabaCut Pro\'yu al</string>
+    <string name="pro_active_title">BabaCut Pro etkin</string>
+    <string name="pro_active_short">BabaCut\'ı desteklediğin için teşekkürler</string>
+    <string name="pro_upsell_short">4K dışa aktarma, karo modu, tüm altyazılar ve filtreler, filigran yok</string>
+    <string name="pro_active_text">Tüm Pro özellikleri bu cihazda açık.</string>
+    <string name="pro_manage">Aboneliği yönet</string>
+    <string name="pro_yearly">Yıllık</string>
+    <string name="pro_monthly">Aylık</string>
+    <string name="pro_year">yıl</string>
+    <string name="pro_month">ay</string>
+    <string name="pro_trial_then">%1$d gün ücretsiz, sonra yılda %2$s</string>
+    <string name="pro_per_year">En iyi fiyat</string>
+    <string name="pro_cancel_anytime">İstediğin zaman iptal et</string>
+    <string name="pro_terms">Abonelikler, dönem sonundan en az 24 saat önce iptal edilmezse otomatik yenilenir. Google Play\'den yönet veya iptal et. Fiyatlara KDV dahildir.</string>
+    <string name="pro_restore">Satın alımları geri yükle</string>
+    <string name="pro_restoring">Satın alımlar kontrol ediliyor…</string>
+    <string name="pro_prices_loading">Fiyatlar yükleniyor…</string>
+    <string name="pro_prices_error">Google Play şu anda kullanılamıyor. Lütfen daha sonra tekrar dene.</string>
+    <string name="pro_thanks">BabaCut Pro\'ya hoş geldin – teşekkürler!</string>
+    <string name="pro_locked">Bu bir Pro özelliği</string>
+    <string-array name="pro_benefits">
+        <item>4K ve 2K dışa aktarma</item>
+        <item>Baba Gökkuşağı ile karo modu</item>
+        <item>Videolu mozaik</item>
+        <item>On bir altyazı stili, emoji ve Baba modeli</item>
+        <item>Dokuz renk filtresinin tümü</item>
+        <item>TikTok, Reels ve Shorts için platform kılavuzları</item>
+        <item>5\'e kadar dışa aktarma yedeği</item>
+        <item>Filigran yok</item>
+    </string-array>
 </resources>

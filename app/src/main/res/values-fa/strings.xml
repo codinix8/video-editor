@@ -228,4 +228,35 @@
     <string name="licenses_title">مجوزهای متن‌باز</string>
     <string name="privacy_title">حریم خصوصی</string>
     <string name="privacy_text">BabaCut همهٔ ویدیوها، تصاویر، صداها و زیرنویس‌ها را به‌صورت محلی روی دستگاهت پردازش می‌کند. هیچ‌چیز به توسعه‌دهنده یا اشخاص ثالث فرستاده نمی‌شود. برنامه فقط برای دانلود یک‌بارهٔ مدل تشخیص گفتار (از huggingface.co) هنگام اولین استفاده از زیرنویس به اینترنت وصل می‌شود. دوربین و میکروفون فقط هنگام ضبط استفاده می‌شوند. پیش‌نویس‌ها و پشتیبان‌ها در فضای خصوصی برنامه ذخیره می‌شوند و هر زمان قابل حذف‌اند. ویدیوهای خروجی در گالری در Movies/BabaCut ذخیره می‌شوند.</string>
+    <string name="pro_title">BabaCut Pro</string>
+    <string name="pro_title_upsell">دریافت BabaCut Pro</string>
+    <string name="pro_active_title">BabaCut Pro فعال است</string>
+    <string name="pro_active_short">ممنون که از BabaCut حمایت می‌کنی</string>
+    <string name="pro_upsell_short">خروجی 4K، حالت کاشی، همهٔ زیرنویس‌ها و فیلترها، بدون واترمارک</string>
+    <string name="pro_active_text">همهٔ امکانات Pro روی این دستگاه باز است.</string>
+    <string name="pro_manage">مدیریت اشتراک</string>
+    <string name="pro_yearly">سالانه</string>
+    <string name="pro_monthly">ماهانه</string>
+    <string name="pro_year">سال</string>
+    <string name="pro_month">ماه</string>
+    <string name="pro_trial_then">%1$d روز رایگان، سپس %2$s در سال</string>
+    <string name="pro_per_year">بهترین پیشنهاد</string>
+    <string name="pro_cancel_anytime">هر زمان قابل لغو</string>
+    <string name="pro_terms">اشتراک‌ها خودکار تمدید می‌شوند مگر حداقل ۲۴ ساعت پیش از پایان دوره لغو شوند. مدیریت یا لغو در Google Play. قیمت‌ها شامل مالیات.</string>
+    <string name="pro_restore">بازیابی خریدها</string>
+    <string name="pro_restoring">در حال بررسی خریدها…</string>
+    <string name="pro_prices_loading">در حال بارگذاری قیمت‌ها…</string>
+    <string name="pro_prices_error">Google Play اکنون در دسترس نیست. بعداً دوباره امتحان کن.</string>
+    <string name="pro_thanks">به BabaCut Pro خوش آمدی – ممنون!</string>
+    <string name="pro_locked">این یک امکان Pro است</string>
+    <string-array name="pro_benefits">
+        <item>خروجی 4K و 2K</item>
+        <item>حالت کاشی با رنگین‌کمان بابا</item>
+        <item>موزاییک با ویدیو</item>
+        <item>هر یازده سبک زیرنویس، ایموجی و مدل بابا</item>
+        <item>هر نه فیلتر رنگ</item>
+        <item>راهنمای پلتفرم برای تیک‌تاک، ریلز و شورتس</item>
+        <item>تا ۵ پشتیبان خروجی</item>
+        <item>بدون واترمارک</item>
+    </string-array>
 </resources>

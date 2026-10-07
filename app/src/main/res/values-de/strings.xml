@@ -228,4 +228,35 @@
     <string name="licenses_title">Open-Source-Lizenzen</string>
     <string name="privacy_title">Datenschutz</string>
     <string name="privacy_text">BabaCut verarbeitet alle Videos, Bilder, Tonaufnahmen und Untertitel lokal auf deinem Gerät. Nichts wird an den Entwickler oder an Dritte übertragen. Die App verbindet sich nur mit dem Internet, um bei der ersten Nutzung der Untertitel einmalig das Spracherkennungs-Modell herunterzuladen (von huggingface.co). Kamera und Mikrofon werden nur während der Aufnahme genutzt. Entwürfe und Export-Sicherungen liegen im privaten Speicher der App und können dort jederzeit gelöscht werden. Exportierte Videos landen in deiner Galerie unter Movies/BabaCut.</string>
+    <string name="pro_title">BabaCut Pro</string>
+    <string name="pro_title_upsell">BabaCut Pro holen</string>
+    <string name="pro_active_title">BabaCut Pro ist aktiv</string>
+    <string name="pro_active_short">Danke, dass du BabaCut unterstützt</string>
+    <string name="pro_upsell_short">4K-Export, Kachel-Modus, alle Untertitel und Filter, kein Wasserzeichen</string>
+    <string name="pro_active_text">Alle Pro-Funktionen sind auf diesem Gerät freigeschaltet.</string>
+    <string name="pro_manage">Abo verwalten</string>
+    <string name="pro_yearly">Jährlich</string>
+    <string name="pro_monthly">Monatlich</string>
+    <string name="pro_year">Jahr</string>
+    <string name="pro_month">Monat</string>
+    <string name="pro_trial_then">%1$d Tage kostenlos, danach %2$s pro Jahr</string>
+    <string name="pro_per_year">Bestes Angebot</string>
+    <string name="pro_cancel_anytime">Jederzeit kündbar</string>
+    <string name="pro_terms">Abos verlängern sich automatisch, wenn sie nicht mindestens 24 Stunden vor Ablauf gekündigt werden. Verwalten oder kündigen in Google Play. Preise inkl. MwSt.</string>
+    <string name="pro_restore">Käufe wiederherstellen</string>
+    <string name="pro_restoring">Käufe werden geprüft…</string>
+    <string name="pro_prices_loading">Preise werden geladen…</string>
+    <string name="pro_prices_error">Google Play ist gerade nicht erreichbar. Bitte später erneut versuchen.</string>
+    <string name="pro_thanks">Willkommen bei BabaCut Pro – danke!</string>
+    <string name="pro_locked">Das ist eine Pro-Funktion</string>
+    <string-array name="pro_benefits">
+        <item>Export in 4K und 2K</item>
+        <item>Kachel-Modus mit Baba Regenbogen</item>
+        <item>Mosaik mit Videos</item>
+        <item>Alle elf Untertitel-Vorlagen, Emojis und das Baba-Modell</item>
+        <item>Alle neun Farbfilter</item>
+        <item>Plattform-Hilfslinien für TikTok, Reels und Shorts</item>
+        <item>Bis zu 5 Export-Sicherungen</item>
+        <item>Kein Wasserzeichen</item>
+    </string-array>
 </resources>
