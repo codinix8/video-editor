@@ -12,7 +12,7 @@ android {
         applicationId = "de.codinix.babacut"
         minSdk = 26
         targetSdk = 36
-        versionCode = 77
+        versionCode = 78
         versionName = "1.1.0"
         ndk { abiFilters += listOf("arm64-v8a") }
     }

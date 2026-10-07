@@ -24,7 +24,7 @@ class Pro(private val context: Context) : PurchasesUpdatedListener {
     companion object {
         const val SUB_ID = "babacut_pro"
         const val PLAN_MONTHLY = "monthly"
-        const val PLAN_YEARLY = "yearly"
+        const val PLAN_YEARLY = "annual"
         private const val TAG = "Pro"
         private const val GRACE_MS = 3L * 86_400_000     // offline 3 Tage weiter Pro
         private const val PREF = "pro_prefs"
