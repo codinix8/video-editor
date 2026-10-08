@@ -56,7 +56,15 @@ class Sections(private val ctx: Context) {
     }
 
     /** Zeile mit Schalter. */
-    fun switch(label: CharSequence, checked: Boolean, sub: CharSequence? = null, onChange: (Boolean) -> Unit): MaterialSwitch {
+    fun switch(label: CharSequence, checked: Boolean, sub: CharSequence? = null, locked: Boolean = false, onLocked: (() -> Unit)? = null, onChange: (Boolean) -> Unit): MaterialSwitch {
+        if (locked) {
+            val row = rowBase(label, sub)
+            row.addView(ImageView(ctx).apply { setImageResource(R.drawable.ic_crown); setPadding(0, 0, (10 * dp).toInt(), 0) })
+            val sw = MaterialSwitch(ctx).apply { isChecked = false; isEnabled = false }
+            row.addView(sw); row.alpha = 0.5f
+            row.setOnClickListener { onLocked?.invoke() }
+            addRow(row); return sw
+        }
         val sw = MaterialSwitch(ctx).apply {
             isChecked = checked
             thumbTintList = ColorStateList.valueOf(Color.WHITE)
@@ -70,18 +78,28 @@ class Sections(private val ctx: Context) {
     }
 
     /** Zeile mit Auswahlwert rechts; Antippen öffnet ein Untermenü mit Auswahlpunkten. */
-    fun choice(label: CharSequence, options: List<String>, selected: Int, sub: CharSequence? = null, onPick: (Int) -> Unit): TextView {
+    fun choice(label: CharSequence, options: List<String>, selected: Int, sub: CharSequence? = null,
+               locked: Set<Int> = emptySet(), onLocked: (() -> Unit)? = null, onPick: (Int) -> Unit): TextView {
         val value = TextView(ctx).apply { text = options.getOrNull(selected) ?: ""; textSize = 15f; setTextColor(0xFFBDBEC8.toInt()) }
         val chevron = ImageView(ctx).apply { setImageResource(R.drawable.ic_chevron_right); alpha = 0.6f; setPadding((6 * dp).toInt(), 0, 0, 0) }
         val row = rowBase(label, sub); row.addView(value); row.addView(chevron)
         var current = selected
         row.setOnClickListener {
             lateinit var dlg: android.app.Dialog
-            dlg = Sheet(ctx).setTitle(label).setView(radioList(ctx, options, current) { i ->
+            dlg = Sheet(ctx).setTitle(label).setView(radioList(ctx, options, current, locked, onLocked) { i ->
                 current = i; value.text = options[i]; onPick(i); dlg.dismiss()
             }).show()
         }
         addRow(row); return value
+    }
+
+    /** Ganze Zeile gesperrt (Pro): Krone, halbe Deckkraft, Antippen ruft [onLocked]. */
+    fun lockedRow(label: CharSequence, sub: CharSequence? = null, onLocked: () -> Unit): View {
+        val row = rowBase(label, sub)
+        row.addView(ImageView(ctx).apply { setImageResource(R.drawable.ic_crown) })
+        row.alpha = 0.5f
+        row.setOnClickListener { onLocked() }
+        addRow(row); return row
     }
 
     /** Zeile mit Regler (0..max) und Wertanzeige. */
@@ -121,19 +139,23 @@ class Sections(private val ctx: Context) {
     fun custom(v: View) { addRow(v) }
 
     companion object {
-        fun radioList(ctx: Context, labels: List<String>, selected: Int, onPick: (Int) -> Unit): View {
+        /** [locked]: Einträge mit Krone und halber Deckkraft; Antippen ruft [onLocked] statt [onPick]. */
+        fun radioList(ctx: Context, labels: List<String>, selected: Int, locked: Set<Int> = emptySet(), onLocked: (() -> Unit)? = null, onPick: (Int) -> Unit): View {
             val dp = ctx.resources.displayMetrics.density
             val col = LinearLayout(ctx).apply { orientation = LinearLayout.VERTICAL }
             labels.forEachIndexed { i, label ->
+                val isLocked = i in locked
                 val row = LinearLayout(ctx).apply {
                     orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
                     setPadding(0, (14 * dp).toInt(), 0, (14 * dp).toInt())
                     addView(TextView(ctx).apply { text = label; textSize = 16f; setTextColor(Color.WHITE) }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+                    if (isLocked) addView(ImageView(ctx).apply { setImageResource(R.drawable.ic_crown); setPadding(0, 0, (10 * dp).toInt(), 0) })
                     addView(MaterialRadioButton(ctx).apply {
                         isChecked = i == selected; isClickable = false
                         buttonTintList = ColorStateList.valueOf(if (i == selected) Sheet.ACCENT else 0xFF8A8B96.toInt())
                     })
-                    setOnClickListener { onPick(i) }
+                    if (isLocked) alpha = 0.5f
+                    setOnClickListener { if (isLocked) onLocked?.invoke() else onPick(i) }
                 }
                 col.addView(row)
                 if (i < labels.lastIndex) col.addView(View(ctx).apply { layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 1); setBackgroundColor(0x1AFFFFFF) })

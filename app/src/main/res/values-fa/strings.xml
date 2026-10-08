@@ -259,4 +259,6 @@
         <item>تا ۵ پشتیبان خروجی</item>
         <item>بدون واترمارک</item>
     </string-array>
+    <string name="export_watermark_note">خروجی‌های رایگان واترمارک کوچک «Made with BabaCut» دارند و به 1080p محدودند.</string>
+    <string name="export_no_watermark">خروجی بدون واترمارک، تا 4K</string>
 </resources>

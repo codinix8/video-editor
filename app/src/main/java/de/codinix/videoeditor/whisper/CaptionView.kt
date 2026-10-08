@@ -25,6 +25,9 @@ class CaptionView @JvmOverloads constructor(context: Context, attrs: AttributeSe
     var reviewTexts: MutableList<ReviewText> = mutableListOf()
         set(v) { field = v; invalidate() }
     var onReviewTextChanged: (() -> Unit)? = null
+    /** Wasserzeichen (nur ohne Pro); nicht anfassbar. */
+    var watermark: PostOverlaySpec? = null
+        set(v) { field = v; invalidate() }
     var onReviewTextEdit: ((ReviewText) -> Unit)? = null
     private var activeText: ReviewText? = null
     private var textStartWidth = 0.6f
@@ -91,6 +94,11 @@ class CaptionView @JvmOverloads constructor(context: Context, attrs: AttributeSe
             if (lastSnapX) canvas.drawLine(width / 2f, 0f, width / 2f, height.toFloat(), snapPaint)
             if (lastSnapY) canvas.drawLine(0f, height / 2f, width.toFloat(), height / 2f, snapPaint)
             postInvalidateDelayed(100)
+        }
+        watermark?.let { o ->
+            val w = o.widthFrac * width; val h = w * o.bitmap.height / o.bitmap.width.toFloat()
+            val cx = width * o.cx; val cy = height * o.cy
+            canvas.drawBitmap(o.bitmap, null, android.graphics.RectF(cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2), paint)
         }
         // Review-Texte vor den Untertiteln
         reviewTexts.forEach { o ->

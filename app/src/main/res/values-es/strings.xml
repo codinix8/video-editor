@@ -259,4 +259,6 @@
         <item>Hasta 5 copias de exportación</item>
         <item>Sin marca de agua</item>
     </string-array>
+    <string name="export_watermark_note">Las exportaciones gratuitas incluyen una pequeña marca de agua “Made with BabaCut” y se limitan a 1080p.</string>
+    <string name="export_no_watermark">Exportar sin marca de agua, hasta 4K</string>
 </resources>

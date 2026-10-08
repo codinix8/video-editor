@@ -259,4 +259,6 @@
         <item>Bis zu 5 Export-Sicherungen</item>
         <item>Kein Wasserzeichen</item>
     </string-array>
+    <string name="export_watermark_note">Gratis-Exporte tragen ein kleines „Made with BabaCut“-Wasserzeichen und sind auf 1080p begrenzt.</string>
+    <string name="export_no_watermark">Export ohne Wasserzeichen, bis 4K</string>
 </resources>

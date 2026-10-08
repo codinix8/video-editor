@@ -259,4 +259,6 @@
         <item>Up to 5 export backups</item>
         <item>No watermark</item>
     </string-array>
+    <string name="export_watermark_note">Free exports include a small “Made with BabaCut” watermark and are limited to 1080p.</string>
+    <string name="export_no_watermark">Export without watermark, up to 4K</string>
 </resources>

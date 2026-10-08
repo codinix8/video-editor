@@ -197,9 +197,14 @@ class MainActivity : AppCompatActivity() {
     private var captionSettings = de.codinix.videoeditor.whisper.CaptionSettings()
 
     /** Zuletzt benutzte Untertitel-Einstellungen als Standard für neue Videos. */
+    private fun clampCaptionSettings(c: de.codinix.videoeditor.whisper.CaptionSettings): de.codinix.videoeditor.whisper.CaptionSettings {
+        if (!isPro) { if (c.template >= 3) c.template = 0; c.emojis = false }
+        return c
+    }
+
     private fun loadDefaultCaptionSettings(): de.codinix.videoeditor.whisper.CaptionSettings {
         val json = prefs.getString("captions_settings", null) ?: return de.codinix.videoeditor.whisper.CaptionSettings()
-        return try { de.codinix.videoeditor.whisper.CaptionSettings.fromJson(org.json.JSONObject(json)) }
+        return try { clampCaptionSettings(de.codinix.videoeditor.whisper.CaptionSettings.fromJson(org.json.JSONObject(json))) }
         catch (e: Exception) { de.codinix.videoeditor.whisper.CaptionSettings() }
     }
     private fun saveDefaultCaptionSettings() {
@@ -207,7 +212,7 @@ class MainActivity : AppCompatActivity() {
     }
     private val captionModel: de.codinix.videoeditor.whisper.ModelManager.Model
         get() = de.codinix.videoeditor.whisper.ModelManager.Model.values()
-            .getOrElse(prefs.getInt("captions_model", 1)) { de.codinix.videoeditor.whisper.ModelManager.Model.BASE }
+            .getOrElse(captionModelIndex()) { de.codinix.videoeditor.whisper.ModelManager.Model.BASE }
     private val pickBackground = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) addVideoOverlay(uri, asBackground = true)
     }
@@ -261,7 +266,7 @@ class MainActivity : AppCompatActivity() {
 
         compositor = CompositorProcessor(overlayStore)
         compositorEffect = CompositorEffect(compositor)
-        binding.safeZone.platform = prefs.getInt("safe_zone", 0)
+        binding.safeZone.platform = if (isPro) prefs.getInt("safe_zone", 0) else 0
         compositor.onFrameAspectChanged = { aspect -> main.post {
             binding.gestureView.frameAspect = aspect
             binding.safeZone.frameAspect = aspect
@@ -290,9 +295,10 @@ class MainActivity : AppCompatActivity() {
         binding.filterButton.setOnClickListener { showFilterDialog() }
         binding.settingsButton.setOnClickListener { showSettings() }
         pro.connect()
+        refreshProMarks()
         if (!prefs.getBoolean("tips_shown", false)) { main.postDelayed({ showFirstRunTips() }, 1200) }
         bgExecutor.execute { try { drafts.pruneAuto(prefs.getInt("auto_backups", 3)) } catch (_: Exception) {} }
-        compositor.colorFilter = prefs.getInt("color_filter", 0)
+        compositor.colorFilter = prefs.getInt("color_filter", 0).let { if (!isPro && it >= 3) 0 else it }
         updateFilterButton()
         binding.tileMediaButton.setOnClickListener {
             if (mosaic.selected >= 0) pickTileImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
@@ -308,12 +314,12 @@ class MainActivity : AppCompatActivity() {
             mosaic.tiles.getOrNull(mosaic.selected)?.let { t -> showTileFillDialog(t) }
         }
         binding.tileVideoButton.setOnClickListener {
-            if (mosaic.selected >= 0) { hintFileBrowser(); pickTileVideo.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)) }
+            if (mosaic.selected >= 0 && requirePro()) { hintFileBrowser(); pickTileVideo.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)) }
         }
-        binding.tileVideoButton.setOnLongClickListener { if (mosaic.selected >= 0) openVideoDocument(VideoTarget.TILE); true }
+        binding.tileVideoButton.setOnLongClickListener { if (mosaic.selected >= 0 && requirePro()) openVideoDocument(VideoTarget.TILE); true }
         binding.addVideoButton.setOnLongClickListener { openVideoDocument(VideoTarget.OVERLAY); true }
         binding.greenscreenButton.setOnLongClickListener {
-            if (!greenscreenActive && !mosaicActive && activeRecording == null) openVideoDocument(VideoTarget.BACKGROUND); true
+            if (!greenscreenActive && !mosaicActive && activeRecording == null && requirePro()) openVideoDocument(VideoTarget.BACKGROUND); true
         }
         binding.tileSoundButton.setOnClickListener {
             mosaic.tiles.getOrNull(mosaic.selected)?.video?.let { showVolumeDialog(it) }
@@ -375,6 +381,7 @@ class MainActivity : AppCompatActivity() {
         binding.review.reviewTextButton.setOnClickListener { showReviewTextDialog(null) }
         binding.review.reviewSoundButton.setOnClickListener { showReviewSoundDialog() }
         binding.review.captionView.reviewTexts = reviewTexts
+        binding.review.captionView.watermark = watermarkSpec()
         binding.review.captionView.onReviewTextChanged = {
             reviewTexts.lastOrNull()?.let { t ->
                 prefs.edit().putFloat("review_text_cx", t.cx).putFloat("review_text_cy", t.cy)
@@ -436,7 +443,8 @@ class MainActivity : AppCompatActivity() {
             compositor.sensorRotationDegrees = it.getSensorRotationDegrees(android.view.Surface.ROTATION_0)
         }
         compositor.frontFacing = lensFacing == CameraSelector.LENS_FACING_FRONT
-        val wanted = preferredQuality?.takeIf { it in supportedQualities } ?: supportedQualities.first()
+        var wanted = preferredQuality?.takeIf { it in supportedQualities } ?: supportedQualities.first()
+        if (!isPro && wanted == Quality.UHD) wanted = supportedQualities.firstOrNull { it != Quality.UHD } ?: wanted   // 4K ist Pro
         val qualitySelector = QualitySelector.from(wanted, FallbackStrategy.lowerQualityOrHigherThan(Quality.SD))
 
         val preview = Preview.Builder().build().also {
@@ -485,7 +493,8 @@ class MainActivity : AppCompatActivity() {
         val labels = supportedQualities.map { label(it) }.toTypedArray()
         val current = supportedQualities.indexOf(preferredQuality ?: supportedQualities.first()).coerceAtLeast(0)
         lateinit var dlg: android.app.Dialog
-        val list = radioList(labels.toList(), current) { which ->
+        val locked = if (isPro) emptySet() else supportedQualities.mapIndexedNotNull { i, q -> if (q == Quality.UHD) i else null }.toSet()
+        val list = Sections.radioList(this, labels.toList(), current, locked, { dlg.dismiss(); showProSheet() }) { which ->
             preferredQuality = supportedQualities[which]
             bindCamera()
             dlg.dismiss()
@@ -809,10 +818,32 @@ class MainActivity : AppCompatActivity() {
     // ---------------------------------------------------------------- Einstellungen & Tipps
 
     private var proSheet: android.app.Dialog? = null
+
+    /** Pro-Schranke: true = frei. Sonst Pro-Seite öffnen. */
+    private fun requirePro(): Boolean { if (isPro) return true; showProSheet(); return false }
+
+    /** Knopf als Pro-Funktion kennzeichnen (Krone oben rechts, halbe Deckkraft), solange kein Pro. */
+    private fun markPro(btn: android.widget.ImageButton) {
+        if (isPro) { btn.foreground = null; btn.alpha = 1f; return }
+        val dp = resources.displayMetrics.density
+        val crown = androidx.core.content.ContextCompat.getDrawable(this, R.drawable.ic_crown)!!
+        btn.foreground = android.graphics.drawable.LayerDrawable(arrayOf(crown)).apply {
+            setLayerGravity(0, android.view.Gravity.TOP or android.view.Gravity.END)
+            setLayerSize(0, (16 * dp).toInt(), (16 * dp).toInt())
+            setLayerInset(0, 0, (2 * dp).toInt(), (2 * dp).toInt(), 0)
+        }
+        btn.alpha = 0.6f
+    }
+    private fun refreshProMarks() {
+        markPro(binding.greenscreenButton)
+        markPro(binding.tileVideoButton)
+        binding.review.captionsEditButton.alpha = 1f
+    }
     private fun onProChanged() {
         // Offenes Pro-Fenster aktualisieren (Preise geladen / Kauf abgeschlossen)
         if (proSheet?.isShowing == true) { proSheet?.dismiss(); showProSheet() }
         if (isPro && proJustBought) { proJustBought = false; Toast.makeText(this, R.string.pro_thanks, Toast.LENGTH_LONG).show() }
+        refreshProMarks()
     }
     private var proJustBought = false
 
@@ -882,6 +913,9 @@ class MainActivity : AppCompatActivity() {
         proSheet = Sheet(this).setTitle(if (isPro) R.string.pro_title else R.string.pro_title_upsell).setView(box).show()
     }
 
+    /** Gewähltes Erkennungsmodell; ohne Pro immer Top (0). */
+    private fun captionModelIndex(): Int = if (isPro) prefs.getInt("captions_model", 1) else 0
+
     private fun isProFromPlay(): Boolean = getSharedPreferences("pro_prefs", MODE_PRIVATE).getLong("pro_valid_until", 0L) > System.currentTimeMillis()
 
     private fun showSettings() {
@@ -914,7 +948,7 @@ class MainActivity : AppCompatActivity() {
         val models = de.codinix.videoeditor.whisper.ModelManager.Model.values()
         sec.choice(getString(R.string.captions_model),
             models.mapIndexed { i, it -> resources.getStringArray(R.array.model_labels)[i] + if (modelManager.isAvailable(it)) "" else " · ${it.approxMb} MB" },
-            prefs.getInt("captions_model", 1)) { pos ->
+            captionModelIndex(), locked = if (isPro) emptySet() else setOf(1, 2), onLocked = { showProSheet() }) { pos ->
             if (prefs.getInt("captions_model", 1) != pos) { prefs.edit().putInt("captions_model", pos).apply(); prefetchCaptionModel() }
         }
 
@@ -930,7 +964,8 @@ class MainActivity : AppCompatActivity() {
         }
         sec.switch(getString(R.string.preview_sound), previewSoundOn) { on -> if (on != previewSoundOn) binding.previewSoundButton.performClick() }
         val zones = resources.getStringArray(R.array.safe_zones)
-        sec.choice(getString(R.string.settings_safe_zone), zones.toList(), prefs.getInt("safe_zone", 0), sub = getString(R.string.safe_zone_hint)) { pos ->
+        sec.choice(getString(R.string.settings_safe_zone), zones.toList(), prefs.getInt("safe_zone", 0), sub = getString(R.string.safe_zone_hint),
+            locked = if (isPro) emptySet() else setOf(1, 2, 3), onLocked = { showProSheet() }) { pos ->
             prefs.edit().putInt("safe_zone", pos).apply()
             binding.safeZone.platform = pos; binding.review.reviewSafeZone.platform = pos
         }
@@ -948,7 +983,8 @@ class MainActivity : AppCompatActivity() {
         sec.section(getString(R.string.settings_backups))
         val backupCounts = listOf(0, 1, 3, 5)
         sec.choice(getString(R.string.settings_backups), backupCounts.map { if (it == 0) getString(R.string.off) else it.toString() },
-            backupCounts.indexOf(prefs.getInt("auto_backups", 3)).coerceAtLeast(0), sub = getString(R.string.backups_hint)) { pos ->
+            backupCounts.indexOf(prefs.getInt("auto_backups", 3)).coerceAtLeast(0), sub = getString(R.string.backups_hint),
+            locked = if (isPro) emptySet() else setOf(2, 3), onLocked = { showProSheet() }) { pos ->
             prefs.edit().putInt("auto_backups", backupCounts[pos]).apply(); drafts.pruneAuto(backupCounts[pos])
         }
 
@@ -1041,7 +1077,8 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
                     clipToOutline = true
                     background = android.graphics.drawable.GradientDrawable().apply { cornerRadius = 8 * dp }
                 }
-                val label = android.widget.TextView(this).apply { text = name; textSize = 11f; gravity = android.view.Gravity.CENTER; setPadding(0, pad / 3, 0, 0) }
+                val lockedF = !isPro && idx >= 3
+                val label = android.widget.TextView(this).apply { text = if (lockedF) "👑 $name" else name; textSize = 11f; gravity = android.view.Gravity.CENTER; setPadding(0, pad / 3, 0, 0) }
                 val card = android.widget.LinearLayout(this).apply {
                     orientation = android.widget.LinearLayout.VERTICAL
                     layoutParams = android.widget.LinearLayout.LayoutParams(cardW, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT).apply { setMargins(pad / 3, 0, pad / 3, 0) }
@@ -1050,9 +1087,11 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
                         setStroke((2.5f * dp).toInt(), if (idx == compositor.colorFilter) 0xFFFF3B4E.toInt() else 0x00000000)
                     }
                     setPadding(pad / 2, pad / 2, pad / 2, pad / 2)
+                    if (lockedF) alpha = 0.5f
                     addView(img, android.widget.LinearLayout.LayoutParams(cardW - pad, cardH))
                     addView(label)
                     setOnClickListener {
+                        if (lockedF) { showProSheet(); return@setOnClickListener }
                         compositor.colorFilter = idx
                         prefs.edit().putInt("color_filter", idx).apply()
                         updateFilterButton(); persistSession(); render()
@@ -1368,12 +1407,12 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
             gapWhite = prefs.getBoolean("mosaic_gap_white", false); rainbowGaps = prefs.getBoolean("mosaic_rainbow", false)
         }
         binding.tileVideoButton.setOnClickListener {
-            if (mosaic.selected >= 0) { hintFileBrowser(); pickTileVideo.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)) }
+            if (mosaic.selected >= 0 && requirePro()) { hintFileBrowser(); pickTileVideo.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)) }
         }
-        binding.tileVideoButton.setOnLongClickListener { if (mosaic.selected >= 0) openVideoDocument(VideoTarget.TILE); true }
+        binding.tileVideoButton.setOnLongClickListener { if (mosaic.selected >= 0 && requirePro()) openVideoDocument(VideoTarget.TILE); true }
         binding.addVideoButton.setOnLongClickListener { openVideoDocument(VideoTarget.OVERLAY); true }
         binding.greenscreenButton.setOnLongClickListener {
-            if (!greenscreenActive && !mosaicActive && activeRecording == null) openVideoDocument(VideoTarget.BACKGROUND); true
+            if (!greenscreenActive && !mosaicActive && activeRecording == null && requirePro()) openVideoDocument(VideoTarget.BACKGROUND); true
         }
         binding.tileSoundButton.setOnClickListener {
             mosaic.tiles.getOrNull(mosaic.selected)?.video?.let { showVolumeDialog(it) }
@@ -1385,6 +1424,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
 
     private fun onGreenscreenPressed() {
         if (activeRecording != null) return
+        if (!greenscreenActive && !requirePro()) return
         if (mosaicActive) { Toast.makeText(this, R.string.mosaic_first_off, Toast.LENGTH_SHORT).show(); return }
         val bg = overlayStore.videoOverlay()?.takeIf { it.isBackground }
         if (bg == null) {
@@ -1812,13 +1852,13 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
 
         // Erkennung
         var langIdx = captionLanguages.indexOfFirst { it.first == prefs.getString("captions_lang", null) }.coerceAtLeast(0)
-        var modelIdx = prefs.getInt("captions_model", 1)
+        var modelIdx = captionModelIndex()
         val models = de.codinix.videoeditor.whisper.ModelManager.Model.values()
         sec.section(getString(R.string.captions_title))
         sec.choice(getString(R.string.captions_language), captionLanguages.map { it.second }, langIdx) { langIdx = it }
         sec.choice(getString(R.string.captions_model),
             models.mapIndexed { i, it -> resources.getStringArray(R.array.model_labels)[i] + if (modelManager.isAvailable(it)) "" else " · ${it.approxMb} MB" },
-            modelIdx) { modelIdx = it }
+            modelIdx, locked = if (isPro) emptySet() else setOf(1, 2), onLocked = { showProSheet() }) { modelIdx = it }
         sec.switch(getString(R.string.captions_always), prefs.getBoolean("captions_auto", false)) { on -> prefs.edit().putBoolean("captions_auto", on).apply() }
 
         // Stil
@@ -1834,6 +1874,8 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
                     setImageBitmap(de.codinix.videoeditor.whisper.CaptionStyle.preview(idx, captionSettings.accentColor, 720, 720, getString(R.string.caption_preview_words)))
                 }
                 val label = android.widget.TextView(this).apply { text = name; textSize = 11f; gravity = android.view.Gravity.CENTER; setTextColor(0xFFFFFFFF.toInt()); setPadding(0, 0, 0, pad / 3) }
+                val lockedTpl = !isPro && idx >= 3
+                if (lockedTpl) label.text = "👑 " + name
                 val card = android.widget.LinearLayout(this).apply {
                     orientation = android.widget.LinearLayout.VERTICAL
                     layoutParams = android.widget.LinearLayout.LayoutParams(cardW, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT).apply { setMargins(pad / 4, 0, pad / 4, 0) }
@@ -1841,8 +1883,10 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
                         cornerRadius = 10 * dp; setColor(0xFF1C1D26.toInt())
                         setStroke((2.5f * dp).toInt(), if (idx == captionSettings.template) captionSettings.accentColor else 0x00000000)
                     }
+                    if (lockedTpl) alpha = 0.5f
                     addView(img, android.widget.LinearLayout.LayoutParams(cardW, cardH)); addView(label)
                     setOnClickListener {
+                        if (lockedTpl) { showProSheet(); return@setOnClickListener }
                         captionSettings.template = idx
                         binding.review.captionView.settings = captionSettings
                         saveDefaultCaptionSettings(); persistSession(); renderCards()
@@ -1874,7 +1918,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
             })
         }
         sec.custom(android.widget.HorizontalScrollView(this).apply { addView(accentRow); isHorizontalScrollBarEnabled = false })
-        sec.switch(getString(R.string.captions_emojis), captionSettings.emojis) { on ->
+        sec.switch(getString(R.string.captions_emojis), captionSettings.emojis && isPro, locked = !isPro, onLocked = { showProSheet() }) { on ->
             captionSettings.emojis = on; binding.review.captionView.settings = captionSettings; saveDefaultCaptionSettings(); persistSession()
         }
         sec.note(getString(R.string.captions_export_note))
@@ -2628,28 +2672,41 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
         val info = VideoConcat.inspect(segments.first().file)
         val recordedHeight = if (info.rotation == 90 || info.rotation == 270) info.width else info.height
         val totalSec = segments.sumOf { it.durationMs } / 1000.0
-        val needsReencode = allAudioMixes().isNotEmpty() || captions.isNotEmpty() || reviewTexts.isNotEmpty() || segments.any { kotlin.math.abs(it.micGain - 1f) >= 0.01f }
+        var selectedIdxInit = 0
+        val needsReencode = allAudioMixes().isNotEmpty() || captions.isNotEmpty() || reviewTexts.isNotEmpty() || segments.any { kotlin.math.abs(it.micGain - 1f) >= 0.01f } || !isPro
         fun sizeText(bytes: Double) = if (bytes >= 1e9) "≈ %.1f GB".format(Locale.getDefault(), bytes / 1e9) else "≈ %.0f MB".format(Locale.getDefault(), bytes / 1e6)
         fun estimate(height: Int) = (Exporter.videoBitrateFor(height) + Exporter.AUDIO_BITRATE) / 8.0 * totalSec
         val originalSize = if (needsReencode) estimate(recordedHeight) else segments.sumOf { it.file.length() }.toDouble()
-        val options = mutableListOf<Pair<String, Int?>>((getString(R.string.export_original) + "  " + sizeText(originalSize)) to null)
+        val options = mutableListOf<Pair<String, Int?>>()
+        val lockedIdx = HashSet<Int>()
+        // Ohne Pro: alles wird neu kodiert (Wasserzeichen), höchstens 1080p
+        if (isPro) options.add((getString(R.string.export_original) + "  " + sizeText(originalSize)) to null)
         listOf(2160 to "4K (2160p)", 1440 to "2K (1440p)", 1080 to "1080p", 720 to "720p", 480 to "480p")
-            .filter { it.first < recordedHeight }
-            .forEach { options.add((it.second + "  " + sizeText(estimate(it.first))) to it.first) }
+            .filter { it.first <= recordedHeight && (isPro || it.first < recordedHeight || it.first <= 1080) }
+            .forEach { (h, name) ->
+                options.add((name + "  " + sizeText(estimate(h))) to h)
+                if (!isPro && h > 1080) lockedIdx.add(options.lastIndex)
+            }
+        if (!isPro) {
+            // Vorauswahl: erste freie Stufe
+            selectedIdxInit = options.indexOfFirst { it.second != null && it.second!! <= 1080 }.coerceAtLeast(0)
+        }
 
         val pad = (20 * resources.displayMetrics.density).toInt()
-        var selectedIdx = 0
+        var selectedIdx = selectedIdxInit
         val sec = Sections(this)
         sec.section(getString(R.string.export_resolution))
         val listView = android.widget.FrameLayout(this)
+        lateinit var exportDlg: android.app.Dialog
         fun renderList() {
             listView.removeAllViews()
-            listView.addView(Sections.radioList(this, options.map { it.first }, selectedIdx) { i -> selectedIdx = i; renderList() })
+            listView.addView(Sections.radioList(this, options.map { it.first }, selectedIdx, lockedIdx, { exportDlg.dismiss(); showProSheet() }) { i -> selectedIdx = i; renderList() })
         }
         renderList()
         sec.custom(listView)
-        sec.note(getString(R.string.captions_export_note).takeIf { captions.isNotEmpty() } ?: getString(R.string.export_size_note))
-        Sheet(this)
+        sec.note(if (!isPro) getString(R.string.export_watermark_note) else getString(R.string.captions_export_note).takeIf { captions.isNotEmpty() } ?: getString(R.string.export_size_note))
+        if (!isPro) sec.lockedRow(getString(R.string.export_no_watermark)) { exportDlg.dismiss(); showProSheet() }
+        exportDlg = Sheet(this)
             .setTitle(R.string.export_title)
             .setSections(sec)
             .setPositiveButton(R.string.save) { _, _ ->
@@ -2659,6 +2716,13 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
             .setNegativeButton(R.string.cancel) { _, _ -> player?.play() }
             .setOnCancelListener { player?.play() }
             .show()
+    }
+
+    /** Wasserzeichen „Made with BabaCut“ unten rechts (nur ohne Pro). */
+    private fun watermarkSpec(): de.codinix.videoeditor.whisper.PostOverlaySpec? {
+        if (isPro) return null
+        val bmp = TextRenderer.render("Made with BabaCut", 0xE6FFFFFF.toInt(), 0x66000000)
+        return de.codinix.videoeditor.whisper.PostOverlaySpec(bmp, 0.80f, 0.955f, 0.30f, 0f, Long.MAX_VALUE)
     }
 
     private fun runExport(targetHeight: Int?, micGain: Float = 1f) {
@@ -2677,7 +2741,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
         val ex = Exporter(this)
         ex.captions = captions.toList()
         ex.captionSettings = captionSettings.copy()
-        ex.postOverlays = reviewTexts.map { it.spec() }
+        ex.postOverlays = reviewTexts.map { it.spec() } + listOfNotNull(watermarkSpec())
         ex.micGains = segments.map { it.micGain }
         exporter = ex
         val audioMix = allAudioMixes()
@@ -2690,7 +2754,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
             override fun onDone(uri: Uri) {
                 dialog.dismiss()
                 ex.release(); exporter = null
-                val keep = prefs.getInt("auto_backups", 3)
+                val keep = prefs.getInt("auto_backups", 3).let { if (isPro) it else minOf(it, 1) }
                 val backedUp = keep > 0 && saveProjectAsDraft(auto = true)
                 if (backedUp) {
                     drafts.pruneAuto(keep)
@@ -3044,15 +3108,15 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
             loaded.overlays.forEach { overlayStore.add(it) }
             captions.clear(); captions.addAll(loaded.captions)
             reviewTexts.clear(); reviewTexts.addAll(loaded.reviewTexts)
-            captionSettings = loaded.captionSettings
+            captionSettings = clampCaptionSettings(loaded.captionSettings)
             mosaic = loaded.mosaic ?: de.codinix.videoeditor.overlay.Mosaic(de.codinix.videoeditor.overlay.Mosaic.LAYOUT_NONE)
             binding.tileVideoButton.setOnClickListener {
-            if (mosaic.selected >= 0) { hintFileBrowser(); pickTileVideo.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)) }
+            if (mosaic.selected >= 0 && requirePro()) { hintFileBrowser(); pickTileVideo.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)) }
         }
-        binding.tileVideoButton.setOnLongClickListener { if (mosaic.selected >= 0) openVideoDocument(VideoTarget.TILE); true }
+        binding.tileVideoButton.setOnLongClickListener { if (mosaic.selected >= 0 && requirePro()) openVideoDocument(VideoTarget.TILE); true }
         binding.addVideoButton.setOnLongClickListener { openVideoDocument(VideoTarget.OVERLAY); true }
         binding.greenscreenButton.setOnLongClickListener {
-            if (!greenscreenActive && !mosaicActive && activeRecording == null) openVideoDocument(VideoTarget.BACKGROUND); true
+            if (!greenscreenActive && !mosaicActive && activeRecording == null && requirePro()) openVideoDocument(VideoTarget.BACKGROUND); true
         }
         binding.tileSoundButton.setOnClickListener {
             mosaic.tiles.getOrNull(mosaic.selected)?.video?.let { showVolumeDialog(it) }

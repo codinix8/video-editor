@@ -259,4 +259,6 @@
         <item>5\'e kadar dışa aktarma yedeği</item>
         <item>Filigran yok</item>
     </string-array>
+    <string name="export_watermark_note">Ücretsiz dışa aktarmalar küçük bir “Made with BabaCut” filigranı içerir ve 1080p ile sınırlıdır.</string>
+    <string name="export_no_watermark">Filigransız dışa aktarma, 4K\'ya kadar</string>
 </resources>

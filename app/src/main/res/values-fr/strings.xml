@@ -259,4 +259,6 @@
         <item>Jusqu\'à 5 sauvegardes d\'export</item>
         <item>Sans filigrane</item>
     </string-array>
+    <string name="export_watermark_note">Les exports gratuits comportent un petit filigrane « Made with BabaCut » et sont limités à 1080p.</string>
+    <string name="export_no_watermark">Export sans filigrane, jusqu\'en 4K</string>
 </resources>
