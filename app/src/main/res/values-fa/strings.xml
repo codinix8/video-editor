@@ -261,4 +261,6 @@
     </string-array>
     <string name="export_watermark_note">خروجی‌های رایگان واترمارک کوچک «Made with BabaCut» دارند و به 1080p محدودند.</string>
     <string name="export_no_watermark">خروجی بدون واترمارک، تا 4K</string>
+    <string name="video_transcode">ویدیو (%1$s) برای پخش روان به H.264 1080p تبدیل می‌شود… %2$d %%</string>
+    <string name="player_error">%1$s پخش نمی‌شود (%2$s). دوباره وارد کن – تبدیل خواهد شد.</string>
 </resources>

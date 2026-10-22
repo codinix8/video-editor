@@ -261,4 +261,6 @@
     </string-array>
     <string name="export_watermark_note">تتضمن التصديرات المجانية علامة مائية صغيرة “Made with BabaCut” وتقتصر على 1080p.</string>
     <string name="export_no_watermark">تصدير بلا علامة مائية، حتى 4K</string>
+    <string name="video_transcode">جارٍ تحويل الفيديو (%1$s) إلى H.264 1080p لتشغيل سلس… %2$d %%</string>
+    <string name="player_error">تعذّر تشغيل %1$s (%2$s). أعد إدراجه – سيتم تحويله.</string>
 </resources>

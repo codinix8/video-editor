@@ -1298,7 +1298,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
                 contentResolver.openInputStream(uri)?.use { input -> raw.outputStream().use { input.copyTo(it) } }
                     ?: throw IllegalStateException("Video konnte nicht gelesen werden")
                 main.post {
-                    if (Downscaler.needsDownscale(raw, 1080)) {
+                    if (Downscaler.transcodeReason(raw) != null) {
                         val dest = File(cacheDir, "tile_${System.currentTimeMillis()}.mp4")
                         dialog.setMessage(getString(R.string.tile_video_downscale, 0))
                         Downscaler.run(this, raw, dest, 1080,
@@ -1340,6 +1340,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
     private fun attachTileVideo(v: VideoOverlay) {
         tilePlayers.remove(v.id)?.release()
         val p = newLeanPlayer()
+        watchErrors(p, "Kachelvideo")
         p.setMediaItem(MediaItem.fromUri(Uri.fromFile(v.file)))
         p.repeatMode = Player.REPEAT_MODE_ALL
         p.volume = previewVolume(v)
@@ -1515,12 +1516,39 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
             Toast.makeText(this, if (asBackground) R.string.greenscreen_conflict else R.string.only_one_video, Toast.LENGTH_LONG).show(); return
         }
         Toast.makeText(this, R.string.video_copying, Toast.LENGTH_SHORT).show()
-        val dest = File(cacheDir, "overlay_video_${System.currentTimeMillis()}.mp4")
+        val raw = File(cacheDir, "overlay_video_${System.currentTimeMillis()}_raw.mp4")
         bgExecutor.execute {
             try {
-                contentResolver.openInputStream(uri)?.use { input -> dest.outputStream().use { input.copyTo(it) } }
+                contentResolver.openInputStream(uri)?.use { input -> raw.outputStream().use { input.copyTo(it) } }
                     ?: throw IllegalStateException("Video konnte nicht gelesen werden")
+                val reason = Downscaler.transcodeReason(raw)
                 main.post {
+                    if (reason != null) {
+                        // Nicht H.264/1080p/30fps/SDR: einmalig umwandeln, sonst kann der Decoder neben der Kamera streiken
+                        val dest = File(cacheDir, "overlay_video_${System.currentTimeMillis()}.mp4")
+                        val dialog: AlertDialog = MaterialAlertDialogBuilder(this).setTitle(R.string.add_video)
+                            .setMessage(getString(R.string.video_transcode, reason, 0)).setCancelable(false).show()
+                        Downscaler.run(this, raw, dest, 1080,
+                            onProgress = { p -> dialog.setMessage(getString(R.string.video_transcode, reason, p)) },
+                            onDone = { out ->
+                                raw.delete(); dialog.dismiss()
+                                if (out != null) installVideoOverlay(out, asBackground)
+                                else Toast.makeText(this, getString(R.string.error, "Umwandlung"), Toast.LENGTH_LONG).show()
+                            })
+                    } else installVideoOverlay(raw, asBackground)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Video-Overlay fehlgeschlagen", e)
+                raw.delete()
+                main.post { Toast.makeText(this, getString(R.string.error, e.message ?: "Video"), Toast.LENGTH_LONG).show() }
+            }
+        }
+    }
+
+    private fun installVideoOverlay(dest: File, asBackground: Boolean) {
+        run {
+            run {
+                run {
                     // Einfügezeitpunkt = fertige Segmente + bereits laufende Aufnahme
                     val total = segments.sumOf { it.durationMs } + liveDurationMs
                     // Ton im Hintergrund vorab dekodieren, damit Review und Export nicht warten müssen
@@ -1542,10 +1570,6 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
                     binding.gestureView.invalidate()
                     persistSession()
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Video-Overlay fehlgeschlagen", e)
-                dest.delete()
-                main.post { Toast.makeText(this, getString(R.string.error, e.message ?: "Video"), Toast.LENGTH_LONG).show() }
             }
         }
     }
@@ -1555,6 +1579,16 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
      * bei 4K über 100 MB pro Player. Mit mehreren Playern und dem Export daneben
      * führt das zu OutOfMemory. Lokale Dateien brauchen keinen großen Puffer.
      */
+    /** Fehler eines Video-Players als Meldung zeigen statt still stehen zu bleiben. */
+    private fun watchErrors(p: ExoPlayer, what: String) {
+        p.addListener(object : Player.Listener {
+            override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                Log.e(TAG, "$what: ${error.errorCodeName} ${error.message}", error)
+                Toast.makeText(this@MainActivity, getString(R.string.player_error, what, error.errorCodeName), Toast.LENGTH_LONG).show()
+            }
+        })
+    }
+
     private fun newLeanPlayer(): ExoPlayer {
         val loadControl = androidx.media3.exoplayer.DefaultLoadControl.Builder()
             .setBufferDurationsMs(1500, 4000, 500, 1000)
@@ -1568,6 +1602,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
     private fun attachVideoOverlay(overlay: VideoOverlay) {
         overlayPlayer?.release()
         val p = newLeanPlayer()
+        watchErrors(p, "Overlay-Video")
         p.setMediaItem(MediaItem.fromUri(Uri.fromFile(overlay.file)))
         p.repeatMode = Player.REPEAT_MODE_ALL
         p.volume = previewVolume(overlay)  // Nur mit Kopfhörern hörbar, sonst Mikrofon-Übersprechen
@@ -2525,6 +2560,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
     private fun buildPlayer() {
         player?.release()
         val p = newLeanPlayer()
+        watchErrors(p, "Review")
         p.setMediaItems(segments.map { MediaItem.fromUri(Uri.fromFile(it.file)) })
         p.repeatMode = Player.REPEAT_MODE_ALL
         p.prepare()

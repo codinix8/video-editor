@@ -41,6 +41,39 @@ object Downscaler {
 
     fun needsDownscale(file: File, maxHeight: Int = 1080) = visibleHeight(file) > maxHeight
 
+    /**
+     * Muss das Video für sicheres Abspielen neben der Kamera umgewandelt werden?
+     * Ja bei: höher als 1080p, kein H.264 (z. B. HEVC/AV1), mehr als 31 fps, HDR.
+     * Liefert den Grund als Text (für die Anzeige) oder null.
+     */
+    fun transcodeReason(file: File): String? {
+        try {
+            val ex = android.media.MediaExtractor(); ex.setDataSource(file.absolutePath)
+            var reason: String? = null
+            for (i in 0 until ex.trackCount) {
+                val f = ex.getTrackFormat(i)
+                val mime = f.getString(android.media.MediaFormat.KEY_MIME) ?: continue
+                if (!mime.startsWith("video/")) continue
+                val h = f.getInteger(android.media.MediaFormat.KEY_HEIGHT); val w = f.getInteger(android.media.MediaFormat.KEY_WIDTH)
+                val rot = if (f.containsKey(android.media.MediaFormat.KEY_ROTATION)) f.getInteger(android.media.MediaFormat.KEY_ROTATION) else 0
+                val visH = if (rot == 90 || rot == 270) w else h
+                val fps = if (f.containsKey(android.media.MediaFormat.KEY_FRAME_RATE)) try { f.getInteger(android.media.MediaFormat.KEY_FRAME_RATE) } catch (_: Exception) { f.getFloat(android.media.MediaFormat.KEY_FRAME_RATE).toInt() } else 30
+                val transfer = if (f.containsKey(android.media.MediaFormat.KEY_COLOR_TRANSFER)) f.getInteger(android.media.MediaFormat.KEY_COLOR_TRANSFER) else 0
+                val hdr = transfer == android.media.MediaFormat.COLOR_TRANSFER_ST2084 || transfer == android.media.MediaFormat.COLOR_TRANSFER_HLG
+                reason = when {
+                    mime != "video/avc" -> mime.removePrefix("video/").uppercase()
+                    visH > 1080 -> "${visH}p"
+                    fps > 31 -> "$fps fps"
+                    hdr -> "HDR"
+                    else -> null
+                }
+                break
+            }
+            ex.release()
+            return reason
+        } catch (e: Exception) { return null }
+    }
+
     fun run(context: Context, src: File, dest: File, maxHeight: Int = 1080,
             onProgress: (Int) -> Unit, onDone: (File?) -> Unit) {
         val item = EditedMediaItem.Builder(MediaItem.fromUri(Uri.fromFile(src)))
