@@ -263,4 +263,5 @@
     <string name="export_no_watermark">تصدير بلا علامة مائية، حتى 4K</string>
     <string name="video_transcode">جارٍ تحويل الفيديو (%1$s) إلى H.264 1080p لتشغيل سلس… %2$d %%</string>
     <string name="player_error">تعذّر تشغيل %1$s (%2$s). أعد إدراجه – سيتم تحويله.</string>
+    <string name="captions_regen_after_cut">تُعاد توليد الترجمة للترتيب الجديد (تُعاد التعديلات اليدوية إلى الوضع الأصلي).</string>
 </resources>

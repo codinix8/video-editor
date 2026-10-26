@@ -263,4 +263,5 @@
     <string name="export_no_watermark">Exportar sin marca de agua, hasta 4K</string>
     <string name="video_transcode">Convirtiendo el vídeo (%1$s) a H.264 1080p para una reproducción fluida… %2$d %%</string>
     <string name="player_error">%1$s no se puede reproducir (%2$s). Insértalo de nuevo – se convertirá.</string>
+    <string name="captions_regen_after_cut">Los subtítulos se regeneran para el nuevo orden (las correcciones manuales se restablecen).</string>
 </resources>

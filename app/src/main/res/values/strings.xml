@@ -263,4 +263,5 @@
     <string name="export_no_watermark">Export without watermark, up to 4K</string>
     <string name="video_transcode">Converting video (%1$s) to H.264 1080p for smooth playback… %2$d %%</string>
     <string name="player_error">%1$s can\'t be played (%2$s). Try inserting it again – it will be converted.</string>
+    <string name="captions_regen_after_cut">Captions are being regenerated for the new order (manual edits are reset).</string>
 </resources>

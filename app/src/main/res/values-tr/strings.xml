@@ -263,4 +263,5 @@
     <string name="export_no_watermark">Filigransız dışa aktarma, 4K\'ya kadar</string>
     <string name="video_transcode">Video (%1$s) akıcı oynatma için H.264 1080p\'ye dönüştürülüyor… %2$d %%</string>
     <string name="player_error">%1$s oynatılamıyor (%2$s). Lütfen tekrar ekle – dönüştürülecek.</string>
+    <string name="captions_regen_after_cut">Altyazılar yeni sıraya göre yeniden oluşturuluyor (elle yapılan düzeltmeler sıfırlanır).</string>
 </resources>

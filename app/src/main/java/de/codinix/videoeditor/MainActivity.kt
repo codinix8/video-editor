@@ -2297,6 +2297,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
         segments.clear(); segments.addAll(reordered)
         val total = remap.totalMs
 
+        val hadCaptions = captions.isNotEmpty()
         val newCaptions = remap.captions(captions)
         captions.clear(); captions.addAll(newCaptions)
 
@@ -2326,6 +2327,12 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
         main.post(playbackTicker)
         refreshCaptionUi()
         persistSession()
+        // Untertitel nach dem Schnitt neu erkennen: Blöcke passen dann exakt zur neuen Reihenfolge.
+        // (Die Umrechnung oben bleibt als Zwischenstand, bis die Erkennung fertig ist.)
+        if (hadCaptions && !transcribing) {
+            Toast.makeText(this, R.string.captions_regen_after_cut, Toast.LENGTH_SHORT).show()
+            main.postDelayed({ if (inReview && !transcribing) startTranscription(prefs.getString("captions_lang", null)) }, 400)
+        }
     }
 
     // ---------------------------------------------------------------- Ton in der Review

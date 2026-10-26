@@ -263,4 +263,5 @@
     <string name="export_no_watermark">Export sans filigrane, jusqu\'en 4K</string>
     <string name="video_transcode">Conversion de la vidéo (%1$s) en H.264 1080p pour une lecture fluide… %2$d %%</string>
     <string name="player_error">%1$s ne peut pas être lu (%2$s). Réinsère-la – elle sera convertie.</string>
+    <string name="captions_regen_after_cut">Les sous-titres sont régénérés pour le nouvel ordre (les corrections manuelles sont réinitialisées).</string>
 </resources>
