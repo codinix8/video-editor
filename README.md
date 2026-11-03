@@ -1,7 +1,8 @@
-# Babacut
+# BabaCut
 
-Persönlicher Video-Editor für Android, gebaut in Zusammenarbeit mit Claude.
-TikTok-artige Segment-Aufnahme, Overlays, Mosaik-Layouts, Freistellung, Farbfilter.
+Videoeditor für Kurzvideos auf Android – bearbeiten während der Aufnahme. Gebaut in Zusammenarbeit mit Claude.
+
+**Vollständige Projektübersicht für Einarbeitung: [HANDOVER.md](HANDOVER.md)**
 
 ## APK herunterladen
 
@@ -38,6 +39,14 @@ Auf dem Handy: Datei öffnen → „Aus dieser Quelle installieren" erlauben →
 | 3b | Mosaik: 5 Raster, Kamera/Bilder in Kacheln, Zoom/Verschieben/Drehen, Füllfarbe, Trennlinien (Regenbogen optional) | ✅ Build 48 |
 | 3c | Videos in Kacheln: 1080p-Umrechnung, gemeinsames Play/Pause, Lautstärke je Kachel, Protokoll, Ton-Mix, Entwürfe | ✅ Build 53 |
 | 6 | Schnitt in der Review: Segmente per langem Drücken umordnen oder löschen, Papierkorb, Rückgängig; Zeitachsen-Umbau für Untertitel und Ton | ✅ Build 58 |
+| 7 | Farbfilter, Bottom-Sheets im TikTok-Stil, Einstellungen, Tipps, Mosaik-Panel, Play/Pause per Tipp | ✅ Build 65–84 |
+| 8 | Branding BabaCut, Icon, 7 Sprachen, Sprachwahl | ✅ Build 68 |
+| 9 | Export-Sicherungen (Verlauf), Ton in der Review je Segment, Mikrofon je Segment | ✅ Build 77–78 |
+| 10 | Plattform-Hilfslinien, Einrasten, Review-Texte, Textstil merken, Datei-Browser-Tipps | ✅ Build 71–82 |
+| 11 | Release-Kette (AAB, Upload-Signatur, API 36, 16 KB), Lizenzen, Datenschutz | ✅ 1.0.0 |
+| 12 | BabaCut Pro: Play Billing 8, Pro-Seite, Schranken mit Krone, Wasserzeichen | ✅ 1.1.1 |
+| 13 | Umwandlung von HEVC/HDR/60fps-Videos beim Einfügen, sichtbare Player-Fehler | ✅ 1.1.2 |
+| 14 | Untertitel nach Schnitt automatisch neu erkennen | ✅ 1.1.3 |
 | 4b | Farbfilter (9 Looks) für das Kamerabild, live umschaltbar, eingebrannt; rechte Knopfspalte scrollbar | ✅ Build 59 |
 | 7 | Aufräumen: Einstellungen-Seite, Tipps beim ersten Öffnen, Kopfhörer-Hinweis mit Punkt, Play/Pause per Tipp, Mosaik-Panel | ✅ Build 65 |
 | 8 | Babacut-Branding, Icon, 7 Sprachen (EN Standard, DE, TR, ES, FR, FA, AR), Sprachwahl in den Einstellungen | in Test |
