@@ -1,0 +1,10 @@
+# GitHub Pages (Jekyll) config for babacut.io.
+# The project record (Markdown) lives in docs/ too but must not be published on the website.
+exclude:
+  - AI_NATION.md
+  - HANDOVER.md
+  - ROADMAP.md
+  - DECISIONS.md
+  - KNOWLEDGE.md
+  - KNOWN_ISSUES.md
+  - CONCEPT.md
