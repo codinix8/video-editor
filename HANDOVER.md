@@ -137,3 +137,8 @@ Mosaik-Videos, Erkennung Ali/Baba, Vorlagen ab der 4., Emojis, Filter ab dem 4.,
   melden. Store-Builds per Tag `vX.Y.Z` auslösen.
 - Diagnosen über Screenshots des Nutzers; bei Fehlern erst Code lesen, dann gezielt ändern.
 - Keine Superlative in Marketingtexten; keine Geheimnisse in Repo oder Doku.
+
+## 9. AI Nation (since 2026-11-08)
+
+The project is managed by AI Nation. Agent rules: [CLAUDE.md](CLAUDE.md). Project record map and English state
+summary: [docs/AI_NATION.md](docs/AI_NATION.md) (roadmap, decisions, knowledge and known issues live in `docs/`).
