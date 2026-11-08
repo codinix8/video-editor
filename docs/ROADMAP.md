@@ -2,6 +2,9 @@
 
 Build history: README "Stand" table. Source of the items below: HANDOVER.md §5–7 (2026-11-03) and onboarding.
 
+## Done
+- [x] 2026-11-08 Owner profile harvested → `docs/FINETUNING.md` + hub fine-tuning store (task 9b8fbac3).
+
 ## Now
 - [ ] Re-apply for Play production access from ~2026-11-09 (concrete answers with numbers/quotes).
 - [ ] Ship an update to closed testers between test day 7 and 10 (e.g. 1.1.4 with small fixes).

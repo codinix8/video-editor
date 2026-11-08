@@ -8,3 +8,4 @@ exclude:
   - KNOWLEDGE.md
   - KNOWN_ISSUES.md
   - CONCEPT.md
+  - FINETUNING.md

@@ -2,6 +2,11 @@
 
 Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, README and commit history.
 
+## 2026-11-08 – Owner profile harvested (task 9b8fbac3)
+- 19 owner insights (3 `_cross`, 16 project) distilled from HANDOVER, README and commits; submitted to the hub and
+  recorded in `docs/FINETUNING.md`. The file is excluded from the public site via `docs/_config.yml`.
+- This branch is stacked on PR #1 (onboarding) because the record files only exist there; merge PR #1 first.
+
 ## 2026-11-08 – Onboarding into AI Nation
 - Agents work on `agent/…` branches with pull requests; no direct pushes to `main`, no self-merge.
   Previously Claude pushed straight to `main` (HANDOVER §2). Note: every push to `main` creates a public GitHub

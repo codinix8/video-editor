@@ -29,3 +29,8 @@ English digest; details in [HANDOVER.md](../HANDOVER.md) §2–3 (German).
 ## Website
 - `docs/` is GitHub Pages (CNAME babacut.io), static HTML with DE/EN/FA switch.
 - Jekyll is active (no `.nojekyll`); Markdown in `docs/` would be published unless listed in `docs/_config.yml`.
+
+## Working with the owner
+- Read [FINETUNING.md](FINETUNING.md) before talking to the owner: plain German, no jargon, he dictates,
+  "erst reden, dann bauen", a "Bitte prüfen" checklist per build, every string in all 7 languages.
+- Any new Markdown file in `docs/` must be added to `exclude` in `docs/_config.yml`, or it is published on babacut.io.

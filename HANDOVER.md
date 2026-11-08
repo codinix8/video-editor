@@ -142,3 +142,4 @@ Mosaik-Videos, Erkennung Ali/Baba, Vorlagen ab der 4., Emojis, Filter ab dem 4.,
 
 The project is managed by AI Nation. Agent rules: [CLAUDE.md](CLAUDE.md). Project record map and English state
 summary: [docs/AI_NATION.md](docs/AI_NATION.md) (roadmap, decisions, knowledge and known issues live in `docs/`).
+Owner profile (how he works and decides): [docs/FINETUNING.md](docs/FINETUNING.md).
