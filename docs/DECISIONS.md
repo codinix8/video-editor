@@ -8,7 +8,14 @@ Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, READ
   release with an APK, so merges should be deliberate.
 - Project record: existing root `HANDOVER.md` stays (not renamed); new record files live in `docs/` and are
   excluded from the GitHub Pages site via `docs/_config.yml`.
-- Team composition requested from the owner as decision `project.team`.
+- **Pending: `project.team`.** The request could not be filed: `hub_request_decision` returned 403 (forbidden)
+  for role `video-editor-entwickler`. Prepared draft (to be filed by a role with permission; owner text in German):
+  1. Schlank – Entwickler + Code-Reviewer – kits: core, qa (lowest cost; tests/stability only).
+  2. Launch-Team – kits: core, qa, copy, security, growth (Play approval, imprint/privacy, store copy, tests + PR CI).
+  3. Voll – kits: core, ui, qa, assets, copy, security, growth, sales (fastest growth, highest cost before launch).
+  Recommendation: option 2 – no subscription revenue without Play production access; it lowers legal risk
+  (imprint, Google Fonts) and prepares Pro conversion at moderate cost. Predicted owner choice: option 2.
+  If no decision: option 1.
 
 ## Earlier (reconstructed)
 - **Monetisation:** BabaCut Pro subscription (Play Billing 8): monthly 2.99 €, annual 19.99 € with 7-day trial;
