@@ -3,6 +3,11 @@ name: Build APK
 on:
   push:
     branches: [ main ]
+    # Docs-only pushes (website in docs/, project record, Markdown) build no APK and create no
+    # public release. A push that also touches other files still builds. Manual runs stay possible.
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
   workflow_dispatch:
 
 permissions:

@@ -2,6 +2,15 @@
 
 Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, README and commit history.
 
+## 2026-11-09 – No release for docs-only pushes (task f075de7b)
+- `build.yml` push trigger gets `paths-ignore: docs/**` and `**/*.md`; `workflow_dispatch` stays. A push is skipped
+  only when *every* changed file matches; mixed pushes still build and publish `build-N`.
+- `docs/**` covers the website too (HTML/CSS/JS); website changes never affect the APK, so no build is needed.
+- Workflow files are not ignored: a change to `build.yml` itself (including this one) still triggers a build.
+- No `versionCode` bump in this PR: the app is unchanged (CI config only, same as PR #5), and PR #6 already
+  uses 82, so a bump here would only create a merge conflict. The merge build of this PR republishes versionCode 81.
+- Skipped pushes do not consume a run number, so `build-N` numbers stay consecutive for real builds.
+
 ## 2026-11-09 – Deep-integration inventory (task 9299e3fd)
 - Docs-only inventory; no code changed. Result: `docs/AI_NATION.md` "State and backlog (2026-11-09)".
 - Backlog order (proposed via `hub_propose_tasks`, owner releases): PR CI first (no tests, no PR checks today),
