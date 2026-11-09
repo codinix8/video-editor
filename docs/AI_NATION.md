@@ -40,6 +40,12 @@ via [`docs/_config.yml`](_config.yml).
   ("requires more testing"); re-apply from about **2026-11-09** with ≥12 testers for 14 days.
 - **Open work:** see [ROADMAP.md](ROADMAP.md). **Risks:** see [KNOWN_ISSUES.md](KNOWN_ISSUES.md).
 
+## Team decision
+
+`project.team` was requested on 2026-11-09 (hub id `7f90c967`, decider: Gremium; details in
+[DECISIONS.md](DECISIONS.md)). Recommendation: lean team (kits: core, qa) until Play production access, then add
+copy/security/ui. Until decided, the developer and code-reviewer roles work on released tasks.
+
 ## CI status
 
 **There are no automated tests in this repository and none run in CI.** `build.yml` only compiles a debug APK on
