@@ -5,11 +5,16 @@
 - Website imprint is a placeholder (imprint data missing) – legal risk once the app is in production.
 - Website uses Google Fonts for Farsi – known German warning-letter risk; self-host planned.
 - DKIM for babacut.io not configured; babacut.net redirect possibly missing.
+- `TimelineRemap` quirks found by the unit tests (behaviour kept, not yet confirmed as bugs):
+  - `map(t)` returns a value for t == end of the *last old* segment only if that segment is also last in the new
+    order; after a reorder, the old end time maps to null.
+  - `captions()`: the 300 ms minimum duration wins over the segment-end clamp, so a caption that starts < 320 ms
+    before a segment end can stick out into the next segment; a word can end before it starts after clamping.
 
 ## Risks
-- **No automated tests; PR CI only builds** – since 2026-11-09 `pr.yml` checks that every PR compiles
-  (`assembleDebug`) and runs `lintDebug`, but lint is non-blocking (no baseline yet) and there are no unit tests.
-  Regressions in behaviour are still only found by manual phone testing; auto-merge is unsafe.
+- **Thin automated test coverage** – since 2026-11-09 `pr.yml` builds every PR (`assembleDebug`), runs 33 JVM unit
+  tests (`testDebugUnitTest`, blocking; only `TimelineRemap` and the transcode rule) and `lintDebug` (non-blocking,
+  no baseline). UI, recording, export and captions are still only tested by hand on the phone; auto-merge is unsafe.
 - **Every push to `main` publishes** a GitHub release with an APK (public repo) – also for docs-only merges
   (`build-102` came from docs PR #2). Fix proposed 2026-11-09 (`paths-ignore`).
 - **PR #1 is superseded** by merged PR #2; its remaining diff only deletes record lines – must not be merged.

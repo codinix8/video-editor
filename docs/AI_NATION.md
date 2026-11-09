@@ -42,12 +42,12 @@ via [`docs/_config.yml`](_config.yml).
 
 ## CI status
 
-**There are no automated tests in this repository.** Since 2026-11-09 `pr.yml` builds every pull request to `main`
-(`assembleDebug`) and runs `lintDebug` (non-blocking, no release). `build.yml` compiles and publishes a debug APK on
+Since 2026-11-09 `pr.yml` builds every pull request to `main` (`assembleDebug`), runs the JVM unit tests
+(`testDebugUnitTest`, blocking; 33 tests for `TimelineRemap` and `TranscodePolicy`) and `lintDebug` (non-blocking,
+no release). `build.yml` compiles and publishes a debug APK on
 pushes to `main`. `release.yml` only builds release artifacts. Auto-merge of
-agent PRs is still unsafe (build-only check). Recommended next step (ROADMAP): a lint baseline and
-`testDebugUnitTest` in `pr.yml` plus first unit tests for pure logic (`TimelineRemap`,
-`Captions` chunking, `Loudness`, `Downscaler.transcodeReason`).
+agent PRs is still unsafe (coverage is thin). Recommended next steps (ROADMAP): a lint baseline and more
+unit tests for pure logic (`Captions` chunking, `Loudness`).
 
 ## State and backlog (2026-11-09)
 

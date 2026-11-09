@@ -3,6 +3,8 @@
 Build history: README "Stand" table. Source of the items below: HANDOVER.md §5–7 (2026-11-03) and onboarding.
 
 ## Done
+- [x] 2026-11-09 First JVM unit tests (task b9d022fb): 33 JUnit tests in `app/src/test` for `TimelineRemap` and
+      `TranscodePolicy` (rule behind `Downscaler.transcodeReason`); `pr.yml` runs `testDebugUnitTest` (blocking).
 - [x] 2026-11-09 PR CI: `.github/workflows/pr.yml` runs `assembleDebug` + `lintDebug` on every PR to `main`,
       no release/tag (task 0b65e2ce). Lint is non-blocking until a baseline exists; unit tests follow.
 - [x] 2026-11-09 Deep-integration inventory and backlog → `docs/AI_NATION.md` "State and backlog"; 7 tasks proposed
@@ -16,8 +18,8 @@ Build history: README "Stand" table. Source of the items below: HANDOVER.md §5�
 
 ## Next
 - [ ] Lint baseline (`app/lint-baseline.xml`), then make `lintDebug` in `pr.yml` blocking (remove `continue-on-error`).
-- [ ] Add `testDebugUnitTest` to `pr.yml` together with the first unit tests (prerequisite for auto-merge).
-- [ ] First unit tests for pure logic (TimelineRemap, Captions chunking, Loudness, transcodeReason).
+- [ ] More unit tests for pure logic: Captions chunking, Loudness, `Caption` JSON round-trip (needs a real
+      `org.json` test dependency, the android.jar stub throws).
 - [ ] Skip the public APK release for docs-only pushes to `main` (`paths-ignore`). *(proposed 2026-11-09)*
 - [ ] Proposal (no code) for splitting `MainActivity.kt`. *(proposed 2026-11-09)*
 - [ ] Self-host the Farsi web font instead of Google Fonts (legal risk).

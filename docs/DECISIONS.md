@@ -2,6 +2,20 @@
 
 Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, README and commit history.
 
+## 2026-11-09 – First JVM unit tests (task b9d022fb)
+- Pure decision of `Downscaler.transcodeReason` extracted into `TranscodePolicy.reason(mime, width, height,
+  rotation, fps, colorTransfer)`; Downscaler still reads the `MediaFormat` and delegates. Same rule and order
+  (codec → >1080p → >31 fps → HDR), same texts. Extracted into a new object instead of testing `Downscaler`
+  directly, because `Downscaler` creates a main-thread `Handler` on class load, which fails on the JVM.
+- `TranscodePolicy` copies `COLOR_TRANSFER_ST2084`(6)/`COLOR_TRANSFER_HLG`(7) to stay Android-free;
+  `MediaFormatConstantsTest` guards the copy against android.jar.
+- Plain JUnit 4.13.2, no Robolectric/mocking library: `TimelineRemap` only needs data classes. No
+  `unitTests.isReturnDefaultValues`, so an accidental Android call in a test fails loudly instead of returning 0.
+- `testDebugUnitTest` is **blocking** in `pr.yml` (lint stays non-blocking).
+- `versionCode` 81 → 82: app code was touched, and the merge to `main` produces a tester build.
+- Branch stacked on PR #5 (`pr.yml` exists only there); merge PR #5 first.
+- Tests document current behaviour, including two quirks found while writing them (see KNOWN_ISSUES).
+
 ## 2026-11-09 – Pull-request CI (task 0b65e2ce)
 - New `.github/workflows/pr.yml` instead of adding `pull_request` to `build.yml`, so PR runs can never reach the
   release/`build-logs` steps. Permissions `contents: read`.
