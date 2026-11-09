@@ -1,7 +1,7 @@
-# Pull-request check: builds the debug APK and runs Android lint.
+# Pull-request check: builds the debug APK, runs the JVM unit tests and Android lint.
 # Deliberately publishes nothing: no GitHub release, no tag, no push to build-logs.
 # The public APK release stays in build.yml (push to main) and release.yml (tag v*).
-name: PR check (build + lint)
+name: PR check (build + tests + lint)
 
 on:
   pull_request:
@@ -46,10 +46,23 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon --stacktrace
 
+      # JVM unit tests (app/src/test). Blocking: a failing test turns the PR red.
+      - name: Unit tests (testDebugUnitTest)
+        id: tests
+        run: ./gradlew testDebugUnitTest --no-daemon
+
+      - name: Upload unit test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-report
+          path: app/build/reports/tests/testDebugUnitTest/
+          if-no-files-found: ignore
+          retention-days: 14
+
       # Lint is reported but not yet blocking: the existing code was never linted in CI,
       # so pre-existing findings must not turn every PR red. Follow-up: create a lint
       # baseline (app/lint-baseline.xml) and then remove continue-on-error.
-      # Next: add testDebugUnitTest here once the first unit tests exist.
       - name: Android lint (debug, non-blocking)
         id: lint
         continue-on-error: true
@@ -70,6 +83,7 @@ jobs:
           {
             echo "### PR check"
             echo "- Build (assembleDebug): ${{ steps.build.outcome }}"
+            echo "- Unit tests (testDebugUnitTest): ${{ steps.tests.outcome }} (blocking, report in artifact \`unit-test-report\`)"
             echo "- Lint (lintDebug): ${{ steps.lint.outcome }} (non-blocking, report in artifact \`lint-report\`)"
             echo "- No release, tag or build-logs push is created by this workflow."
           } >> "$GITHUB_STEP_SUMMARY"

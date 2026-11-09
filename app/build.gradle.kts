@@ -12,7 +12,7 @@ android {
         applicationId = "de.codinix.babacut"
         minSdk = 26
         targetSdk = 36
-        versionCode = 81
+        versionCode = 82
         versionName = "1.1.3"
         ndk { abiFilters += listOf("arm64-v8a") }
     }
@@ -102,4 +102,7 @@ dependencies {
     implementation("androidx.media3:media3-common:$media3")
     implementation("androidx.media3:media3-exoplayer:$media3")
     implementation("androidx.media3:media3-ui:$media3")
+
+    // JVM unit tests (app/src/test) for pure logic; run with ./gradlew testDebugUnitTest
+    testImplementation("junit:junit:4.13.2")
 }
