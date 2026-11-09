@@ -47,3 +47,58 @@ pushes to `main`; it does not run on pull requests. `release.yml` only builds re
 agent PRs therefore has no safety net. Recommended next step (ROADMAP): a PR workflow running
 `./gradlew assembleDebug testDebugUnitTest lintDebug` plus first unit tests for pure logic (`TimelineRemap`,
 `Captions` chunking, `Loudness`, `Downscaler.transcodeReason`).
+
+## State and backlog (2026-11-09)
+
+Inventory by task 9299e3fd (docs only, no code changed). Sources: `gh pr list`, `gh issue list`, `git ls-remote`,
+`gh run list`, `gh release list`, the workflows, a grep for TODO/FIXME and the record files in `docs/`.
+
+### What works
+- App version 1.1.3 (versionCode 81) is on the Play internal and closed test; all features in HANDOVER §4 are
+  confirmed by the owner on his phone. 34 Kotlin files, ~8.7k lines (`MainActivity.kt` 3292 lines).
+- CI builds are green: the last `Build APK` runs on `main` (2026-11-03, 2026-11-08) succeeded in ~2 min; latest
+  debug release is `build-102`. The last store build `release-1.1.3-8` (tag `v1.1.3`, 2026-10-26) succeeded.
+- GitHub Pages deploys babacut.io from `docs/` on every push to `main` (runs green).
+- Code hygiene: no `TODO`/`FIXME`/`HACK` markers in `app/src`. All 7 `values*` string folders present.
+
+### Open pull requests, issues and branches
+| Item | State | Note |
+|------|-------|------|
+| [PR #1](https://github.com/codinix8/video-editor/pull/1) "Onboard BabaCut into AI Nation" (`agent/4e8e8c10-…`) | open | **Superseded:** its content reached `main` via the stacked [PR #2](https://github.com/codinix8/video-editor/pull/2) (merged 2026-11-08). Its diff against `main` now only *removes* lines (FINETUNING.md etc.). Do not merge; the owner can close it. Not touched by this task. |
+| [PR #2](https://github.com/codinix8/video-editor/pull/2) "Harvest owner profile" | merged | – |
+| Issues | none | No GitHub issues (open or closed). Bugs are reported via screenshots in chat. |
+| Branch `build-logs` | CI-owned | Force-pushed by the workflows with the last failing `build.log` (last: build 94, 2026-10-07). Not a work branch. |
+| Owner branches | none | No other branches from the owner's earlier single chats exist on the remote. |
+
+### What is open (product)
+See [ROADMAP.md](ROADMAP.md) "Now": Play production re-application (possible from **today, 2026-11-09**, ≥12 testers
+for 14 days), an update for closed testers between test day 7 and 10, imprint data from the owner for the website.
+
+### Risks
+- **No tests, no PR CI** (details below) – regressions are found only on the owner's phone.
+- **Website loads Google Fonts** (`fonts.googleapis.com` in `docs/index.html`, `404.html`, `support.html`) – known
+  German warning-letter (Abmahnung) risk.
+- **Imprint is a placeholder** – legal risk once the app is in production.
+- **Every push to `main` publishes a public GitHub release with an APK** (`build.yml`), also for docs-only merges
+  (e.g. `build-102` from PR #2). Merges should be deliberate; a `paths-ignore` for `docs/**` would avoid this.
+- **Debug keystore with plaintext passwords committed** (`keystore/videoeditor.jks`, `app/build.gradle.kts`) –
+  debug signature only; Play uses the upload key from GitHub secrets.
+- **`MainActivity.kt` concentration** (3292 lines) – high change risk.
+- No revenue until Play production access is granted.
+
+### CI status
+- `build.yml`: push to `main` + manual → `assembleDebug`, uploads APK, creates release `build-N`; on failure pushes
+  `build.log` to branch `build-logs`. **Does not run on pull requests.**
+- `release.yml`: tag `v*` + manual → signed `bundleRelease assembleRelease`, release `release-<version>-N`.
+- **No unit/instrumentation tests exist and none run.** Therefore agent PRs must not be auto-merged. First backlog
+  item: *Add CI with the existing build checks* (PR workflow: `assembleDebug` + `lintDebug`, then unit tests as they
+  are added).
+
+### Proposed next tasks (submitted with `hub_propose_tasks`, waiting for owner release)
+1. Add a pull-request CI workflow (build + lint) without publishing a release.
+2. Add the first JVM unit tests for pure logic (`TimelineRemap`, `Downscaler.transcodeReason`) and run them in PR CI.
+3. Skip the public APK release for docs-only pushes to `main` (`paths-ignore: docs/**`, `*.md`).
+4. Self-host the Vazirmatn web font on babacut.io (remove Google Fonts).
+5. Prepare the Play production re-application text (German draft for the owner, with numbers from the closed test).
+6. Plan the 1.1.4 closed-test update: collect small fixes from KNOWN_ISSUES into a "Bitte prüfen" list (proposal only).
+7. Proposal (no code) for splitting `MainActivity.kt` into smaller units, for the owner to approve ("erst reden").

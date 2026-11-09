@@ -2,6 +2,13 @@
 
 Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, README and commit history.
 
+## 2026-11-09 – Deep-integration inventory (task 9299e3fd)
+- Docs-only inventory; no code changed. Result: `docs/AI_NATION.md` "State and backlog (2026-11-09)".
+- Backlog order (proposed via `hub_propose_tasks`, owner releases): PR CI first (no tests, no PR checks today),
+  then first unit tests, no release for docs-only pushes, self-hosted font, Play re-application draft, 1.1.4 plan,
+  `MainActivity.kt` split proposal.
+- PR #1 left untouched although it is superseded by the merged PR #2; closing it is the owner's call.
+
 ## 2026-11-08 – Owner profile harvested (task 9b8fbac3)
 - 19 owner insights (3 `_cross`, 16 project) distilled from HANDOVER, README and commits; submitted to the hub and
   recorded in `docs/FINETUNING.md`. The file is excluded from the public site via `docs/_config.yml`.
