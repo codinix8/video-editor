@@ -3,6 +3,8 @@
 Build history: README "Stand" table. Source of the items below: HANDOVER.md §5–7 (2026-11-03) and onboarding.
 
 ## Done
+- [x] 2026-11-09 PR CI: `.github/workflows/pr.yml` runs `assembleDebug` + `lintDebug` on every PR to `main`,
+      no release/tag (task 0b65e2ce). Lint is non-blocking until a baseline exists; unit tests follow.
 - [x] 2026-11-09 Deep-integration inventory and backlog → `docs/AI_NATION.md` "State and backlog"; 7 tasks proposed
       to the hub (waiting for owner release, task 9299e3fd).
 - [x] 2026-11-08 Owner profile harvested → `docs/FINETUNING.md` + hub fine-tuning store (task 9b8fbac3).
@@ -13,7 +15,8 @@ Build history: README "Stand" table. Source of the items below: HANDOVER.md §5�
 - [ ] Imprint data from the owner → finish website imprint/privacy (legal).
 
 ## Next
-- [ ] CI for pull requests: build + unit tests + lint on every PR (prerequisite for auto-merge).
+- [ ] Lint baseline (`app/lint-baseline.xml`), then make `lintDebug` in `pr.yml` blocking (remove `continue-on-error`).
+- [ ] Add `testDebugUnitTest` to `pr.yml` together with the first unit tests (prerequisite for auto-merge).
 - [ ] First unit tests for pure logic (TimelineRemap, Captions chunking, Loudness, transcodeReason).
 - [ ] Skip the public APK release for docs-only pushes to `main` (`paths-ignore`). *(proposed 2026-11-09)*
 - [ ] Proposal (no code) for splitting `MainActivity.kt`. *(proposed 2026-11-09)*

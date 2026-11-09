@@ -2,6 +2,14 @@
 
 Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, README and commit history.
 
+## 2026-11-09 – Pull-request CI (task 0b65e2ce)
+- New `.github/workflows/pr.yml` instead of adding `pull_request` to `build.yml`, so PR runs can never reach the
+  release/`build-logs` steps. Permissions `contents: read`.
+- Lint runs but is non-blocking (`continue-on-error` on the step), because the code was never linted and no Android
+  SDK was available in the agent container to create a baseline. Chosen over `lint { abortOnError = false }` in
+  Gradle so that `lintVitalRelease` still guards store builds. Follow-up: baseline, then blocking.
+- No `versionCode` bump: no app code changed and PR runs produce no tester build.
+
 ## 2026-11-09 – Deep-integration inventory (task 9299e3fd)
 - Docs-only inventory; no code changed. Result: `docs/AI_NATION.md` "State and backlog (2026-11-09)".
 - Backlog order (proposed via `hub_propose_tasks`, owner releases): PR CI first (no tests, no PR checks today),

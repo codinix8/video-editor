@@ -42,10 +42,11 @@ via [`docs/_config.yml`](_config.yml).
 
 ## CI status
 
-**There are no automated tests in this repository and none run in CI.** `build.yml` only compiles a debug APK on
-pushes to `main`; it does not run on pull requests. `release.yml` only builds release artifacts. Auto-merge of
-agent PRs therefore has no safety net. Recommended next step (ROADMAP): a PR workflow running
-`./gradlew assembleDebug testDebugUnitTest lintDebug` plus first unit tests for pure logic (`TimelineRemap`,
+**There are no automated tests in this repository.** Since 2026-11-09 `pr.yml` builds every pull request to `main`
+(`assembleDebug`) and runs `lintDebug` (non-blocking, no release). `build.yml` compiles and publishes a debug APK on
+pushes to `main`. `release.yml` only builds release artifacts. Auto-merge of
+agent PRs is still unsafe (build-only check). Recommended next step (ROADMAP): a lint baseline and
+`testDebugUnitTest` in `pr.yml` plus first unit tests for pure logic (`TimelineRemap`,
 `Captions` chunking, `Loudness`, `Downscaler.transcodeReason`).
 
 ## State and backlog (2026-11-09)
@@ -88,11 +89,13 @@ for 14 days), an update for closed testers between test day 7 and 10, imprint da
 
 ### CI status
 - `build.yml`: push to `main` + manual → `assembleDebug`, uploads APK, creates release `build-N`; on failure pushes
-  `build.log` to branch `build-logs`. **Does not run on pull requests.**
+  `build.log` to branch `build-logs`. Does not run on pull requests.
+- `pr.yml` (added 2026-11-09, task 0b65e2ce): `pull_request` to `main` → `assembleDebug` + `lintDebug`
+  (lint `continue-on-error`, report artifact `lint-report`). Read-only permissions; no release, tag or `build-logs` push.
+  Next: lint baseline → blocking lint; `testDebugUnitTest` once tests exist.
 - `release.yml`: tag `v*` + manual → signed `bundleRelease assembleRelease`, release `release-<version>-N`.
-- **No unit/instrumentation tests exist and none run.** Therefore agent PRs must not be auto-merged. First backlog
-  item: *Add CI with the existing build checks* (PR workflow: `assembleDebug` + `lintDebug`, then unit tests as they
-  are added).
+- **No unit/instrumentation tests exist and none run.** Therefore agent PRs must not be auto-merged. The PR build
+  check (backlog item 1) is done; unit tests are the next item.
 
 ### Proposed next tasks (submitted with `hub_propose_tasks`, waiting for owner release)
 1. Add a pull-request CI workflow (build + lint) without publishing a release.

@@ -6,6 +6,10 @@ English digest; details in [HANDOVER.md](../HANDOVER.md) §2–3 (German).
 - Needs Android SDK (platform 36, build-tools 36.0.0), NDK 27.2.12479018, CMake 3.22.1, Java 17.
 - `git submodule update --init --recursive` (whisper.cpp v1.9.4) before building.
 - `./gradlew assembleDebug`; CI build takes ~4.5 min. `android.suppressUnsupportedCompileSdk=36` with AGP 8.7.3.
+- PR CI (`.github/workflows/pr.yml`, since 2026-11-09): on `pull_request` to `main` → `assembleDebug`, then
+  `lintDebug` with `continue-on-error` (report artifact `lint-report`, outcome in the job summary). Permissions
+  `contents: read`, Gradle cache read-only, no release/tag/`build-logs` push. Lint is non-blocking at workflow level
+  (not via `abortOnError=false` in Gradle), so `lintVitalRelease` in `release.yml` keeps blocking store builds.
 - 16 KB page-size linker flags are set (Play requirement).
 - Bump `versionCode` (+1) for every build that goes to testers; current 81 / 1.1.3.
 
