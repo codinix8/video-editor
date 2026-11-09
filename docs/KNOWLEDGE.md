@@ -34,3 +34,9 @@ English digest; details in [HANDOVER.md](../HANDOVER.md) §2–3 (German).
 - Read [FINETUNING.md](FINETUNING.md) before talking to the owner: plain German, no jargon, he dictates,
   "erst reden, dann bauen", a "Bitte prüfen" checklist per build, every string in all 7 languages.
 - Any new Markdown file in `docs/` must be added to `exclude` in `docs/_config.yml`, or it is published on babacut.io.
+
+## Repo inventory facts (2026-11-09)
+- No GitHub issues exist; the owner reports bugs via screenshots in chat.
+- Branch `build-logs` is written by CI only (force-push of the last failing `build.log`); not a work branch.
+- PR #2 was squash-merged from a branch stacked on PR #1, so PR #1's commits are not ancestors of `main` and its
+  diff against `main` is now deletions only. Check `git diff main <branch>` before assuming an open PR still adds work.
