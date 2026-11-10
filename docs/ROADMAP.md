@@ -3,6 +3,8 @@
 Build history: README "Stand" table. Source of the items below: HANDOVER.md §5–7 (2026-11-03) and onboarding.
 
 ## Done
+- [x] 2026-11-10 `docs/FINETUNING.md` synced with the fine-tuning hub: 60 insights (17 BabaCut, 43 `_cross`),
+      grouped by area, newest first, 3 superseded items marked (task 9b560127).
 - [x] 2026-11-10 Proposal for splitting `MainActivity.kt` → `docs/MAINACTIVITY_SPLIT.md` (12 move-only steps,
       no code; task de9795a4). Waiting for the owner's go on steps 1–5.
 - [x] 2026-11-10 Vazirmatn web font self-hosted on babacut.io; no Google Fonts request left (task 6c203aca).

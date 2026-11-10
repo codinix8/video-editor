@@ -2,6 +2,13 @@
 
 Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, README and commit history.
 
+## 2026-11-10 – FINETUNING.md mirrors the whole hub (task 9b560127)
+- `docs/FINETUNING.md` now lists every insight `hub_finetuning` returns for `video-editor`, including `_cross`
+  ones, not only the ones harvested from this repo. Reason: agents read the file before talking to the owner;
+  cross-project rules (name the project, batch merge approvals, never drop his input silently) apply here too.
+- Superseded items stay in the file struck through with a pointer to their replacement (traceability); the hub
+  is the source of truth, the file is a dated mirror.
+
 ## 2026-11-10 – Proposal for splitting MainActivity.kt (task de9795a4)
 - Proposal only, no code: `docs/MAINACTIVITY_SPLIT.md`. Recommended: plain Kotlin controllers sharing one
   `ProjectState` + a small `Host` interface; no ViewModel/Compose/DI migration (that would be a rebuild).

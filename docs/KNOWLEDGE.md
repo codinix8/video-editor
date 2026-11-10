@@ -38,6 +38,8 @@ English digest; details in [HANDOVER.md](../HANDOVER.md) §2–3 (German).
 ## Working with the owner
 - Read [FINETUNING.md](FINETUNING.md) before talking to the owner: plain German, no jargon, he dictates,
   "erst reden, dann bauen", a "Bitte prüfen" checklist per build, every string in all 7 languages.
+- FINETUNING.md is a dated mirror of `hub_finetuning` (last sync 2026-11-10, 60 insights). Before relying on it,
+  re-run `hub_finetuning` and compare count/dates; the hub wins on conflicts.
 - Any new Markdown file in `docs/` must be added to `exclude` in `docs/_config.yml`, or it is published on babacut.io.
 
 ## Repo inventory facts (2026-11-09)
