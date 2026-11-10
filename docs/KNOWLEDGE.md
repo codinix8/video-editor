@@ -17,7 +17,9 @@ English digest; details in [HANDOVER.md](../HANDOVER.md) §2–3 (German).
 - Failed build logs are force-pushed to branch `build-logs` (`build.log`).
 
 ## Code map (app/src/main/java/de/codinix/videoeditor/)
-- `MainActivity.kt` – recording, review, dialogs, Pro gates, persistence (very large).
+- `MainActivity.kt` – recording, review, dialogs, Pro gates, persistence (3326 lines; line-range map and split plan
+  in `docs/MAINACTIVITY_SPLIT.md`). Shared state (`segments`, `overlayStore`, `mosaic`, `captions`, `audioHistory`)
+  couples all areas; `persistSession()` has 32 call sites. Private `radioList()` there is dead code.
 - `gl/CompositorProcessor.kt` – OpenGL ES2 CameraX effect; preview equals recording.
 - `overlay/` – overlay models, gestures, mosaic, text rendering.
 - `whisper/` – Whisper engine (JNI in `app/src/main/cpp`), model manager, captions, styles, emoji dictionary.
