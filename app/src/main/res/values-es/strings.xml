@@ -264,4 +264,12 @@
     <string name="video_transcode">Convirtiendo el vídeo (%1$s) a H.264 1080p para una reproducción fluida… %2$d %%</string>
     <string name="player_error">%1$s no se puede reproducir (%2$s). Insértalo de nuevo – se convertirá.</string>
     <string name="captions_regen_after_cut">Los subtítulos se regeneran para el nuevo orden (las correcciones manuales se restablecen).</string>
+    <string name="paused_label">Pausa</string>
+    <string name="permission_title">Cámara y micrófono</string>
+    <string name="permission_explain">BabaCut necesita la cámara para grabar y el micrófono para el sonido y los subtítulos. No se sube nada.</string>
+    <string name="permission_settings_explain">Se denegó el acceso. Permite cámara y micrófono en los ajustes de la app y vuelve.</string>
+    <string name="permission_allow">Permitir acceso</string>
+    <string name="permission_open_settings">Abrir ajustes de la app</string>
+    <string name="tip_live_overlay">Las superposiciones añadidas ahora se graban desde aquí. Para texto sobre todo el vídeo, usa el botón T en la revisión.</string>
+    <string name="export_actual_size">Tamaño del archivo: %1$s</string>
 </resources>
