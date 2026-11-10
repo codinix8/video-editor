@@ -2,6 +2,14 @@
 
 Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, README and commit history.
 
+## 2026-11-10 – Self-hosted Vazirmatn web font (task 6c203aca)
+- Google Fonts removed from all five pages (index, 404, support, imprint, privacy – the brief named three).
+- Vazirmatn v33.003 from the upstream release (github.com/rastikerdar/vazirmatn), static Regular (400) and Bold (700)
+  woff2 only – the weights the old Google link requested; ~100 KB total, no variable font, no subsetting.
+  SIL OFL 1.1 licence shipped next to the files (`docs/assets/fonts/OFL.txt`).
+- Font stack in `style.css` unchanged (`"Vazirmatn","Noto Sans Arabic",Tahoma,…` for `lang="fa"`); `font-display:swap`.
+- No versionCode bump: website-only change, no app build.
+
 ## 2026-11-09 – Deep-integration inventory (task 9299e3fd)
 - Docs-only inventory; no code changed. Result: `docs/AI_NATION.md` "State and backlog (2026-11-09)".
 - Backlog order (proposed via `hub_propose_tasks`, owner releases): PR CI first (no tests, no PR checks today),
