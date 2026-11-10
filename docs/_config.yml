@@ -10,3 +10,4 @@ exclude:
   - CONCEPT.md
   - FINETUNING.md
   - CLOSED_TEST_1_1_4_PLAN.md
+  - MAINACTIVITY_SPLIT.md

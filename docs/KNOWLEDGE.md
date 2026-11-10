@@ -17,7 +17,9 @@ English digest; details in [HANDOVER.md](../HANDOVER.md) §2–3 (German).
 - Failed build logs are force-pushed to branch `build-logs` (`build.log`).
 
 ## Code map (app/src/main/java/de/codinix/videoeditor/)
-- `MainActivity.kt` – recording, review, dialogs, Pro gates, persistence (very large).
+- `MainActivity.kt` – recording, review, dialogs, Pro gates, persistence (3326 lines; line-range map and split plan
+  in `docs/MAINACTIVITY_SPLIT.md`). Shared state (`segments`, `overlayStore`, `mosaic`, `captions`, `audioHistory`)
+  couples all areas; `persistSession()` has 32 call sites. Private `radioList()` there is dead code.
 - `gl/CompositorProcessor.kt` – OpenGL ES2 CameraX effect; preview equals recording.
 - `overlay/` – overlay models, gestures, mosaic, text rendering.
 - `whisper/` – Whisper engine (JNI in `app/src/main/cpp`), model manager, captions, styles, emoji dictionary.
@@ -28,6 +30,9 @@ English digest; details in [HANDOVER.md](../HANDOVER.md) §2–3 (German).
 
 ## Website
 - `docs/` is GitHub Pages (CNAME babacut.io), static HTML with DE/EN/FA switch.
+- Web font: Vazirmatn is self-hosted (`docs/assets/fonts/`, `@font-face` at the top of `style.css`). Do not add
+  external font/CSS links (Google Fonts = German warning-letter risk). Upstream woff2 files:
+  `raw.githubusercontent.com/rastikerdar/vazirmatn/v33.003/fonts/webfonts/`.
 - Jekyll is active (no `.nojekyll`); Markdown in `docs/` would be published unless listed in `docs/_config.yml`.
 
 ## Working with the owner

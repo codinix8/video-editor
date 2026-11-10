@@ -2,18 +2,45 @@
 
 Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, README and commit history.
 
-## 2026-11-10 – 1.1.4 closed-test update planned (task d444acae)
-- Owner decision requested via `hub_request_decision` (type `milestone`, id 2a5ce05a; worked for this role
-  now, unlike the 403 on 2026-11-08). Options: small 1.1.4 first (recommended) vs. apply now with 1.1.3.
+## 2026-11-10 – Closed-test update planned (task d444acae, revised after review of PR #10)
 - Proposal only, no code ("erst reden, dann bauen"): `docs/CLOSED_TEST_1_1_4_PLAN.md` (German, for the owner).
-- Recommended scope: A localise German error-toast labels (~10 new strings × 7 languages), B versionName 1.1.4 +
-  Play release notes in 7 languages, D English crash-report labels (optional). Deferred: C (TimelineRemap caption
-  300 ms clamp quirk; needs the tests of open PR b9d022fb and its own phone test), caption drift, RTL layout.
-- Honest timing: the day-7–10 window of the second test period (~1–5 Nov) has passed; 1.1.4 still strengthens the
-  re-application answer and the next test period if Google rejects again.
-- versionCode: open PR b9d022fb already sets 82; 1.1.4 takes 83 if that PR is merged first, otherwise 82.
-- Unused German name lists (`CaptionStyle.TEMPLATE_NAMES`, `Mosaic.LAYOUT_NAMES`, `ColorFilters.NAMES`) are not
-  shown in the UI and are left alone.
+- Owner choice recorded, not re-asked (hub decision 2a5ce05a): "1.1.4 klein: Fehlermeldungen in allen 7 Sprachen +
+  Neuerungen-Text, danach Antrag" = scope A + B, then the production application. D (English crash-report labels)
+  stays optional and unapproved; C (TimelineRemap caption 300 ms clamp) deferred until PR #6 tests are on `main`.
+- The owner's own `v1.1.4` (82, f7999a1, 2026-11-10) shipped other fixes but not A, so A + B target the next
+  version: versionCode 83, proposed versionName 1.1.5 (owner to confirm). PR #6 also sets 82 and must be bumped.
+- Scope A extended per review: `ModelManager.kt` download error, `Exporter.kt` save/MediaStore/re-encode/overlay-audio
+  errors and `OverlayAudioRenderer.kt` "Kein Ton im Overlay" (all reach the toast or the export error sheet).
+  Explicitly deferred: GL/EGL exception texts (not verified to reach the UI), system `e.message`, log-only texts.
+- Claims narrowed: verified result is "the 7 `strings.xml` have the same 223 keys", not full runtime translation.
+- Closed-track rollout history is not inferable from versionCode; marked `[BESTÄTIGEN]` for the owner (Play Console).
+  "Changes were shipped during the test" may only be used in the application if the Console confirms it.
+
+## 2026-11-10 – Proposal for splitting MainActivity.kt (task de9795a4)
+- Proposal only, no code: `docs/MAINACTIVITY_SPLIT.md`. Recommended: plain Kotlin controllers sharing one
+  `ProjectState` + a small `Host` interface; no ViewModel/Compose/DI migration (that would be a rebuild).
+- Order by risk: pure logic with JVM tests first (caption timing, gain ranges, session JSON), wide-coupled UI
+  (review, mosaic, overlays, recording) last. One move-only PR per step, `versionCode` +1, phone checklist per step.
+- Session/draft JSON keys must not change (user work). Prerequisite: PR CI (#5) and JVM tests (#6) merged.
+- Status: waiting for the owner (3 questions in §6 of the proposal). No versionCode bump: docs-only.
+
+## 2026-11-10 – Self-hosted Vazirmatn web font (task 6c203aca)
+- Google Fonts removed from all five pages (index, 404, support, imprint, privacy – the brief named three).
+- Vazirmatn v33.003 from the upstream release (github.com/rastikerdar/vazirmatn), static Regular (400) and Bold (700)
+  woff2 only – the weights the old Google link requested; ~100 KB total, no variable font, no subsetting.
+  SIL OFL 1.1 licence shipped next to the files (`docs/assets/fonts/OFL.txt`).
+- Font stack in `style.css` unchanged (`"Vazirmatn","Noto Sans Arabic",Tahoma,…` for `lang="fa"`); `font-display:swap`.
+- No versionCode bump: website-only change, no app build.
+## 2026-11-09 – `project.team` requested (task 4e8e8c10, resumed)
+- The earlier 403 on `hub_request_decision` is gone; the request was filed (hub decision id `7f90c967`, decider:
+  Gremium). Options (German for the owner): 1. Schlank – Entwickler + Code-Reviewer + QA-Tester (kits: core, qa);
+  2. Ausgewogen – plus Texter + Security-Review (kits: core, ui, qa, copy, security); 3. Wachstum – plus Growth +
+  Asset-Ersteller (kits: core, ui, qa, assets, copy, security, growth).
+- Recommendation: option 1 now, extend to option 2 after Play production access. This differs from the 2026-11-08
+  draft (which recommended a launch team): no revenue is possible before production access, the owner keeps
+  overhead small for projects without revenue, and the website legal items (fonts, imprint) are small enough to be
+  single tasks without a dedicated role. Predicted owner choice: option 1 (option 2 possible). If no decision:
+  current state (developer + code reviewer).
 
 ## 2026-11-09 – Deep-integration inventory (task 9299e3fd)
 - Docs-only inventory; no code changed. Result: `docs/AI_NATION.md` "State and backlog (2026-11-09)".
@@ -33,7 +60,7 @@ Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, READ
   release with an APK, so merges should be deliberate.
 - Project record: existing root `HANDOVER.md` stays (not renamed); new record files live in `docs/` and are
   excluded from the GitHub Pages site via `docs/_config.yml`.
-- **Pending: `project.team`.** The request could not be filed: `hub_request_decision` returned 403 (forbidden)
+- ~~Pending: `project.team`~~ (filed 2026-11-09, see above). The request could not be filed at first: `hub_request_decision` returned 403 (forbidden)
   for role `video-editor-entwickler`. Prepared draft (to be filed by a role with permission; owner text in German):
   1. Schlank – Entwickler + Code-Reviewer – kits: core, qa (lowest cost; tests/stability only).
   2. Launch-Team – kits: core, qa, copy, security, growth (Play approval, imprint/privacy, store copy, tests + PR CI).

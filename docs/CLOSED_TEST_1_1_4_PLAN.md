@@ -1,80 +1,107 @@
-# BabaCut 1.1.4 – Vorschlag für das Update an die Tester (nur Plan, kein Code)
+# BabaCut – Plan für das Tester-Update „Fehlermeldungen in 7 Sprachen“ (nur Plan, kein Code)
 
 > Interne Datei (Projektakte, nicht auf babacut.io veröffentlicht – siehe `docs/_config.yml`).
-> Vorschlag vom 2026-11-10, Aufgabe d444acae. Sprache: Deutsch, für den Owner.
-> "Erst reden, dann bauen": Es wurde **nichts am Code geändert**. Du suchst den Umfang aus, danach wird gebaut.
+> Vorschlag vom 2026-11-10, Aufgabe d444acae, überarbeitet nach dem Review von PR #10. Sprache: Deutsch, für den Owner.
+> "Erst reden, dann bauen": In diesem PR wird **nichts am Code geändert**.
+> Dateiname bleibt `CLOSED_TEST_1_1_4_PLAN.md` (Verweise in der Projektakte); inhaltlich geht es jetzt um die
+> **nächste** Version nach `v1.1.4`, siehe unten.
+> **[BESTÄTIGEN: …]** = Aussage, die nur du kennst. Stimmt sie, Klammer entfernen; sonst Satz streichen.
 
-## Kurz gesagt
+## Deine Entscheidung steht schon fest
 
-- Seit **1.1.3 (Versionscode 81, 26.10.)** haben die Tester laut Code kein Update bekommen.
-- Das empfohlene Fenster "Update zwischen Testtag 7 und 10" (ca. 1.–5. November) ist **schon vorbei**. Ein Update
-  jetzt nützt trotzdem: Im neuen Produktionsantrag (Entwurf: `docs/PLAY_PRODUCTION_APPLICATION.md`) kannst du dann
-  ehrlich schreiben, dass während des Tests Änderungen ausgeliefert wurden. Und falls Google erneut ablehnt, läuft der
-  nächste Testzeitraum schon mit der neuen Version.
-- Vorschlag: ein **kleines, risikoarmes 1.1.4** – nur Dinge, die nichts an Aufnahme, Schnitt oder Export ändern.
+Hub-Entscheidung 2a5ce05a, deine Antwort: *"1.1.4 klein: Fehlermeldungen in allen 7 Sprachen + Neuerungen-Text,
+danach Antrag"*. Das heißt: **A + B umsetzen, danach den Produktionsantrag stellen.** D (Absturzbericht) bleibt
+optional und ist **nicht** freigegeben. Diese Frage wird nicht noch einmal gestellt.
 
-## Was im Code gefunden wurde (Stand `main`, 2026-11-10)
+## Was das Repository sicher zeigt (Stand `main` = `40521ea`, 2026-11-10)
 
-**Deutsche Wörter in Fehlermeldungen, auch wenn die App auf Englisch, Farsi usw. eingestellt ist.**
-Die Meldungen selbst sind übersetzt, aber das eingesetzte Wort nicht. Ein Tester mit englischer App sieht z. B.
-"Error: Umrechnung" oder "Kachelvideo can't be played (…)". Stellen in `MainActivity.kt`:
+- Gebaute/getaggte Versionen: 1.1.3 (Versionscode 81, Tag `v1.1.3`) und **1.1.4 (82, Tag `v1.1.4`, 10.11.)**.
+  Dein `v1.1.4` (Commit `f7999a1`) enthält andere Verbesserungen (Untertitel-Halluzinationen bei Stille gefiltert,
+  Plural im Status, Berechtigungs-Hilfe, Overlay-Hinweis, tatsächliche Exportgröße), **aber nicht** die Übersetzung
+  der Fehlermeldungen. Die deutschen Wörter unten sind auf `main` noch vorhanden.
+- Darum kommt A + B in die **nächste** Version: Versionscode **83**, Versionsname Vorschlag **1.1.5**.
+- Was das Repository **nicht** zeigt: welche Version wann im geschlossenen Test „Closed Beta“ angekommen ist. Ein
+  Versionscode im Code beweist keine Auslieferung an Tester.
+  [BESTÄTIGEN: Version(en), die tatsächlich im geschlossenen Test ausgeliefert wurden, und Datum – Play Console →
+  Test → Geschlossener Test → Closed Beta → Releases.]
+- Satz für den Produktionsantrag „Während des Tests wurden Änderungen ausgeliefert“ nur verwenden, **wenn** die
+  Console zeigt, dass 1.1.4 und/oder 1.1.5 im geschlossenen Test (nicht nur im internen Test) veröffentlicht wurde.
 
-| Zeile | Wort | Wann es erscheint |
+## Umfang A – deutsche Texte in Fehlermeldungen (alle 7 Sprachen)
+
+Gesucht wurde nach App-eigenen Texten, die in einer Meldung, einem Toast oder dem Export-Fehlerfenster landen können.
+Zeilen Stand `main` `40521ea`:
+
+| Datei:Zeile | Deutscher Text | Wann er erscheint |
 |---|---|---|
-| 683, 1282 | "Bild" | Bild kann nicht eingefügt werden |
-| 1310 | "Umrechnung" | Umwandlung eines Kachelvideos schlägt fehl |
-| 1536 | "Umwandlung" | Umwandlung eines Overlay-Videos schlägt fehl |
-| 1319, 1543 | "Video" | Video kann nicht eingefügt werden |
-| 2215 | "Spracherkennung" | Untertitel-Erkennung schlägt fehl |
-| 3032, 3188 | "Entwurf" | Entwurf kann nicht gespeichert/geladen werden |
-| 1343, 1605 | "Kachelvideo", "Overlay-Video" | Video lässt sich nicht abspielen |
-| 1299, 1523, 1845 | "Video/Bild konnte nicht gelesen werden" | Datei kann nicht gelesen werden (Text landet in der Meldung) |
-| `WhisperEngine.kt` 57 | "Modell konnte nicht geladen werden" | Untertitel-Modell defekt |
+| `MainActivity.kt` 707, 1307 | "Bild" | Bild kann nicht als Overlay/Kachel eingefügt werden |
+| `MainActivity.kt` 1335 | "Umrechnung" | Umwandlung eines Kachelvideos schlägt fehl |
+| `MainActivity.kt` 1561 | "Umwandlung" | Umwandlung eines Overlay-Videos schlägt fehl |
+| `MainActivity.kt` 1344, 1568 | "Video" | Video kann nicht eingefügt werden |
+| `MainActivity.kt` 1324, 1548 | "Video konnte nicht gelesen werden" | Datei nicht lesbar (Text landet im Toast) |
+| `MainActivity.kt` 1870 | "Bild konnte nicht gelesen werden" | Bilddatei nicht lesbar |
+| `MainActivity.kt` 1368, 1630 | "Kachelvideo", "Overlay-Video" | Abspielfehler-Toast (`player_error`) |
+| `MainActivity.kt` 2240 | "Spracherkennung" | Untertitel-Erkennung schlägt fehl |
+| `MainActivity.kt` 3065, 3221 | "Entwurf" | Entwurf kann nicht gespeichert/geladen werden |
+| `WhisperEngine.kt` 92 | "Modell konnte nicht geladen werden" | Untertitel-Modell defekt (Toast über Zeile 2240) |
+| `ModelManager.kt` 33 | "Download fehlgeschlagen: HTTP …" | Modell-Download scheitert (Toast über Zeile 2240) |
+| `Exporter.kt` 220 | "Speichern fehlgeschlagen" | Export: Speichern in die Galerie scheitert (Fehlerfenster) |
+| `Exporter.kt` 301 | "MediaStore-Eintrag fehlgeschlagen" | Export: Galerie-Eintrag scheitert (über Zeile 220) |
+| `Exporter.kt` 228 | "Neukodierung fehlgeschlagen (Code …)" | Export: Neukodierung scheitert (Fehlerfenster) |
+| `Exporter.kt` 136 | "Overlay-Ton: …" | Export: Overlay-Ton kann nicht gemischt werden |
+| `OverlayAudioRenderer.kt` 239 | "Kein Ton im Overlay" | über Zeile 136 im Export-Fehlerfenster |
 
-Alle anderen Texte der App sind in allen 7 Sprachen vollständig (215 Texte je Sprache, geprüft).
-Ungenutzte deutsche Namenslisten (`CaptionStyle.TEMPLATE_NAMES`, `Mosaic.LAYOUT_NAMES`, `ColorFilters.NAMES`)
-erscheinen nirgends in der App und bleiben unberührt.
+Etwa 15 neue Texte je Sprache, nur Meldungstexte; Aufnahme, Schnitt und Export bleiben unverändert.
 
-## Umfang zur Auswahl
+**Bewusst nicht in A (zurückgestellt):**
+- Technische Grafik-Fehler (`GlUtil.kt`, `EglCore.kt`: "Shader-Kompilierung fehlgeschlagen" usw.). Sie sind für
+  Entwickler gedacht; ob sie je bis zu einer sichtbaren Meldung durchgereicht werden, ist nicht geprüft.
+- Meldungen von Android/Media3 selbst (`e.message` von Systemfehlern): kommen vom System, nicht aus der App.
+- Reine Log-Texte (`Log.e/Log.w`): sieht kein Nutzer.
+- Absturzbericht "Zeit/Gerät" (`CrashLog.kt` 22, 25) = D, optional, nicht freigegeben.
 
-| # | Änderung | Risiko | Empfehlung |
-|---|---|---|---|
-| **A** | Fehlermeldungen oben in allen 7 Sprachen (ca. 10 neue Texte je Sprache, nur Meldungstexte) | sehr gering – ändert nur, *welches Wort* in einer Fehlermeldung steht | **ja** |
-| **B** | Versionsnummer 1.1.4 und "Neuerungen"-Text für die Play Console in 7 Sprachen (kurz, sachlich, z. B. "Fehlermeldungen in allen Sprachen, kleine Verbesserungen") | keins (nur Text) | **ja** |
-| **C** | Untertitel am Segmentende: Ein Untertitel, der kurz vor dem Ende eines Segments beginnt, kann bis zu 0,3 s in das nächste Segment hineinragen (gefunden durch die neuen automatischen Tests, Aufgabe b9d022fb) | gering bis mittel – betrifft die Untertitel-Zeiten nach Umordnen/Löschen | **nein, erst nach 1.1.4** – braucht die Tests aus dem noch offenen PR und einen eigenen Handytest |
-| **D** | Absturzbericht: Feldnamen "Zeit/Gerät" auf Englisch (liest nur der Support) | keins | optional, kann mit A mit |
+**Was geprüft ist und was nicht:** Alle 7 `strings.xml` haben auf `main` dieselben **223 Schlüssel** (Zählung,
+keine Lücke). Das beweist **nicht**, dass zur Laufzeit jeder sichtbare Text übersetzt ist – Texte, die direkt im
+Kotlin-Code stehen, zählt diese Prüfung nicht. Die Tabelle oben ist eine Suche nach deutschen Fehlertexten im Code,
+keine Garantie, dass es keine weiteren gibt.
 
-**Bewusst nicht in 1.1.4** (zu groß oder ungeklärt): Untertitel-Verschiebung bei sehr langen Videos (Ursache unklar),
-Rechts-nach-links-Layout für Farsi/Arabisch (`supportsRtl=false`, wäre ein Umbau), Aufteilen von `MainActivity.kt`.
+## Umfang B – Version und "Neuerungen"-Text
 
-**Empfehlung: A + B (+ D).** Aufwand für den Entwickler: unter einer Stunde plus ein Build (~4,5 min).
+- Versionscode 83, Versionsname 1.1.5 (Vorschlag) in `app/build.gradle.kts`.
+- "Neuerungen"-Text für die Play Console in 7 Sprachen, kurz und sachlich, z. B. DE: "Fehlermeldungen jetzt in
+  allen Sprachen. Kleine Verbesserungen." (keine Superlative).
 
-## Ablauf, wenn du zustimmst
+## Nicht in diesem Update
 
-1. Entwickler setzt A, B (und ggf. D) auf einem eigenen Branch um, mit allen 7 Sprachen; Versionscode +1.
-   Hinweis: Der offene PR mit den automatischen Tests (b9d022fb) setzt den Versionscode schon auf **82**.
-   Wird er zuerst übernommen, bekommt 1.1.4 die **83**, sonst die 82.
-2. Du übernimmst den PR, dann Tag `v1.1.4` → Store-Build (`.aab`).
-3. Du lädst die `.aab` zuerst in den **internen Test** (dein Handy), prüfst mit der Liste unten, dann dasselbe
-   Bundle in den **geschlossenen Test "Closed Beta"** mit dem "Neuerungen"-Text.
-4. Danach den Produktionsantrag stellen; in Antwort "Änderungen" 1.1.4 nennen.
+- C: Untertitel am Segmentende (bis 0,3 s Überhang, gefunden durch die Tests aus PR #6) – braucht die Tests auf
+  `main` und einen eigenen Handytest.
+- Untertitel-Verschiebung bei sehr langen Videos (Ursache unklar), Rechts-nach-links-Layout, Aufteilen von
+  `MainActivity.kt`.
+
+## Ablauf
+
+1. Entwickler setzt A + B auf einem eigenen Branch um (alle 7 Sprachen, Versionscode 83). Hinweis: PR #6 (Tests)
+   setzt den Versionscode ebenfalls auf 82 und muss nach `v1.1.4` ohnehin angepasst werden; wer zuerst übernommen
+   wird, bekommt 83, der andere 84.
+2. Du übernimmst den PR, dann Tag `v1.1.5` → Store-Build (`.aab`).
+3. `.aab` zuerst in den **internen Test** (dein Handy), Liste unten prüfen, dann dasselbe Bundle in den
+   **geschlossenen Test "Closed Beta"** mit dem "Neuerungen"-Text.
+4. Danach Produktionsantrag (Entwurf in PR #9, `docs/PLAY_PRODUCTION_APPLICATION.md`); Versionen nur nennen, wenn
+   die Console sie im geschlossenen Test zeigt.
 
 ## Bitte prüfen (auf deinem Handy, nach dem Build)
 
-- [ ] App öffnet sich, in den Einstellungen steht unten **Version 1.1.4**.
-- [ ] Ein Video aufnehmen, in der Review schneiden, exportieren – alles wie vorher.
+- [ ] App öffnet sich, in den Einstellungen steht unten **Version 1.1.5**.
+- [ ] Ein Video aufnehmen, in der Review schneiden, exportieren – alles wie vorher, Dateigröße wird angezeigt.
 - [ ] Untertitel erkennen lassen – funktioniert wie vorher.
-- [ ] Sprache in den Einstellungen auf **Englisch** stellen und ein Bild sowie ein Video als Overlay einfügen –
-      funktioniert wie vorher. Falls dabei irgendeine Fehlermeldung erscheint: Sie ist **ganz auf Englisch**,
-      ohne deutsches Wort (bitte Screenshot schicken). Eine Fehlermeldung absichtlich auszulösen ist nicht nötig;
-      der Entwickler prüft die Texte zusätzlich im Code.
-- [ ] Danach Sprache zurück auf Deutsch – alles wieder auf Deutsch.
+- [ ] Sprache auf **Englisch** stellen, ein Bild und ein Video als Overlay einfügen – funktioniert wie vorher. Falls
+      eine Fehlermeldung erscheint: Sie ist **ganz auf Englisch**, ohne deutsches Wort (bitte Screenshot schicken).
+      Fehler absichtlich auszulösen ist nicht nötig; der Entwickler prüft die Texte zusätzlich im Code.
+- [ ] Sprache zurück auf Deutsch – alles wieder auf Deutsch.
 - [ ] Entwürfe öffnen sich noch, Pro-Status ist unverändert.
-- [ ] In der Play Console: Version 1.1.4 im geschlossenen Test sichtbar, "Neuerungen"-Text in allen Sprachen.
+- [ ] Play Console: 1.1.5 im geschlossenen Test sichtbar, "Neuerungen"-Text in allen Sprachen.
 
-## Deine Entscheidung (bitte eine Zeile antworten)
+## Offene Punkte nur für dich
 
-1. **"1.1.4 klein: A + B (+ D)"** – kleines Update jetzt, dann Produktionsantrag. *(Empfehlung)*
-2. **"Kein Update, Antrag mit 1.1.3"** – Antrag sofort; die Fehlermeldungen kommen später.
-
-Ohne Antwort passiert nichts am Code.
+- [BESTÄTIGEN: Versionsname 1.1.5 ist recht (oder Wunschname nennen).]
+- [BESTÄTIGEN: Ausgelieferte Versionen im geschlossenen Test laut Console – siehe oben.]
