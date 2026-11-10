@@ -2,6 +2,14 @@
 
 Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, README and commit history.
 
+## 2026-11-10 – Proposal for splitting MainActivity.kt (task de9795a4)
+- Proposal only, no code: `docs/MAINACTIVITY_SPLIT.md`. Recommended: plain Kotlin controllers sharing one
+  `ProjectState` + a small `Host` interface; no ViewModel/Compose/DI migration (that would be a rebuild).
+- Order by risk: pure logic with JVM tests first (caption timing, gain ranges, session JSON), wide-coupled UI
+  (review, mosaic, overlays, recording) last. One move-only PR per step, `versionCode` +1, phone checklist per step.
+- Session/draft JSON keys must not change (user work). Prerequisite: PR CI (#5) and JVM tests (#6) merged.
+- Status: waiting for the owner (3 questions in §6 of the proposal). No versionCode bump: docs-only.
+
 ## 2026-11-10 – Self-hosted Vazirmatn web font (task 6c203aca)
 - Google Fonts removed from all five pages (index, 404, support, imprint, privacy – the brief named three).
 - Vazirmatn v33.003 from the upstream release (github.com/rastikerdar/vazirmatn), static Regular (400) and Bold (700)

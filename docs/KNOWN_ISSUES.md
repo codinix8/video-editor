@@ -18,6 +18,7 @@
 - **Debug keystore with plaintext passwords** is committed (`keystore/`, `app/build.gradle.kts`). Only the debug
   signature is affected (Play uses the upload key + Play App Signing), but anyone can sign APKs that look like
   the GitHub debug builds.
-- `MainActivity.kt` (~3300 lines) concentrates most UI logic – change risk is high.
+- `MainActivity.kt` (3326 lines) concentrates most UI logic – change risk is high. Split proposal (12 move-only
+  steps, not started): `docs/MAINACTIVITY_SPLIT.md`.
 - Play production access not yet granted (rejected 2026-10-25); revenue depends on it.
 - Translation tables from the old container are lost; new strings must be added to all 7 `strings.xml` by hand.

@@ -145,4 +145,5 @@ Mosaik-Videos, Erkennung Ali/Baba, Vorlagen ab der 4., Emojis, Filter ab dem 4.,
 The project is managed by AI Nation. Agent rules: [CLAUDE.md](CLAUDE.md). Project record map and English state
 summary incl. "State and backlog" (2026-11-09): [docs/AI_NATION.md](docs/AI_NATION.md) (roadmap, decisions, knowledge and known issues live in `docs/`).
 Owner profile (how he works and decides): [docs/FINETUNING.md](docs/FINETUNING.md).
+Proposal for splitting `MainActivity.kt` (2026-11-10, waiting for the owner): [docs/MAINACTIVITY_SPLIT.md](docs/MAINACTIVITY_SPLIT.md).
 Team decision `project.team` requested on 2026-11-09 (see [docs/DECISIONS.md](docs/DECISIONS.md)).
