@@ -264,4 +264,12 @@
     <string name="video_transcode">ویدیو (%1$s) برای پخش روان به H.264 1080p تبدیل می‌شود… %2$d %%</string>
     <string name="player_error">%1$s پخش نمی‌شود (%2$s). دوباره وارد کن – تبدیل خواهد شد.</string>
     <string name="captions_regen_after_cut">زیرنویس‌ها برای ترتیب جدید دوباره ساخته می‌شوند (اصلاح‌های دستی بازنشانی می‌شوند).</string>
+    <string name="paused_label">مکث</string>
+    <string name="permission_title">دوربین و میکروفون</string>
+    <string name="permission_explain">BabaCut برای ضبط به دوربین و برای صدا و زیرنویس به میکروفون نیاز دارد. چیزی آپلود نمی‌شود.</string>
+    <string name="permission_settings_explain">دسترسی رد شد. لطفاً در تنظیمات برنامه دوربین و میکروفون را اجازه بده و برگرد.</string>
+    <string name="permission_allow">اجازهٔ دسترسی</string>
+    <string name="permission_open_settings">باز کردن تنظیمات برنامه</string>
+    <string name="tip_live_overlay">لایه‌هایی که اکنون اضافه می‌شوند از اینجا به بعد ضبط می‌شوند. برای متن روی کل ویدیو از دکمهٔ T در بازبینی استفاده کن.</string>
+    <string name="export_actual_size">اندازهٔ فایل: %1$s</string>
 </resources>
