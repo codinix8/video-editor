@@ -3,6 +3,10 @@
 Build history: README "Stand" table. Source of the items below: HANDOVER.md §5–7 (2026-11-03) and onboarding.
 
 ## Done
+- [x] 2026-11-10 CI on every push and PR (task 40c40718): `pr.yml` → `ci.yml` (workflow `CI`, check
+      `build-test-lint`), build + unit tests + lint all blocking; new tests for `Loudness`, caption chunking and
+      `EmojiDict`; `CONTRIBUTING.md` with local commands; lint baseline for 15 pre-existing errors. 54 tests, 0 failures
+      (CI run 42888492366). Includes PR #5 and #6 (stacked).
 - [x] 2026-11-10 Proposal for splitting `MainActivity.kt` → `docs/MAINACTIVITY_SPLIT.md` (12 move-only steps,
       no code; task de9795a4). Waiting for the owner's go on steps 1–5.
 - [x] 2026-11-10 Vazirmatn web font self-hosted on babacut.io; no Google Fonts request left (task 6c203aca).
@@ -21,9 +25,10 @@ Build history: README "Stand" table. Source of the items below: HANDOVER.md §5�
 - [ ] Imprint data from the owner → finish website imprint/privacy (legal).
 
 ## Next
-- [ ] Lint baseline (`app/lint-baseline.xml`), then make `lintDebug` in `pr.yml` blocking (remove `continue-on-error`).
-- [ ] More unit tests for pure logic: Captions chunking, Loudness, `Caption` JSON round-trip (needs a real
-      `org.json` test dependency, the android.jar stub throws).
+- [ ] Owner: make `build-test-lint` a required status check for `main` (GitHub settings, see `CONTRIBUTING.md`).
+- [ ] More unit tests for pure logic: `Caption`/session JSON round-trip (needs a real `org.json` test dependency,
+      the android.jar stub throws), Whisper hallucination filter (extract from `WhisperEngine` first, its companion
+      loads the native library).
 - [ ] Skip the public APK release for docs-only pushes to `main` (`paths-ignore`). *(proposed 2026-11-09)*
 - [ ] Email: DKIM for babacut.io; babacut.net redirect.
 - [ ] Owner proofreads FA/AR texts; check screenshots per language for clipped buttons.

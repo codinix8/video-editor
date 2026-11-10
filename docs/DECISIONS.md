@@ -2,6 +2,31 @@
 
 Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, README and commit history.
 
+## 2026-11-10 – CI on every push and pull request (task 40c40718)
+- Built on the open PRs instead of a competing workflow: branch stacked on PR #6 (which already contains PR #5's
+  commit), `main` merged in. Merging this PR makes PR #5 and #6 redundant (close them instead of merging).
+- `pr.yml` renamed to `ci.yml` (workflow `CI`, job name `build-test-lint` = the status check to require).
+  Triggers: `push` on all branches except `build-logs` (CI log branch, no code), `pull_request` to `main`,
+  `workflow_dispatch`. Pushes to a branch with an open PR therefore run twice (push + PR); accepted for the "every
+  push" requirement, cancelled per event/ref by `concurrency`.
+- Still a separate workflow with `contents: read`; publishing stays in `build.yml`/`release.yml`. The push run on
+  `main` duplicates the debug build of `build.yml` (~5 min of runner time per merge); accepted so `main` has a
+  green/red CI status of its own.
+- `lintDebug` made blocking **with a baseline** (`app/lint-baseline.xml`, wired via `lint { baseline = … }` in
+  `app/build.gradle.kts`). The first blocking run (CI run 42887488201) failed with 15 errors, 85 warnings: the green
+  lint step on PR #6 only meant `continue-on-error` had swallowed them. The baseline holds exactly those 15 errors
+  (generated from that run's XML report, warnings excluded so they stay visible); any new error fails CI. The
+  errors themselves are not fixed here (app code + 7 `strings.xml`, own task) – listed in KNOWN_ISSUES.
+  `lintVitalRelease` (store builds) only checks fatal issues and was never failing on these, so nothing that
+  blocked before is weakened.
+- Tests and lint run only after a successful build, but independently of each other (`!cancelled()`), so a failing
+  test does not hide lint results.
+- New JVM tests without touching app code: `Loudness.gain`, `Caption.chunk`/`chunkSentences`, `EmojiDict.forWord`.
+  No new frameworks (JUnit 4 as before). No `versionCode` bump beyond PR #6's 83: no app code changed here.
+- Docs: `CONTRIBUTING.md` (English, technical) + a short German pointer in `README.md`.
+- Evidence: CI run 42888492366 on 6a19a11 green (push event), 54 tests / 0 failures / 0 ignored in the report.
+- Open owner step: mark `build-test-lint` as required status check for `main` (not possible with the agent token).
+
 ## 2026-11-10 – Proposal for splitting MainActivity.kt (task de9795a4)
 - Proposal only, no code: `docs/MAINACTIVITY_SPLIT.md`. Recommended: plain Kotlin controllers sharing one
   `ProjectState` + a small `Host` interface; no ViewModel/Compose/DI migration (that would be a rebuild).

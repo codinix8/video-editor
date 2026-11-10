@@ -15,10 +15,20 @@
   `docs/assets/fonts/` (task 6c203aca). 404.html links `style.css` relatively, so on deep missing URLs neither
   the stylesheet nor the font loads (unchanged, pre-existing).
 
+- **15 lint errors frozen in `app/lint-baseline.xml`** (2026-11-10, task 40c40718) – CI ignores them, new ones block.
+  Likely real problems, each needs its own fix:
+  - `values/strings.xml:59` `mic_hint`: `% s` read as a broken format string (`StringFormatInvalid`, 6 locales) –
+    probably a literal percent sign that should be `%%` or not marked as format.
+  - `values-ar/strings.xml:193`: Arabic plural lacks `zero`/`two`/`few`/`many` (`MissingQuantity`).
+  - `MainActivity.kt:3200–3201`: `SuspiciousIndentation` – `publishMosaic(); updateTileButtons()` is indented as if
+    inside the previous statement; check whether it should be in a block.
+  - `MainActivity.kt:1618–1623`: Media3 `UnstableApi` used without `@OptIn` (`UnsafeOptInUsageError`, 7×).
+
 ## Risks
-- **Thin automated test coverage** – since 2026-11-09 `pr.yml` builds every PR (`assembleDebug`), runs 33 JVM unit
-  tests (`testDebugUnitTest`, blocking; only `TimelineRemap` and the transcode rule) and `lintDebug` (non-blocking,
-  no baseline). UI, recording, export and captions are still only tested by hand on the phone; auto-merge is unsafe.
+- **Thin automated test coverage** – since 2026-11-10 `ci.yml` builds every push and PR, runs the JVM unit tests
+  (`TimelineRemap`, transcode rule, `Loudness`, caption chunking, `EmojiDict`) and `lintDebug`, all blocking. UI,
+  recording, export, drafts/session JSON and the native Whisper path are still only tested by hand on the phone, so a
+  green `build-test-lint` does not prove that these work. `build-test-lint` is not yet a required check (owner step).
 - **Every push to `main` publishes** a GitHub release with an APK (public repo) – also for docs-only merges
   (`build-102` came from docs PR #2). Fix proposed 2026-11-09 (`paths-ignore`).
 - **PR #1 is superseded** by merged PR #2; its remaining diff only deletes record lines – must not be merged.

@@ -31,9 +31,12 @@ Zielgruppe: Creator; wichtig ist die persische Community (Farsi-Oberfläche, Nam
   - `release.yml`: Tag `v*` oder manuell → `bundleRelease` + `assembleRelease`, signiert mit Upload-Schlüssel aus
     GitHub-Secrets `UPLOAD_KEYSTORE_B64`, `UPLOAD_KEYSTORE_PASSWORD`, `UPLOAD_KEY_ALIAS` (=`babacut`); Release
     `release-<version>-<run>` mit `BabaCut-<version>.aab` (Play Console) und `BabaCut-<version>-release.apk`.
-  - `pr.yml` (seit 2026-11-09): jeder Pull Request auf `main` → `assembleDebug`, `testDebugUnitTest` (JVM-Unit-Tests
-    in `app/src/test`, blockierend, Bericht `unit-test-report`) + `lintDebug` (Lint vorerst nicht
-    blockierend, Bericht als Artifact `lint-report`). Erstellt **kein** Release, keinen Tag, keinen `build-logs`-Push.
+  - `ci.yml` (Workflow `CI`, Prüfung `build-test-lint`; seit 2026-11-10, vorher `pr.yml`): jeder Push auf jeden Branch
+    (außer `build-logs`) und jeder Pull Request auf `main` → `assembleDebug`, `testDebugUnitTest` (JVM-Unit-Tests in
+    `app/src/test`, Bericht `unit-test-report`) und `lintDebug` (Bericht `lint-report`; 15 Altfehler eingefroren in `app/lint-baseline.xml`),
+    alle drei blockierend.
+    Erstellt **kein** Release, keinen Tag, keinen `build-logs`-Push. Lokale Befehle: `CONTRIBUTING.md`.
+    `build-test-lint` als Pflichtprüfung für `main` setzt der Owner in den GitHub-Einstellungen (noch offen).
 - Build dauert ~4,5 min. Gradle-Build-Cache ist aus (lieferte veraltete Zwischenstände). API: compileSdk/targetSdk 36,
   minSdk 26, AGP 8.7.3 (`android.suppressUnsupportedCompileSdk=36`), NDK 27.2.12479018, CMake 3.22.1,
   Submodule `third_party/whisper.cpp` v1.9.4, 16-KB-Page-Size-Linkerflags gesetzt, kein R8/Minify.
