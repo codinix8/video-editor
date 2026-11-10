@@ -166,6 +166,13 @@ class MainActivity : AppCompatActivity() {
             VideoTarget.TILE -> setTileVideo(uri)
         }
     }
+    /** Overlay eingefügt, während schon Segmente existieren: einmal erklären, dass es ab jetzt gilt. */
+    private fun hintLiveOverlay() {
+        if (segments.isEmpty() || prefs.getBoolean("hint_live_overlay_shown", false)) return
+        prefs.edit().putBoolean("hint_live_overlay_shown", true).apply()
+        showTip(getString(R.string.tip_live_overlay), 7000, gesture = false)
+    }
+
     /** Beim Antippen eines Medien-Knopfs: die ersten drei Male auf den Datei-Browser hinweisen. */
     private fun hintFileBrowser() {
         val n = prefs.getInt("file_browser_hint_count", 0)
@@ -244,9 +251,24 @@ class MainActivity : AppCompatActivity() {
 
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
-            if (requiredPermissions.all { results[it] == true }) startCamera()
-            else binding.statusText.text = getString(R.string.permission_needed)
+            if (requiredPermissions.all { results[it] == true }) { binding.statusText.text = getString(R.string.ready); startCamera() }
+            else showPermissionHelp()
         }
+
+    /** Nach verweigerter Berechtigung: Status + Weg zurück (erneut fragen oder App-Einstellungen öffnen). */
+    private fun showPermissionHelp() {
+        binding.statusText.text = getString(R.string.permission_needed)
+        val canAskAgain = requiredPermissions.any { shouldShowRequestPermissionRationale(it) }
+        Sheet(this).setTitle(R.string.permission_title)
+            .setMessage(getString(if (canAskAgain) R.string.permission_explain else R.string.permission_settings_explain))
+            .setPositiveButton(if (canAskAgain) R.string.permission_allow else R.string.permission_open_settings) { _, _ ->
+                if (canAskAgain) permissionLauncher.launch(requiredPermissions)
+                else startActivity(android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    Uri.fromParts("package", packageName, null)))
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -529,6 +551,7 @@ class MainActivity : AppCompatActivity() {
     // ---------------------------------------------------------------- Aufnahme
 
     private fun toggleRecording() {
+        if (!hasAllPermissions()) { showPermissionHelp(); return }
         val capture = videoCapture ?: return
         disarmDelete()
         if (activeRecording == null) {
@@ -674,6 +697,7 @@ class MainActivity : AppCompatActivity() {
             val overlay = ImageOverlay(Overlay.newId(), bmp, cx = 0.5f, cy = 0.5f, widthFrac = 0.45f)
             overlay.createdAtMs = currentTotalMs()
             overlayStore.add(overlay)
+            hintLiveOverlay()
             updateOverlayButtons(overlay)
             binding.gestureView.invalidate()
             Toast.makeText(this, R.string.overlay_hint, Toast.LENGTH_SHORT).show()
@@ -797,6 +821,7 @@ class MainActivity : AppCompatActivity() {
                     o.createdAtMs = currentTotalMs()
                     overlayStore.add(o)
                     rememberTextStyle(textColor(), bgColor())
+                    hintLiveOverlay()
                     updateOverlayButtons(o)
                 } else {
                     existing.text = text; existing.colorArgb = textColor(); existing.bgColorArgb = bgColor()
@@ -2704,7 +2729,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
         binding.review.captionView.setTime(pos)
         if (!deleteArmed && !reviewWaitingForAudio) {
             val vol = overlayStore.videoOverlay()?.let { " · Overlay ${(it.volume * 100).toInt()} %" } ?: ""
-            binding.review.reviewStatus.text = getString(R.string.review_position, fmt(pos), fmt(total), segments.size) + vol
+            binding.review.reviewStatus.text = fmt(pos) + " / " + fmt(total) + " · " + resources.getQuantityString(R.plurals.segments, segments.size, segments.size) + vol
         }
     }
 
@@ -2761,6 +2786,14 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
             .show()
     }
 
+    /** Tatsächliche Dateigröße des exportierten Videos (für den Speichern-Dialog). */
+    private fun exportedSizeLine(uri: Uri): String = try {
+        contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
+            val bytes = pfd.statSize
+            if (bytes > 0) "\n" + getString(R.string.export_actual_size, if (bytes >= 1e9) String.format(Locale.getDefault(), "%.2f GB", bytes / 1e9) else String.format(Locale.getDefault(), "%.0f MB", bytes / 1e6)) else ""
+        } ?: ""
+    } catch (_: Exception) { "" }
+
     /** Wasserzeichen „Made with BabaCut“ unten rechts (nur ohne Pro). */
     private fun watermarkSpec(): de.codinix.videoeditor.whisper.PostOverlaySpec? {
         if (isPro) return null
@@ -2816,7 +2849,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
                 if (inReview) exitReview() else refreshUi()
                 Sheet(this@MainActivity)
                     .setTitle(R.string.saved_title)
-                    .setMessage(getString(R.string.saved_msg) + if (backedUp) "\n\n" + getString(R.string.backup_kept) else "")
+                    .setMessage(getString(R.string.saved_msg) + exportedSizeLine(uri) + if (backedUp) "\n\n" + getString(R.string.backup_kept) else "")
                     .setPositiveButton(R.string.share) { _, _ -> shareVideo(uri) }
                     .setNegativeButton(R.string.ok, null)
                     .show()
@@ -3209,7 +3242,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
         binding.statusText.text = when {
             recording -> getString(R.string.recording, fmt(total))
             segments.isEmpty() -> getString(R.string.ready)
-            else -> getString(R.string.paused, segments.size, fmt(total))
+            else -> getString(R.string.paused_label) + " · " + resources.getQuantityString(R.plurals.segments, segments.size, segments.size) + " · " + fmt(total)
         }
         binding.segmentBar.update(segments.map { it.durationMs }, liveDurationMs, deleteArmed)
         binding.segmentBar.limitMs = MAX_TOTAL_MS
@@ -3259,6 +3292,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
 
     override fun onStart() {
         super.onStart()
+        if (videoCapture == null && hasAllPermissions()) { binding.statusText.text = getString(R.string.ready); startCamera() }
         if (stoppedInBackground) { stoppedInBackground = false; Toast.makeText(this, R.string.recording_paused_background, Toast.LENGTH_LONG).show() }
         if (!inReview) {
             overlayPlayer?.let { if (it.playbackState == Player.STATE_IDLE) it.prepare() }

@@ -18,7 +18,7 @@ English digest; details in [HANDOVER.md](../HANDOVER.md) §2–3 (German).
   + junit/hamcrest/json jars, stub `android.graphics.Bitmap` and `overlay.TextRenderer` (needed by
   `OverlayModel.kt`), compile the sources with the tests and run `org.junit.runner.JUnitCore`.
 - 16 KB page-size linker flags are set (Play requirement).
-- Bump `versionCode` (+1) for every build that goes to testers; current 82 / 1.1.3 (82 from task b9d022fb).
+- Bump `versionCode` (+1) for every build that goes to testers; current 83 / 1.1.4 (82 = owner build 1.1.4 on main, 83 from task b9d022fb).
 
 ## Release
 - Tag `vX.Y.Z` → `release.yml` builds AAB + APK signed with the upload key (secrets `UPLOAD_KEYSTORE_B64`,

@@ -12,7 +12,8 @@ Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, READ
 - Plain JUnit 4.13.2, no Robolectric/mocking library: `TimelineRemap` only needs data classes. No
   `unitTests.isReturnDefaultValues`, so an accidental Android call in a test fails loudly instead of returning 0.
 - `testDebugUnitTest` is **blocking** in `pr.yml` (lint stays non-blocking).
-- `versionCode` 81 → 82: app code was touched, and the merge to `main` produces a tester build.
+- `versionCode` 81 → 82, after merging `main` (owner build 1.1.4 = 82) → **83**: app code was touched, and the merge to
+  `main` produces a tester build. `versionName` stays 1.1.4 (no user-visible change).
 - Branch stacked on PR #5 (`pr.yml` exists only there); merge PR #5 first.
 - Tests document current behaviour, including two quirks found while writing them (see KNOWN_ISSUES).
 
@@ -23,6 +24,16 @@ Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, READ
   SDK was available in the agent container to create a baseline. Chosen over `lint { abortOnError = false }` in
   Gradle so that `lintVitalRelease` still guards store builds. Follow-up: baseline, then blocking.
 - No `versionCode` bump: no app code changed and PR runs produce no tester build.
+## 2026-11-09 – `project.team` requested (task 4e8e8c10, resumed)
+- The earlier 403 on `hub_request_decision` is gone; the request was filed (hub decision id `7f90c967`, decider:
+  Gremium). Options (German for the owner): 1. Schlank – Entwickler + Code-Reviewer + QA-Tester (kits: core, qa);
+  2. Ausgewogen – plus Texter + Security-Review (kits: core, ui, qa, copy, security); 3. Wachstum – plus Growth +
+  Asset-Ersteller (kits: core, ui, qa, assets, copy, security, growth).
+- Recommendation: option 1 now, extend to option 2 after Play production access. This differs from the 2026-11-08
+  draft (which recommended a launch team): no revenue is possible before production access, the owner keeps
+  overhead small for projects without revenue, and the website legal items (fonts, imprint) are small enough to be
+  single tasks without a dedicated role. Predicted owner choice: option 1 (option 2 possible). If no decision:
+  current state (developer + code reviewer).
 
 ## 2026-11-09 – Deep-integration inventory (task 9299e3fd)
 - Docs-only inventory; no code changed. Result: `docs/AI_NATION.md` "State and backlog (2026-11-09)".
@@ -42,7 +53,7 @@ Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, READ
   release with an APK, so merges should be deliberate.
 - Project record: existing root `HANDOVER.md` stays (not renamed); new record files live in `docs/` and are
   excluded from the GitHub Pages site via `docs/_config.yml`.
-- **Pending: `project.team`.** The request could not be filed: `hub_request_decision` returned 403 (forbidden)
+- ~~Pending: `project.team`~~ (filed 2026-11-09, see above). The request could not be filed at first: `hub_request_decision` returned 403 (forbidden)
   for role `video-editor-entwickler`. Prepared draft (to be filed by a role with permission; owner text in German):
   1. Schlank – Entwickler + Code-Reviewer – kits: core, qa (lowest cost; tests/stability only).
   2. Launch-Team – kits: core, qa, copy, security, growth (Play approval, imprint/privacy, store copy, tests + PR CI).

@@ -264,4 +264,12 @@
     <string name="video_transcode">Video (%1$s) wird für flüssige Wiedergabe in H.264 1080p umgewandelt… %2$d %%</string>
     <string name="player_error">%1$s kann nicht abgespielt werden (%2$s). Bitte erneut einfügen – es wird dann umgewandelt.</string>
     <string name="captions_regen_after_cut">Untertitel werden für die neue Reihenfolge neu erzeugt (manuelle Korrekturen werden zurückgesetzt).</string>
+    <string name="paused_label">Pause</string>
+    <string name="permission_title">Kamera und Mikrofon</string>
+    <string name="permission_explain">BabaCut braucht die Kamera zum Aufnehmen und das Mikrofon für Ton und Untertitel. Nichts wird hochgeladen.</string>
+    <string name="permission_settings_explain">Der Zugriff wurde abgelehnt. Bitte in den App-Einstellungen Kamera und Mikrofon erlauben und dann zurückkommen.</string>
+    <string name="permission_allow">Zugriff erlauben</string>
+    <string name="permission_open_settings">App-Einstellungen öffnen</string>
+    <string name="tip_live_overlay">Jetzt eingefügte Overlays werden ab hier aufgenommen. Für Text über das ganze Video: der T-Knopf in der Review.</string>
+    <string name="export_actual_size">Dateigröße: %1$s</string>
 </resources>

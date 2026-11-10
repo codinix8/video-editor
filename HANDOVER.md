@@ -38,7 +38,7 @@ Zielgruppe: Creator; wichtig ist die persische Community (Farsi-Oberfläche, Nam
   minSdk 26, AGP 8.7.3 (`android.suppressUnsupportedCompileSdk=36`), NDK 27.2.12479018, CMake 3.22.1,
   Submodule `third_party/whisper.cpp` v1.9.4, 16-KB-Page-Size-Linkerflags gesetzt, kein R8/Minify.
 - Prüfen eines Builds per GitHub-API: `.../actions/runs?per_page=1` bzw. `.../actions/workflows/release.yml/runs`.
-- Versionierung: `versionCode` fortlaufend (aktuell **82**, ab Task b9d022fb; im Play-Store noch 81), `versionName` aktuell **1.1.3**.
+- Versionierung: `versionCode` fortlaufend (aktuell **83**: 82 = 1.1.4 auf `main`, 83 ab Task b9d022fb; im Play-Store noch 81), `versionName` aktuell **1.1.4**.
 - **Wichtig für Tests auf dem Nutzer-Handy**: Die App ist dort über den **Play Store (interner Test)** installiert.
   GitHub-APKs haben eine andere Signatur und lassen sich nicht darüber installieren → neue Builds immer als
   `.aab` in den internen Test laden.
@@ -146,3 +146,4 @@ Mosaik-Videos, Erkennung Ali/Baba, Vorlagen ab der 4., Emojis, Filter ab dem 4.,
 The project is managed by AI Nation. Agent rules: [CLAUDE.md](CLAUDE.md). Project record map and English state
 summary incl. "State and backlog" (2026-11-09): [docs/AI_NATION.md](docs/AI_NATION.md) (roadmap, decisions, knowledge and known issues live in `docs/`).
 Owner profile (how he works and decides): [docs/FINETUNING.md](docs/FINETUNING.md).
+Team decision `project.team` requested on 2026-11-09 (see [docs/DECISIONS.md](docs/DECISIONS.md)).
