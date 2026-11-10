@@ -61,7 +61,7 @@ class CaptionChunkTest {
 
     @Test fun segmentBoundary_splitsAndSnapsWord() {
         // word starts 200 ms before the cut at 1000 and ends after it: it moves onto the cut
-        val c = Caption.chunk(listOf(Word(0, 500, "before"), Word(800, 1100, "after")), boundariesMs = listOf(1000L))
+        val c = Caption.chunkSentences(listOf(listOf(Word(0, 500, "before"), Word(800, 1100, "after"))), boundariesMs = listOf(1000L))
         assertEquals(listOf("before", "after"), c.map { it.text })
         assertEquals(1000L, c[1].startMs)
         // block before the cut ends 20 ms before it at the latest

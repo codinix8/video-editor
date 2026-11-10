@@ -59,6 +59,11 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+    lint {
+        // 15 pre-existing lint errors (2026-11-10) are frozen here so CI lint can block on NEW errors.
+        // Fix them one by one and remove the entries (see docs/KNOWN_ISSUES.md). Warnings are not baselined.
+        baseline = file("lint-baseline.xml")
+    }
     buildFeatures {
         viewBinding = true
         buildConfig = true
