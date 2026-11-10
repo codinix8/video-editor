@@ -1,3 +1,6 @@
+/* Vazirmatn (SIL OFL 1.1, see assets/fonts/OFL.txt), self-hosted: no request to Google Fonts. */
+@font-face { font-family:"Vazirmatn"; src:url("assets/fonts/Vazirmatn-Regular.woff2") format("woff2"); font-weight:400; font-style:normal; font-display:swap; }
+@font-face { font-family:"Vazirmatn"; src:url("assets/fonts/Vazirmatn-Bold.woff2") format("woff2"); font-weight:700; font-style:normal; font-display:swap; }
 :root { --bg:#0B4F4A; --bg2:#073833; --card:#0F5E58; --gold:#E4B85A; --gold2:#F5D78A; --text:#F2F7F6; --muted:#B7CFCB; --accent:#FE2C55; }
 * { box-sizing:border-box; }
 html,body { margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; line-height:1.55; }
