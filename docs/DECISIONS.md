@@ -7,9 +7,22 @@ Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, READ
   only when *every* changed file matches; mixed pushes still build and publish `build-N`.
 - `docs/**` covers the website too (HTML/CSS/JS); website changes never affect the APK, so no build is needed.
 - Workflow files are not ignored: a change to `build.yml` itself (including this one) still triggers a build.
-- No `versionCode` bump in this PR: the app is unchanged (CI config only, same as PR #5), and PR #6 already
-  uses 82, so a bump here would only create a merge conflict. The merge build of this PR republishes versionCode 81.
+- No `versionCode` bump in this PR: the app is unchanged (CI config only, same as PR #5). `main` is at 82 (owner
+  build 1.1.4) and PR #6 already claims 83, so a bump here would only create a conflict. The merge build of this PR
+  (it changes `build.yml`, so it is not skipped) republishes versionCode 82 as a new `build-N`. Updated 2026-11-10
+  when merging `main` (1.1.4) into this branch; before that the text said 81.
 - Skipped pushes do not consume a run number, so `build-N` numbers stay consecutive for real builds.
+
+## 2026-11-09 – `project.team` requested (task 4e8e8c10, resumed)
+- The earlier 403 on `hub_request_decision` is gone; the request was filed (hub decision id `7f90c967`, decider:
+  Gremium). Options (German for the owner): 1. Schlank – Entwickler + Code-Reviewer + QA-Tester (kits: core, qa);
+  2. Ausgewogen – plus Texter + Security-Review (kits: core, ui, qa, copy, security); 3. Wachstum – plus Growth +
+  Asset-Ersteller (kits: core, ui, qa, assets, copy, security, growth).
+- Recommendation: option 1 now, extend to option 2 after Play production access. This differs from the 2026-11-08
+  draft (which recommended a launch team): no revenue is possible before production access, the owner keeps
+  overhead small for projects without revenue, and the website legal items (fonts, imprint) are small enough to be
+  single tasks without a dedicated role. Predicted owner choice: option 1 (option 2 possible). If no decision:
+  current state (developer + code reviewer).
 
 ## 2026-11-09 – Deep-integration inventory (task 9299e3fd)
 - Docs-only inventory; no code changed. Result: `docs/AI_NATION.md` "State and backlog (2026-11-09)".
@@ -29,7 +42,7 @@ Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, READ
   release with an APK, so merges should be deliberate.
 - Project record: existing root `HANDOVER.md` stays (not renamed); new record files live in `docs/` and are
   excluded from the GitHub Pages site via `docs/_config.yml`.
-- **Pending: `project.team`.** The request could not be filed: `hub_request_decision` returned 403 (forbidden)
+- ~~Pending: `project.team`~~ (filed 2026-11-09, see above). The request could not be filed at first: `hub_request_decision` returned 403 (forbidden)
   for role `video-editor-entwickler`. Prepared draft (to be filed by a role with permission; owner text in German):
   1. Schlank – Entwickler + Code-Reviewer – kits: core, qa (lowest cost; tests/stability only).
   2. Launch-Team – kits: core, qa, copy, security, growth (Play approval, imprint/privacy, store copy, tests + PR CI).

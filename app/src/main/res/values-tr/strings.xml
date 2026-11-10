@@ -264,4 +264,12 @@
     <string name="video_transcode">Video (%1$s) akıcı oynatma için H.264 1080p\'ye dönüştürülüyor… %2$d %%</string>
     <string name="player_error">%1$s oynatılamıyor (%2$s). Lütfen tekrar ekle – dönüştürülecek.</string>
     <string name="captions_regen_after_cut">Altyazılar yeni sıraya göre yeniden oluşturuluyor (elle yapılan düzeltmeler sıfırlanır).</string>
+    <string name="paused_label">Duraklatıldı</string>
+    <string name="permission_title">Kamera ve mikrofon</string>
+    <string name="permission_explain">BabaCut kayıt için kameraya, ses ve altyazı için mikrofona ihtiyaç duyar. Hiçbir şey yüklenmez.</string>
+    <string name="permission_settings_explain">Erişim reddedildi. Lütfen uygulama ayarlarında kamera ve mikrofona izin ver ve geri dön.</string>
+    <string name="permission_allow">Erişime izin ver</string>
+    <string name="permission_open_settings">Uygulama ayarlarını aç</string>
+    <string name="tip_live_overlay">Şimdi eklenen katmanlar buradan itibaren kaydedilir. Tüm video üzerine metin için incelemedeki T düğmesini kullan.</string>
+    <string name="export_actual_size">Dosya boyutu: %1$s</string>
 </resources>

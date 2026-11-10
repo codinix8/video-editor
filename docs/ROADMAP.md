@@ -5,6 +5,7 @@ Build history: README "Stand" table. Source of the items below: HANDOVER.md §5�
 ## Done
 - [x] 2026-11-09 No public APK release for docs-only pushes: `paths-ignore` (`docs/**`, `**/*.md`) in `build.yml`
       (task f075de7b). Verify on the next docs-only merge to `main`.
+- [x] 2026-11-09 Decision `project.team` requested from the hub (task 4e8e8c10; waiting for Gremium/owner).
 - [x] 2026-11-09 Deep-integration inventory and backlog → `docs/AI_NATION.md` "State and backlog"; 7 tasks proposed
       to the hub (waiting for owner release, task 9299e3fd).
 - [x] 2026-11-08 Owner profile harvested → `docs/FINETUNING.md` + hub fine-tuning store (task 9b8fbac3).
