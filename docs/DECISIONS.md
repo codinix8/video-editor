@@ -3,6 +3,8 @@
 Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, README and commit history.
 
 ## 2026-11-10 – 1.1.4 closed-test update planned (task d444acae)
+- Owner decision requested via `hub_request_decision` (type `milestone`, id 2a5ce05a; worked for this role
+  now, unlike the 403 on 2026-11-08). Options: small 1.1.4 first (recommended) vs. apply now with 1.1.3.
 - Proposal only, no code ("erst reden, dann bauen"): `docs/CLOSED_TEST_1_1_4_PLAN.md` (German, for the owner).
 - Recommended scope: A localise German error-toast labels (~10 new strings × 7 languages), B versionName 1.1.4 +
   Play release notes in 7 languages, D English crash-report labels (optional). Deferred: C (TimelineRemap caption
