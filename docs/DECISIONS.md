@@ -2,6 +2,15 @@
 
 Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, README and commit history.
 
+## 2026-11-10 – Play production re-application draft (task 036afa99)
+- Draft in German in `docs/PLAY_PRODUCTION_APPLICATION.md` (excluded from the site), answers kept near the
+  ~300-character field limit noted in HANDOVER §5, with placeholders instead of invented numbers or tester quotes.
+- Only fixes provable from git history are cited (1.1.2 transcoding/visible player errors, 1.1.3 caption
+  re-detection). Whether they came from testers or the owner's own tests is left for the owner to state truthfully.
+- No app code changed, no versionCode bump (docs-only).
+- Noted risk: git shows no build after 1.1.3 (2026-10-26), so the recommended update between test day 7–10 of the
+  second window probably did not happen; the owner decides whether to ship 1.1.4 before applying.
+
 ## 2026-11-09 – Deep-integration inventory (task 9299e3fd)
 - Docs-only inventory; no code changed. Result: `docs/AI_NATION.md` "State and backlog (2026-11-09)".
 - Backlog order (proposed via `hub_propose_tasks`, owner releases): PR CI first (no tests, no PR checks today),

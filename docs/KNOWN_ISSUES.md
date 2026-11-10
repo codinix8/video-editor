@@ -15,5 +15,7 @@
   signature is affected (Play uses the upload key + Play App Signing), but anyone can sign APKs that look like
   the GitHub debug builds.
 - `MainActivity.kt` (~3300 lines) concentrates most UI logic – change risk is high.
-- Play production access not yet granted (rejected 2026-10-25); revenue depends on it.
+- Play production access not yet granted (rejected 2026-10-25); revenue depends on it. Re-application draft
+  ready (`docs/PLAY_PRODUCTION_APPLICATION.md`), but no tester update since 1.1.3 (2026-10-26) and no tester
+  feedback is recorded in the repo – the "changes based on testing" answer is thin without real Console data.
 - Translation tables from the old container are lost; new strings must be added to all 7 `strings.xml` by hand.

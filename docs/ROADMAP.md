@@ -8,7 +8,9 @@ Build history: README "Stand" table. Source of the items below: HANDOVER.md §5�
 - [x] 2026-11-08 Owner profile harvested → `docs/FINETUNING.md` + hub fine-tuning store (task 9b8fbac3).
 
 ## Now
-- [ ] Re-apply for Play production access from ~2026-11-09 (concrete answers with numbers/quotes).
+- [ ] Re-apply for Play production access from ~2026-11-09. Draft ready (2026-11-10, task 036afa99):
+      `docs/PLAY_PRODUCTION_APPLICATION.md`; waiting for owner figures Z1–Z7 from the Play Console and his
+      choice "apply now with 1.1.3" vs. "ship 1.1.4 to closed testers first".
 - [ ] Ship an update to closed testers between test day 7 and 10 (e.g. 1.1.4 with small fixes).
 - [ ] Imprint data from the owner → finish website imprint/privacy (legal).
 

@@ -103,7 +103,8 @@ Mosaik-Videos, Erkennung Ali/Baba, Vorlagen ab der 4., Emojis, Filter ab dem 4.,
   ("requires more testing"); seitdem laufen **14 weitere Tage** mit ≥12 Testern → erneut beantragen ab ca.
   **9. November 2026**. Es wurde empfohlen, 1.1.3 als Update in den geschlossenen Test zu laden und zwischen Tag 7
   und 10 ein weiteres Update zu liefern. Antworten für den Antrag (300-Zeichen-Felder) sind im alten Chat formuliert;
-  beim zweiten Antrag konkreter mit Zahlen/Zitaten.
+  beim zweiten Antrag konkreter mit Zahlen/Zitaten. **Entwurf für den zweiten Antrag (2026-11-10):**
+  `docs/PLAY_PRODUCTION_APPLICATION.md` (Antworttexte + Liste der Console-Zahlen Z1–Z7, die der Nutzer abliest).
 - Abo in der Console: `babacut_pro` aktiv, Pläne `monthly` (netto so gesetzt, dass DE 2,99 € brutto) und `annual`
   (19,99 € brutto) mit Angebot `trial7`; alter Prepaid-Plan `yearly` inaktiv. Lizenztester: das Konto des Nutzers.
 - Play App Signing aktiv; Upload-Schlüssel `babacut-upload.jks` (Alias `babacut`, gültig bis 2054) liegt beim Nutzer.
