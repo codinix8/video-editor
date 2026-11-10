@@ -3,8 +3,12 @@
 ## Open issues
 - Caption drift on very long videos (audio-check message only in the debug build) – not resolved.
 - Website imprint is a placeholder (imprint data missing) – legal risk once the app is in production.
-- Website uses Google Fonts for Farsi – known German warning-letter risk; self-host planned.
 - DKIM for babacut.io not configured; babacut.net redirect possibly missing.
+
+## Resolved
+- 2026-11-10 Website loaded Google Fonts (Vazirmatn) – German warning-letter risk. Fixed: font self-hosted under
+  `docs/assets/fonts/` (task 6c203aca). 404.html links `style.css` relatively, so on deep missing URLs neither
+  the stylesheet nor the font loads (unchanged, pre-existing).
 
 ## Risks
 - **No automated tests and no PR CI** – regressions are only found by manual phone testing; auto-merge is unsafe.

@@ -3,6 +3,7 @@
 Build history: README "Stand" table. Source of the items below: HANDOVER.md §5–7 (2026-11-03) and onboarding.
 
 ## Done
+- [x] 2026-11-10 Vazirmatn web font self-hosted on babacut.io; no Google Fonts request left (task 6c203aca).
 - [x] 2026-11-09 Decision `project.team` requested from the hub (task 4e8e8c10; waiting for Gremium/owner).
 - [x] 2026-11-09 Deep-integration inventory and backlog → `docs/AI_NATION.md` "State and backlog"; 7 tasks proposed
       to the hub (waiting for owner release, task 9299e3fd).
@@ -18,7 +19,6 @@ Build history: README "Stand" table. Source of the items below: HANDOVER.md §5�
 - [ ] First unit tests for pure logic (TimelineRemap, Captions chunking, Loudness, transcodeReason).
 - [ ] Skip the public APK release for docs-only pushes to `main` (`paths-ignore`). *(proposed 2026-11-09)*
 - [ ] Proposal (no code) for splitting `MainActivity.kt`. *(proposed 2026-11-09)*
-- [ ] Self-host the Farsi web font instead of Google Fonts (legal risk).
 - [ ] Email: DKIM for babacut.io; babacut.net redirect.
 - [ ] Owner proofreads FA/AR texts; check screenshots per language for clipped buttons.
 - [ ] Clarify caption drift on very long videos.

@@ -28,6 +28,9 @@ English digest; details in [HANDOVER.md](../HANDOVER.md) §2–3 (German).
 
 ## Website
 - `docs/` is GitHub Pages (CNAME babacut.io), static HTML with DE/EN/FA switch.
+- Web font: Vazirmatn is self-hosted (`docs/assets/fonts/`, `@font-face` at the top of `style.css`). Do not add
+  external font/CSS links (Google Fonts = German warning-letter risk). Upstream woff2 files:
+  `raw.githubusercontent.com/rastikerdar/vazirmatn/v33.003/fonts/webfonts/`.
 - Jekyll is active (no `.nojekyll`); Markdown in `docs/` would be published unless listed in `docs/_config.yml`.
 
 ## Working with the owner
