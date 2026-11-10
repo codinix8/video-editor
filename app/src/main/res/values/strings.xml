@@ -264,4 +264,12 @@
     <string name="video_transcode">Converting video (%1$s) to H.264 1080p for smooth playback… %2$d %%</string>
     <string name="player_error">%1$s can\'t be played (%2$s). Try inserting it again – it will be converted.</string>
     <string name="captions_regen_after_cut">Captions are being regenerated for the new order (manual edits are reset).</string>
+    <string name="paused_label">Paused</string>
+    <string name="permission_title">Camera and microphone</string>
+    <string name="permission_explain">BabaCut needs the camera to record and the microphone for sound and captions. Nothing is uploaded.</string>
+    <string name="permission_settings_explain">Access was declined. Please allow camera and microphone in the app settings, then come back.</string>
+    <string name="permission_allow">Allow access</string>
+    <string name="permission_open_settings">Open app settings</string>
+    <string name="tip_live_overlay">Overlays added now are recorded from here on. For text over the whole video, use the T button in the review.</string>
+    <string name="export_actual_size">File size: %1$s</string>
 </resources>
