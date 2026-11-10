@@ -1,6 +1,10 @@
 # Known issues and risks – BabaCut
 
 ## Open issues
+- German words leak into localised error toasts: fallback labels passed to `R.string.error` / `player_error`
+  ("Bild", "Umrechnung", "Umwandlung", "Video", "Spracherkennung", "Entwurf", "Kachelvideo", "Overlay-Video")
+  and German exception messages (`MainActivity.kt` 1299/1523/1845, `WhisperEngine.kt` 57). Found 2026-11-10;
+  planned fix A in `docs/CLOSED_TEST_1_1_4_PLAN.md`. All 215 `strings.xml` keys exist in all 7 languages.
 - Caption drift on very long videos (audio-check message only in the debug build) – not resolved.
 - Website imprint is a placeholder (imprint data missing) – legal risk once the app is in production.
 - Website uses Google Fonts for Farsi – known German warning-letter risk; self-host planned.

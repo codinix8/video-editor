@@ -9,3 +9,4 @@ exclude:
   - KNOWN_ISSUES.md
   - CONCEPT.md
   - FINETUNING.md
+  - CLOSED_TEST_1_1_4_PLAN.md

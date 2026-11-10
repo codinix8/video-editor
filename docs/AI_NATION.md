@@ -101,4 +101,5 @@ for 14 days), an update for closed testers between test day 7 and 10, imprint da
 4. Self-host the Vazirmatn web font on babacut.io (remove Google Fonts).
 5. Prepare the Play production re-application text (German draft for the owner, with numbers from the closed test).
 6. Plan the 1.1.4 closed-test update: collect small fixes from KNOWN_ISSUES into a "Bitte prüfen" list (proposal only).
+   *Done 2026-11-10 (task d444acae): `docs/CLOSED_TEST_1_1_4_PLAN.md`, waiting for the owner's scope choice.*
 7. Proposal (no code) for splitting `MainActivity.kt` into smaller units, for the owner to approve ("erst reden").

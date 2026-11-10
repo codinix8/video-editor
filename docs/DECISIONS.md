@@ -2,6 +2,17 @@
 
 Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, README and commit history.
 
+## 2026-11-10 – 1.1.4 closed-test update planned (task d444acae)
+- Proposal only, no code ("erst reden, dann bauen"): `docs/CLOSED_TEST_1_1_4_PLAN.md` (German, for the owner).
+- Recommended scope: A localise German error-toast labels (~10 new strings × 7 languages), B versionName 1.1.4 +
+  Play release notes in 7 languages, D English crash-report labels (optional). Deferred: C (TimelineRemap caption
+  300 ms clamp quirk; needs the tests of open PR b9d022fb and its own phone test), caption drift, RTL layout.
+- Honest timing: the day-7–10 window of the second test period (~1–5 Nov) has passed; 1.1.4 still strengthens the
+  re-application answer and the next test period if Google rejects again.
+- versionCode: open PR b9d022fb already sets 82; 1.1.4 takes 83 if that PR is merged first, otherwise 82.
+- Unused German name lists (`CaptionStyle.TEMPLATE_NAMES`, `Mosaic.LAYOUT_NAMES`, `ColorFilters.NAMES`) are not
+  shown in the UI and are left alone.
+
 ## 2026-11-09 – Deep-integration inventory (task 9299e3fd)
 - Docs-only inventory; no code changed. Result: `docs/AI_NATION.md` "State and backlog (2026-11-09)".
 - Backlog order (proposed via `hub_propose_tasks`, owner releases): PR CI first (no tests, no PR checks today),
