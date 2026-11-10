@@ -104,7 +104,9 @@ Mosaik-Videos, Erkennung Ali/Baba, Vorlagen ab der 4., Emojis, Filter ab dem 4.,
   **9. November 2026**. Es wurde empfohlen, 1.1.3 als Update in den geschlossenen Test zu laden und zwischen Tag 7
   und 10 ein weiteres Update zu liefern. Antworten für den Antrag (300-Zeichen-Felder) sind im alten Chat formuliert;
   beim zweiten Antrag konkreter mit Zahlen/Zitaten. **Entwurf für den zweiten Antrag (2026-11-10):**
-  `docs/PLAY_PRODUCTION_APPLICATION.md` (Antworttexte + Liste der Console-Zahlen Z1–Z7, die der Nutzer abliest).
+  `docs/PLAY_PRODUCTION_APPLICATION.md` (Antworttexte + Liste der Console-Zahlen Z1–Z7, die der Nutzer abliest). Überarbeitet nach
+  Review: Aussagen, die nur der Nutzer kennt, als `[BESTÄTIGEN]`; Antrag laut seiner Wahl erst nach 1.1.4-Feinschliff
+  (Fehlermeldungen in 7 Sprachen – im Tag `v1.1.4` noch nicht enthalten).
 - Abo in der Console: `babacut_pro` aktiv, Pläne `monthly` (netto so gesetzt, dass DE 2,99 € brutto) und `annual`
   (19,99 € brutto) mit Angebot `trial7`; alter Prepaid-Plan `yearly` inaktiv. Lizenztester: das Konto des Nutzers.
 - Play App Signing aktiv; Upload-Schlüssel `babacut-upload.jks` (Alias `babacut`, gültig bis 2054) liegt beim Nutzer.
@@ -115,9 +117,11 @@ Mosaik-Videos, Erkennung Ali/Baba, Vorlagen ab der 4., Emojis, Filter ab dem 4.,
 - Webseite: GitHub Pages aus `docs/` (CNAME babacut.io): index, support, privacy (EN/DE/FA), imprint
   (**Platzhalter – Impressumsdaten fehlen noch**), 404; Sprachwahl mit Flaggen DE/EN/FA, Farsi RTL.
   Geplant (nicht gebaut): Umbau auf "Live statt Post-Editing" mit Screenshots, Vergleichsseite BabaCut vs. CapCut,
-  Blog (Jekyll), Glossar, Presseseite, strukturierte Daten/llms.txt, **selbst gehostete Farsi-Schrift statt Google
-  Fonts** (Abmahnrisiko), rechtssichere Impressum/Datenschutz-Fassung (Fragen an den Nutzer: Name/Firma, Anschrift,
+  Blog (Jekyll), Glossar, Presseseite, strukturierte Daten/llms.txt, rechtssichere Impressum/Datenschutz-Fassung (Fragen an den Nutzer: Name/Firma, Anschrift,
   USt-ID, MStV-Verantwortlicher, Telefon; Analytics/Newsletter geplant?). Werbeaussagen sachlich halten (UWG).
+- Schrift: Farsi-Schrift Vazirmatn (v33.003, Regular/Bold, SIL OFL 1.1) liegt selbst gehostet in
+  `docs/assets/fonts/` (Lizenz `OFL.txt` daneben), eingebunden per `@font-face` in `docs/style.css`; keine Anfrage an
+  Google Fonts mehr (erledigt 2026-11-10). Keine externen Schrift-/CSS-Links in neue Seiten einbauen.
 - E-Mail: Microsoft 365 Business Basic mit Domain babacut.io; DNS (MX, autodiscover, SPF) bei Hosteurope gesetzt;
   `support@babacut.io` als Alias am freigegebenen Postfach `supporter@`; DKIM noch offen.
 - Optional später: Claude-Code-Routine (geplanter Task) für tägliche Blog-Entwürfe als PR in `claude/`-Branch.
@@ -144,3 +148,5 @@ Mosaik-Videos, Erkennung Ali/Baba, Vorlagen ab der 4., Emojis, Filter ab dem 4.,
 The project is managed by AI Nation. Agent rules: [CLAUDE.md](CLAUDE.md). Project record map and English state
 summary incl. "State and backlog" (2026-11-09): [docs/AI_NATION.md](docs/AI_NATION.md) (roadmap, decisions, knowledge and known issues live in `docs/`).
 Owner profile (how he works and decides): [docs/FINETUNING.md](docs/FINETUNING.md).
+Proposal for splitting `MainActivity.kt` (2026-11-10, waiting for the owner): [docs/MAINACTIVITY_SPLIT.md](docs/MAINACTIVITY_SPLIT.md).
+Team decision `project.team` requested on 2026-11-09 (see [docs/DECISIONS.md](docs/DECISIONS.md)).

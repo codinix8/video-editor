@@ -102,7 +102,8 @@ Java_de_codinix_videoeditor_whisper_WhisperEngine_nativeTranscribe(
         int64_t t1 = whisper_full_get_segment_t1(ctx, i) * 10;
         std::string text = whisper_full_get_segment_text(ctx, i);
         if (i) js << ",";
-        js << "{\"t0\":" << t0 << ",\"t1\":" << t1 << ",\"text\":\"" << json_escape(text) << "\",\"words\":[";
+        float nsp = whisper_full_get_segment_no_speech_prob(ctx, i);
+        js << "{\"t0\":" << t0 << ",\"t1\":" << t1 << ",\"nsp\":" << nsp << ",\"text\":\"" << json_escape(text) << "\",\"words\":[";
         // Tokens zu Wörtern zusammenfassen: ein Token mit führendem Leerzeichen beginnt ein neues Wort
         int nt = whisper_full_n_tokens(ctx, i);
         std::string word; int64_t w0 = -1, w1 = -1; bool first = true;

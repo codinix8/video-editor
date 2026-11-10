@@ -3,23 +3,27 @@
 Build history: README "Stand" table. Source of the items below: HANDOVER.md §5–7 (2026-11-03) and onboarding.
 
 ## Done
+- [x] 2026-11-10 Proposal for splitting `MainActivity.kt` → `docs/MAINACTIVITY_SPLIT.md` (12 move-only steps,
+      no code; task de9795a4). Waiting for the owner's go on steps 1–5.
+- [x] 2026-11-10 Vazirmatn web font self-hosted on babacut.io; no Google Fonts request left (task 6c203aca).
+- [x] 2026-11-09 Decision `project.team` requested from the hub (task 4e8e8c10; waiting for Gremium/owner).
 - [x] 2026-11-09 Deep-integration inventory and backlog → `docs/AI_NATION.md` "State and backlog"; 7 tasks proposed
       to the hub (waiting for owner release, task 9299e3fd).
 - [x] 2026-11-08 Owner profile harvested → `docs/FINETUNING.md` + hub fine-tuning store (task 9b8fbac3).
 
 ## Now
-- [ ] Re-apply for Play production access from ~2026-11-09. Draft ready (2026-11-10, task 036afa99):
-      `docs/PLAY_PRODUCTION_APPLICATION.md`; waiting for owner figures Z1–Z7 from the Play Console and his
-      choice "apply now with 1.1.3" vs. "ship 1.1.4 to closed testers first".
-- [ ] Ship an update to closed testers between test day 7 and 10 (e.g. 1.1.4 with small fixes).
+- [ ] Re-apply for Play production access from ~2026-11-09. Draft ready (2026-11-10, task 036afa99, revised):
+      `docs/PLAY_PRODUCTION_APPLICATION.md`; waiting for owner figures Z1–Z7 and his `[BESTÄTIGEN]` answers.
+      Owner choice: apply only after the 1.1.4 polish (error messages in 7 languages + release notes) is in the
+      closed test.
+- [ ] Localise the remaining German error labels (7 languages) + Play release notes – not in the tagged
+      `v1.1.4` (versionCode 82); next build takes versionCode 83. Plan: `docs/CLOSED_TEST_1_1_4_PLAN.md` (open PR).
 - [ ] Imprint data from the owner → finish website imprint/privacy (legal).
 
 ## Next
 - [ ] CI for pull requests: build + unit tests + lint on every PR (prerequisite for auto-merge).
 - [ ] First unit tests for pure logic (TimelineRemap, Captions chunking, Loudness, transcodeReason).
 - [ ] Skip the public APK release for docs-only pushes to `main` (`paths-ignore`). *(proposed 2026-11-09)*
-- [ ] Proposal (no code) for splitting `MainActivity.kt`. *(proposed 2026-11-09)*
-- [ ] Self-host the Farsi web font instead of Google Fonts (legal risk).
 - [ ] Email: DKIM for babacut.io; babacut.net redirect.
 - [ ] Owner proofreads FA/AR texts; check screenshots per language for clipped buttons.
 - [ ] Clarify caption drift on very long videos.
@@ -30,4 +34,5 @@ Build history: README "Stand" table. Source of the items below: HANDOVER.md §5�
 - [ ] Whistle (Cactus) as fast free recognition (no FA/TR/AR).
 - [ ] On-device person segmentation (MediaPipe) with temporal smoothing.
 - [ ] iOS port (estimated 60–70 % of the original effort).
-- [ ] Split `MainActivity.kt` (~3300 lines) into smaller units.
+- [ ] Split `MainActivity.kt` (3326 lines) per `docs/MAINACTIVITY_SPLIT.md`: steps 1–5 (dead code, pure caption/gain
+      math + tests, `ProjectState`, `SessionStore`, drafts) after PR CI (#5) and unit tests (#6); steps 6–12 later.
