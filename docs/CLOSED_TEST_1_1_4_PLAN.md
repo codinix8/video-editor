@@ -7,6 +7,19 @@
 > **nächste** Version nach `v1.1.4`, siehe unten.
 > **[BESTÄTIGEN: …]** = Aussage, die nur du kennst. Stimmt sie, Klammer entfernen; sonst Satz streichen.
 
+## Stand 2026-11-11: A ist umgesetzt (Aufgabe 6f0c1893)
+
+- Alle Texte aus der Tabelle unten (plus "Keine Segmente" im Export) kommen jetzt aus den 7 Sprachdateien.
+  Versionscode 84, Versionsname 1.1.5. Kein Tag gesetzt – das machst du nach dem Merge (`v1.1.5`).
+- "Neuerungen"-Text für die Play Console (B), zum Einfügen:
+  - de-DE: Fehlermeldungen jetzt in allen Sprachen. Kleine Verbesserungen.
+  - en-US: Error messages are now shown in all languages. Small improvements.
+  - tr-TR: Hata mesajları artık tüm dillerde. Küçük iyileştirmeler.
+  - es-ES: Los mensajes de error ahora aparecen en todos los idiomas. Pequeñas mejoras.
+  - fr-FR: Les messages d’erreur sont désormais dans toutes les langues. Petites améliorations.
+  - fa-IR: پیام‌های خطا اکنون به همهٔ زبان‌ها نمایش داده می‌شوند. بهبودهای کوچک.
+  - ar: رسائل الخطأ متاحة الآن بجميع اللغات. تحسينات صغيرة.
+
 ## Deine Entscheidung steht schon fest
 
 Hub-Entscheidung 2a5ce05a, deine Antwort: *"1.1.4 klein: Fehlermeldungen in allen 7 Sprachen + Neuerungen-Text,

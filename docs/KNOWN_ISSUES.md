@@ -1,14 +1,6 @@
 # Known issues and risks – BabaCut
 
 ## Open issues
-- German words leak into localised error messages (still on `main` after `v1.1.4`): fallback labels passed to
-  `R.string.error` / `player_error` ("Bild", "Umrechnung", "Umwandlung", "Video", "Spracherkennung", "Entwurf",
-  "Kachelvideo", "Overlay-Video"), German exception texts shown in toasts (`MainActivity.kt` 1324/1548/1870,
-  `WhisperEngine.kt` 92, `ModelManager.kt` 33) and in the export error sheet (`Exporter.kt` 136/220/228/301,
-  `OverlayAudioRenderer.kt` 239). Line numbers as of `40521ea`. Planned fix A in `docs/CLOSED_TEST_1_1_4_PLAN.md`
-  (versionCode 84; 83 is taken on `main` since PR #12). Deferred: GL/EGL exception texts (`GlUtil.kt`, `EglCore.kt`; not verified to reach the UI),
-  crash-report labels (`CrashLog.kt`). Verified: the 7 `strings.xml` files have the same 223 keys; this does not
-  prove runtime translation coverage (hard-coded Kotlin strings are not counted).
 - Two CI workflows run on every PR to `main` (2026-11-11): the old `.github/workflows/pr.yml` ("PR check (build +
   lint)", non-blocking lint, no tests) is still on `main` next to `ci.yml`, although PR #12 described it as renamed.
   It duplicates build + lint and doubles CI minutes. Follow-up: delete `pr.yml` (workflow change = owner merge).
@@ -22,6 +14,13 @@
     before a segment end can stick out into the next segment; a word can end before it starts after clamping.
 
 ## Resolved
+- 2026-11-11 German words leaked into localised error messages (fallback labels "Bild", "Umrechnung", "Umwandlung",
+  "Video", "Spracherkennung", "Entwurf", "Kachelvideo", "Overlay-Video" and German exception texts in
+  `MainActivity.kt`, `WhisperEngine.kt`, `ModelManager.kt`, `Exporter.kt`, `OverlayAudioRenderer.kt`). Fixed in 1.1.5
+  (task 6f0c1893): 18 new string keys in all 7 `strings.xml` (incl. Exporter's "Keine Segmente", not in the plan
+  table); `UserFacingException` + `ErrorText` for classes without a Context. Still German by design (out of scope):
+  GL/EGL texts (`GlUtil.kt`, `EglCore.kt`), `CrashLog.kt` labels (option D), the debug-only "Ton-Kontrolle" toast.
+  System/Media3 exception messages are shown as delivered by Android. Phone check by the owner pending.
 - 2026-11-11 Agent PRs kept returning with "Conflict with main" (11 returns in 24 h) and the record collected
   duplicate/stale entries. Fixed at the root by conflict-safe record rules (`docs/AI_NATION.md`) and union merge for
   `docs/DECISIONS.md` (task 9167d767). Still open: PR #7 and the `pr.yml` deletion need the owner's merge.
