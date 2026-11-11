@@ -2,6 +2,14 @@
 
 Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, README and commit history.
 
+## 2026-11-09 – Pull-request CI (task 0b65e2ce)
+- New `.github/workflows/pr.yml` instead of adding `pull_request` to `build.yml`, so PR runs can never reach the
+  release/`build-logs` steps. Permissions `contents: read`.
+- Lint runs but is non-blocking (`continue-on-error` on the step), because the code was never linted and no Android
+  SDK was available in the agent container to create a baseline. Chosen over `lint { abortOnError = false }` in
+  Gradle so that `lintVitalRelease` still guards store builds. Follow-up: baseline, then blocking.
+- No `versionCode` bump: no app code changed and PR runs produce no tester build.
+
 ## 2026-11-10 – Proposal for splitting MainActivity.kt (task de9795a4)
 - Proposal only, no code: `docs/MAINACTIVITY_SPLIT.md`. Recommended: plain Kotlin controllers sharing one
   `ProjectState` + a small `Host` interface; no ViewModel/Compose/DI migration (that would be a rebuild).
