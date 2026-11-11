@@ -128,6 +128,9 @@ Mosaik-Videos, Erkennung Ali/Baba, Vorlagen ab der 4., Emojis, Filter ab dem 4.,
 ## 7. Offene Punkte / Ideen
 
 - Produktionsantrag erneut ab 9.11.; Update für Tester zwischen Tag 7–10 (z. B. 1.1.4 mit Kleinigkeiten).
+  Plan für das nächste Tester-Update mit Umfang und "Bitte prüfen"-Liste: [docs/CLOSED_TEST_1_1_4_PLAN.md](docs/CLOSED_TEST_1_1_4_PLAN.md)
+  (10.11.2026). Owner-Entscheidung steht (A + B, danach Antrag); `v1.1.4` (82) enthält die Fehlermeldungs-Übersetzung
+  noch nicht, darum kommt sie als 1.1.5 (Versionscode 83, Name vom Owner zu bestätigen).
 - Impressumsdaten → Webseite fertigstellen; DKIM; babacut.net-Weiterleitung.
 - Untertitel-Drift bei sehr langen Videos (Ton-Kontrolle-Meldung nur im Debug-Build) – nicht abschließend geklärt.
 - Farsi/Arabisch-Texte vom Nutzer gegenlesen; Screenshots je Sprache auf abgeschnittene Knöpfe prüfen.
