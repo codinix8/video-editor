@@ -2,16 +2,22 @@
 
 Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, README and commit history.
 
-## 2026-11-09 – No release for docs-only pushes (task f075de7b)
-- `build.yml` push trigger gets `paths-ignore: docs/**` and `**/*.md`; `workflow_dispatch` stays. A push is skipped
-  only when *every* changed file matches; mixed pushes still build and publish `build-N`.
-- `docs/**` covers the website too (HTML/CSS/JS); website changes never affect the APK, so no build is needed.
-- Workflow files are not ignored: a change to `build.yml` itself (including this one) still triggers a build.
-- No `versionCode` bump in this PR: the app is unchanged (CI config only, same as PR #5). `main` is at 82 (owner
-  build 1.1.4) and PR #6 already claims 83, so a bump here would only create a conflict. The merge build of this PR
-  (it changes `build.yml`, so it is not skipped) republishes versionCode 82 as a new `build-N`. Updated 2026-11-10
-  when merging `main` (1.1.4) into this branch; before that the text said 81.
-- Skipped pushes do not consume a run number, so `build-N` numbers stay consecutive for real builds.
+## 2026-11-10 – Play production re-application draft (task 036afa99, revised after review of PR #9)
+- Draft in German in `docs/PLAY_PRODUCTION_APPLICATION.md` (excluded from the site), answers kept near the
+  ~300-character field limit noted in HANDOVER §5. Console figures are placeholders Z1–Z7; facts only the owner
+  knows (which features testers used, email feedback, device checks, Console completeness, whether fixes came from
+  testers) are explicit `[BESTÄTIGEN: …]` placeholders – numeric Console totals do not establish them.
+- Versions are listed as built/tagged in git (1.1.1/79, 1.1.2/80, 1.1.3/81, 1.1.4/82 tagged 2026-11-10), separately
+  from closed-track delivery, which is unknown until the owner reads Z7 (internal vs. closed track). The C1 answer
+  only keeps versions Z7 confirms on the closed track.
+- The stale "apply now with 1.1.3 vs. ship 1.1.4 first" choice is removed. Recorded owner choice (hub decision
+  2a5ce05a): small 1.1.4 with error messages in all 7 languages + release notes, then apply.
+- Finding: the owner's `v1.1.4` (f7999a1) shipped other fixes (silence-hallucination filter, permission help, etc.)
+  but not the error-label localisation – German labels remain on `main` (`MainActivity.kt` "Bild", "Umrechnung",
+  "Umwandlung", "Spracherkennung", "Entwurf", "Kachelvideo"; `WhisperEngine.kt` "Modell konnte nicht geladen werden").
+  Per the owner's choice that polish is still due before applying (next versionCode 83; separate task).
+- No app code changed, no versionCode bump (docs-only).
+
 ## 2026-11-10 – Closed-test update planned (task d444acae, revised after review of PR #10)
 - Proposal only, no code ("erst reden, dann bauen"): `docs/CLOSED_TEST_1_1_4_PLAN.md` (German, for the owner).
 - Owner choice recorded, not re-asked (hub decision 2a5ce05a): "1.1.4 klein: Fehlermeldungen in allen 7 Sprachen +
@@ -25,6 +31,19 @@ Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, READ
 - Claims narrowed: verified result is "the 7 `strings.xml` have the same 223 keys", not full runtime translation.
 - Closed-track rollout history is not inferable from versionCode; marked `[BESTÄTIGEN]` for the owner (Play Console).
   "Changes were shipped during the test" may only be used in the application if the Console confirms it.
+
+## 2026-11-09 – No release for docs-only pushes (task f075de7b)
+- `build.yml` push trigger gets `paths-ignore: docs/**` and `**/*.md`; `workflow_dispatch` stays. A push is skipped
+  only when *every* changed file matches; mixed pushes still build and publish `build-N`.
+- `docs/**` covers the website too (HTML/CSS/JS); website changes never affect the APK, so no build is needed.
+- Workflow files are not ignored: a change to `build.yml` itself (including this one) still triggers a build.
+- No `versionCode` bump in this PR: the app is unchanged (CI config only, same as PR #5). `main` is at 82 (owner
+  build 1.1.4); 83 is planned for the next app update (see the 2026-11-10 closed-test entry), so a bump here would
+  only create a conflict. The merge build of this PR (it changes `build.yml`, so it is not skipped) republishes
+  versionCode 82 as a new `build-N`. Updated 2026-11-10 when merging `main` (1.1.4) into this branch; before that
+  the text said 81. Updated 2026-11-11 when merging `main` again (PR #9/#10): stale "PR #6 already claims 83" removed.
+- Skipped pushes do not consume a run number, so `build-N` numbers stay consecutive for real builds.
+
 ## 2026-11-09 – Pull-request CI (task 0b65e2ce)
 - New `.github/workflows/pr.yml` instead of adding `pull_request` to `build.yml`, so PR runs can never reach the
   release/`build-logs` steps. Permissions `contents: read`.
