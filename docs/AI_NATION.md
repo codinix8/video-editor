@@ -15,6 +15,7 @@ Onboarded into AI Nation on 2026-11-08 (task 4e8e8c10). The project's own rules 
 | Known issues  | [`docs/KNOWN_ISSUES.md`](KNOWN_ISSUES.md) | **New.** Open bugs and risks. |
 | Owner profile | [`docs/FINETUNING.md`](FINETUNING.md) | **New (2026-11-08).** How the owner thinks, decides and gives feedback; mirrored in the hub fine-tuning store. |
 | Proposals     | [`docs/MAINACTIVITY_SPLIT.md`](MAINACTIVITY_SPLIT.md) | **New (2026-11-10).** Plan for splitting `MainActivity.kt` in 12 move-only steps; waiting for the owner. |
+| Play application | [`docs/PLAY_PRODUCTION_APPLICATION.md`](PLAY_PRODUCTION_APPLICATION.md) | **New (2026-11-10, revised).** German draft of the 2nd production-access request: Play Console figures Z1–Z7 + `[BESTÄTIGEN]` items the owner fills in; apply after the 1.1.4 polish. |
 | Status table  | [`/README.md`](../README.md) "Stand" | Existing, German, per-step build history. |
 | Repo rules    | [`/CLAUDE.md`](../CLAUDE.md) | **New.** Project rules + AI Nation section. |
 

@@ -2,6 +2,21 @@
 
 Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, README and commit history.
 
+## 2026-11-10 – Play production re-application draft (task 036afa99, revised after review of PR #9)
+- Draft in German in `docs/PLAY_PRODUCTION_APPLICATION.md` (excluded from the site), answers kept near the
+  ~300-character field limit noted in HANDOVER §5. Console figures are placeholders Z1–Z7; facts only the owner
+  knows (which features testers used, email feedback, device checks, Console completeness, whether fixes came from
+  testers) are explicit `[BESTÄTIGEN: …]` placeholders – numeric Console totals do not establish them.
+- Versions are listed as built/tagged in git (1.1.1/79, 1.1.2/80, 1.1.3/81, 1.1.4/82 tagged 2026-11-10), separately
+  from closed-track delivery, which is unknown until the owner reads Z7 (internal vs. closed track). The C1 answer
+  only keeps versions Z7 confirms on the closed track.
+- The stale "apply now with 1.1.3 vs. ship 1.1.4 first" choice is removed. Recorded owner choice (hub decision
+  2a5ce05a): small 1.1.4 with error messages in all 7 languages + release notes, then apply.
+- Finding: the owner's `v1.1.4` (f7999a1) shipped other fixes (silence-hallucination filter, permission help, etc.)
+  but not the error-label localisation – German labels remain on `main` (`MainActivity.kt` "Bild", "Umrechnung",
+  "Umwandlung", "Spracherkennung", "Entwurf", "Kachelvideo"; `WhisperEngine.kt` "Modell konnte nicht geladen werden").
+  Per the owner's choice that polish is still due before applying (next versionCode 83; separate task).
+- No app code changed, no versionCode bump (docs-only).
 ## 2026-11-10 – Closed-test update planned (task d444acae, revised after review of PR #10)
 - Proposal only, no code ("erst reden, dann bauen"): `docs/CLOSED_TEST_1_1_4_PLAN.md` (German, for the owner).
 - Owner choice recorded, not re-asked (hub decision 2a5ce05a): "1.1.4 klein: Fehlermeldungen in allen 7 Sprachen +
