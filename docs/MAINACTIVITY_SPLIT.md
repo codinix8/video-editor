@@ -76,7 +76,7 @@ Ordered by risk: pure and well-tested first, wide-coupled UI last. Each step is 
 
 | # | Step | Risk | Phone check ("Bitte prüfen") |
 |---|---|---|---|
-| 0 | Prerequisite: PR CI (#5) and JVM unit tests (#6) merged | – | – |
+| 0 | Prerequisite: PR CI and JVM unit tests on `main` – met 2026-11-11 (PR #12, 1eb2c6c) | – | – |
 | 1 | Remove dead `radioList()`, use `currentTotalMs()` everywhere, move `fmt`/`label`/`loadBitmap` into `Util.kt` | very low | record 2 clips, status time correct; add an image overlay (portrait photo stays upright) |
 | 2 | Extract pure `CaptionEdits` (`shiftStart`, `shiftEnd`, `retext`) and `GainEdits` (`applyGainRange`, `gainAt`) + JVM tests that pin today's behaviour | low | caption editor: move start/end ±, edit text; review sound: mute one segment |
 | 3 | Introduce `ProjectState` (fields only move, Activity delegates) | low–medium | full flow: record, overlay, review, export, draft save/load |

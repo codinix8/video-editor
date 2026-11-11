@@ -2,6 +2,14 @@
 
 Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, README and commit history.
 
+## 2026-11-11 – Task b9d022fb closed out (docs only)
+- The owner sent PR #6 back (merge decision); its commits then reached `main` inside PR #12 (1eb2c6c, stacked). No
+  new code: re-implementing would have duplicated what is on `main`. PR #6's branch was then merged with `-s ours` onto `main` (no force push), so PR #6 now carries only this
+  docs close-out.
+- Evidence: `main` CI run 43002550851 (`build-test-lint`), `unit-test-report`: 54 tests, 0 failures.
+- Consequence for the 1.1.5 polish (scope A + B): versionCode 83 is taken, it gets **84**.
+- Found: `pr.yml` still exists next to `ci.yml` (see KNOWN_ISSUES); not removed here to keep this PR docs-only.
+
 ## 2026-11-10 – CI on every push and pull request (task 40c40718)
 - Built on the open PRs instead of a competing workflow: branch stacked on PR #6 (which already contains PR #5's
   commit), `main` merged in. Merging this PR makes PR #5 and #6 redundant (close them instead of merging).

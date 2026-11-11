@@ -67,22 +67,21 @@ keine Garantie, dass es keine weiteren gibt.
 
 ## Umfang B – Version und "Neuerungen"-Text
 
-- Versionscode 83, Versionsname 1.1.5 (Vorschlag) in `app/build.gradle.kts`.
+- Versionscode 84 (83 ist seit PR #12 auf `main`), Versionsname 1.1.5 (Vorschlag) in `app/build.gradle.kts`.
 - "Neuerungen"-Text für die Play Console in 7 Sprachen, kurz und sachlich, z. B. DE: "Fehlermeldungen jetzt in
   allen Sprachen. Kleine Verbesserungen." (keine Superlative).
 
 ## Nicht in diesem Update
 
-- C: Untertitel am Segmentende (bis 0,3 s Überhang, gefunden durch die Tests aus PR #6) – braucht die Tests auf
-  `main` und einen eigenen Handytest.
+- C: Untertitel am Segmentende (bis 0,3 s Überhang, gefunden durch die Unit-Tests; diese sind seit 2026-11-11 auf
+  `main`) – braucht noch einen eigenen Handytest.
 - Untertitel-Verschiebung bei sehr langen Videos (Ursache unklar), Rechts-nach-links-Layout, Aufteilen von
   `MainActivity.kt`.
 
 ## Ablauf
 
-1. Entwickler setzt A + B auf einem eigenen Branch um (alle 7 Sprachen, Versionscode 83). Hinweis: PR #6 (Tests)
-   setzt den Versionscode ebenfalls auf 82 und muss nach `v1.1.4` ohnehin angepasst werden; wer zuerst übernommen
-   wird, bekommt 83, der andere 84.
+1. Entwickler setzt A + B auf einem eigenen Branch um (alle 7 Sprachen, Versionscode 84). Stand 2026-11-11: 83 ist
+   bereits auf `main` vergeben (Unit-Tests, PR #12).
 2. Du übernimmst den PR, dann Tag `v1.1.5` → Store-Build (`.aab`).
 3. `.aab` zuerst in den **internen Test** (dein Handy), Liste unten prüfen, dann dasselbe Bundle in den
    **geschlossenen Test "Closed Beta"** mit dem "Neuerungen"-Text.
