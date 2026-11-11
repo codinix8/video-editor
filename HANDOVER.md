@@ -25,7 +25,8 @@ Zielgruppe: Creator; wichtig ist die persische Community (Farsi-Oberfläche, Nam
   Push über `https://x-access-token:<TOKEN>@github.com/codinix8/video-editor.git` (Token vom Nutzer erfragen; Token darf
   Secrets/Pages nicht ändern → solche Dinge macht der Nutzer in der GitHub-Oberfläche).
 - **Workflows** (`.github/workflows/`):
-  - `build.yml`: jeder Push auf `main` → Debug-APK (Signatur `keystore/videoeditor.jks`), Release `build-N` mit
+  - `build.yml`: jeder Push auf `main` (außer reine Doku-Pushes: `paths-ignore` für `docs/**` und `**/*.md`,
+    seit 2026-11-09) → Debug-APK (Signatur `keystore/videoeditor.jks`), Release `build-N` mit
     `VideoEditor-buildN.apk`. Bei Fehlern wird `build.log` in Branch `build-logs` gepusht
     (lesbar unter https://raw.githubusercontent.com/codinix8/video-editor/build-logs/build.log).
   - `release.yml`: Tag `v*` oder manuell → `bundleRelease` + `assembleRelease`, signiert mit Upload-Schlüssel aus

@@ -34,6 +34,8 @@ English digest; details in [HANDOVER.md](../HANDOVER.md) §2–3 (German).
   `UPLOAD_KEYSTORE_PASSWORD`, `UPLOAD_KEY_ALIAS`). Upload the AAB to the Play Console manually.
 - The owner's phone has the Play (internal test) build. GitHub debug APKs have another signature and cannot be
   installed over it → test builds go as AAB to the internal test.
+- `build.yml` skips docs-only pushes (`paths-ignore: docs/**`, `**/*.md`). To get a debug APK anyway, start
+  "Build APK" manually (Actions → Run workflow).
 - Failed build logs are force-pushed to branch `build-logs` (`build.log`).
 
 ## Code map (app/src/main/java/de/codinix/videoeditor/)

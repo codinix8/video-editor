@@ -37,12 +37,20 @@
   - `MainActivity.kt:1618–1623`: Media3 `UnstableApi` used without `@OptIn` (`UnsafeOptInUsageError`, 7×).
 
 ## Risks
+- **Every push to `main` publishes** a GitHub release with an APK (public repo). Docs-only merges no longer do
+  (`paths-ignore: docs/**`, `**/*.md` in `build.yml`, task f075de7b, 2026-11-09; `build-102` came from docs PR #2; on 2026-11-11 also
+  `build-109`, `build-110`, `build-112` from docs PRs #10, #9, #6).
+  Open: verify on the next docs-only merge that no new `build-N` release appears. Mixed pushes (docs + code) still
+  build and release, as intended.
 - **Thin automated test coverage** – since 2026-11-10 `ci.yml` builds every push and PR, runs the JVM unit tests
   (`TimelineRemap`, transcode rule, `Loudness`, caption chunking, `EmojiDict`) and `lintDebug`, all blocking. UI,
   recording, export, drafts/session JSON and the native Whisper path are still only tested by hand on the phone, so a
   green `build-test-lint` does not prove that these work. `build-test-lint` is not yet a required check (owner step).
 - **Every push to `main` publishes** a GitHub release with an APK (public repo) – also for docs-only merges
   (`build-102` came from docs PR #2). Fix proposed 2026-11-09 (`paths-ignore`).
+- **No automated tests; PR CI only builds** – since 2026-11-09 `pr.yml` checks that every PR compiles
+  (`assembleDebug`) and runs `lintDebug`, but lint is non-blocking (no baseline yet) and there are no unit tests.
+  Regressions in behaviour are still only found by manual phone testing; auto-merge is unsafe.
 - **PR #1 is superseded** by merged PR #2; its remaining diff only deletes record lines – must not be merged.
 - **Debug keystore with plaintext passwords** is committed (`keystore/`, `app/build.gradle.kts`). Only the debug
   signature is affected (Play uses the upload key + Play App Signing), but anyone can sign APKs that look like
