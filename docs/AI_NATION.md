@@ -14,6 +14,7 @@ Onboarded into AI Nation on 2026-11-08 (task 4e8e8c10). The project's own rules 
 | Knowledge     | [`docs/KNOWLEDGE.md`](KNOWLEDGE.md) | **New.** Build/release facts and gotchas (English digest of HANDOVER §2–3). |
 | Known issues  | [`docs/KNOWN_ISSUES.md`](KNOWN_ISSUES.md) | **New.** Open bugs and risks. |
 | Owner profile | [`docs/FINETUNING.md`](FINETUNING.md) | **New (2026-11-08).** How the owner thinks, decides and gives feedback; mirrored in the hub fine-tuning store. |
+| Proposals     | [`docs/MAINACTIVITY_SPLIT.md`](MAINACTIVITY_SPLIT.md) | **New (2026-11-10).** Plan for splitting `MainActivity.kt` in 12 move-only steps; waiting for the owner. |
 | Status table  | [`/README.md`](../README.md) "Stand" | Existing, German, per-step build history. |
 | Repo rules    | [`/CLAUDE.md`](../CLAUDE.md) | **New.** Project rules + AI Nation section. |
 
@@ -83,8 +84,8 @@ for 14 days), an update for closed testers between test day 7 and 10, imprint da
 
 ### Risks
 - **No tests, no PR CI** (details below) – regressions are found only on the owner's phone.
-- **Website loads Google Fonts** (`fonts.googleapis.com` in `docs/index.html`, `404.html`, `support.html`) – known
-  German warning-letter (Abmahnung) risk.
+- ~~Website loads Google Fonts~~ – resolved 2026-11-10: Vazirmatn is self-hosted in `docs/assets/fonts/`
+  (task 6c203aca; it was loaded by index, 404, support, imprint and privacy).
 - **Imprint is a placeholder** – legal risk once the app is in production.
 - **Every push to `main` publishes a public GitHub release with an APK** (`build.yml`), also for docs-only merges
   (e.g. `build-102` from PR #2). Merges should be deliberate; a `paths-ignore` for `docs/**` would avoid this.
@@ -107,7 +108,7 @@ for 14 days), an update for closed testers between test day 7 and 10, imprint da
 1. Add a pull-request CI workflow (build + lint) without publishing a release.
 2. Add the first JVM unit tests for pure logic (`TimelineRemap`, `Downscaler.transcodeReason`) and run them in PR CI.
 3. Skip the public APK release for docs-only pushes to `main` (`paths-ignore: docs/**`, `*.md`).
-4. Self-host the Vazirmatn web font on babacut.io (remove Google Fonts).
+4. ~~Self-host the Vazirmatn web font on babacut.io (remove Google Fonts).~~ Done 2026-11-10 (task 6c203aca).
 5. Prepare the Play production re-application text (German draft for the owner, with numbers from the closed test).
 6. Plan the 1.1.4 closed-test update: collect small fixes from KNOWN_ISSUES into a "Bitte prüfen" list (proposal only).
 7. Proposal (no code) for splitting `MainActivity.kt` into smaller units, for the owner to approve ("erst reden").
