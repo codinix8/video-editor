@@ -3,6 +3,9 @@
 Build history: README "Stand" table. Source of the items below: HANDOVER.md §5–7 (2026-11-03) and onboarding.
 
 ## Done
+- [x] 2026-11-11 Fix D: crash report labels in `CrashLog.kt` localised in all 7 languages (4 keys `crash_label_*`;
+      neutral keys in the file, labels applied at display time by `CrashReportText` + `CrashReportTextTest`); still
+      versionCode 84 / 1.1.5, not tagged (task a0f44077).
 - [x] 2026-11-11 Fix A: remaining German error labels and exception texts localised in all 7 languages (18 new keys,
       `UserFacingException`/`ErrorText` + `ErrorTextTest`); version 1.1.5 (task 6f0c1893). Not tagged.
 - [x] 2026-11-11 Cause of the returned merges found and fixed in the repo (task 9167d767): every PR rewrote the same
@@ -40,7 +43,9 @@ Build history: README "Stand" table. Source of the items below: HANDOVER.md §5�
       `docs/PLAY_PRODUCTION_APPLICATION.md`; waiting for owner figures Z1–Z7 and his `[BESTÄTIGEN]` answers.
       Owner choice: apply only after the 1.1.4 polish (error messages in 7 languages + release notes) is in the
       closed test.
-- [ ] Ship 1.1.5 to closed testers: owner merges the 1.1.5 PR (task 6f0c1893), tags `v1.1.5`, internal test on
+- [ ] Ship 1.1.5 to closed testers (owner scope "A + B + D", 2026-11-11): A = localised error texts (task 6f0c1893,
+      merged), B = release notes, D = localised crash report labels (PR #17 / task a0f44077, re-dispatched as
+      84b19ca3). Owner merges the D PR, tags `v1.1.5`, internal test on
       his phone, then the closed test "Closed Beta" with the release notes from `docs/CLOSED_TEST_1_1_4_PLAN.md` (B).
       Which versions reached the closed track is unverified (owner: Play Console).
 - [ ] Imprint data from the owner → finish website imprint/privacy (legal).

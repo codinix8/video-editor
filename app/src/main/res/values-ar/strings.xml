@@ -59,6 +59,10 @@
     <string name="mic_hint">يُطبَّق على تسجيلك عند التصدير. 100 %% = بلا تغيير، 50 %% نصف الارتفاع.</string>
     <string name="crash_title">توقف التطبيق في المرة السابقة</string>
     <string name="crash_msg">يرجى نسخ التقرير وإرساله إلى المطوّر.</string>
+    <string name="crash_label_time">الوقت</string>
+    <string name="crash_label_thread">الخيط</string>
+    <string name="crash_label_version">الإصدار</string>
+    <string name="crash_label_device">الجهاز</string>
     <string name="copy">نسخ الكل</string>
     <string name="copied">تم النسخ إلى الحافظة</string>
     <string name="recovered">تم استرداد التسجيل كمسودة بعد التوقف</string>
