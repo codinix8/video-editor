@@ -3,6 +3,8 @@
 Build history: README "Stand" table. Source of the items below: HANDOVER.md §5–7 (2026-11-03) and onboarding.
 
 ## Done
+- [x] 2026-11-10 Closed-test update planned (proposal only, no code) → `docs/CLOSED_TEST_1_1_4_PLAN.md`
+      (task d444acae, revised after review of PR #10).
 - [x] 2026-11-09 PR CI: `.github/workflows/pr.yml` runs `assembleDebug` + `lintDebug` on every PR to `main`,
       no release/tag (task 0b65e2ce). Lint is non-blocking until a baseline exists; unit tests follow.
 - [x] 2026-11-10 Proposal for splitting `MainActivity.kt` → `docs/MAINACTIVITY_SPLIT.md` (12 move-only steps,
@@ -15,7 +17,11 @@ Build history: README "Stand" table. Source of the items below: HANDOVER.md §5�
 
 ## Now
 - [ ] Re-apply for Play production access from ~2026-11-09 (concrete answers with numbers/quotes).
-- [ ] Ship an update to closed testers between test day 7 and 10 (e.g. 1.1.4 with small fixes).
+- [ ] Ship error messages in all 7 languages to closed testers as 1.1.5 (versionCode 83; name to be confirmed).
+      Owner chose A + B, then the production application (hub decision 2a5ce05a). Plan: `docs/CLOSED_TEST_1_1_4_PLAN.md`
+      (A: ~15 German error texts incl. ModelManager download and Exporter/MediaStore errors; B: version + Play release
+      notes in 7 languages; D crash-report labels optional, not approved; C caption clamp deferred). `v1.1.4` (82,
+      2026-11-10) shipped other fixes. Which versions reached the closed track is unverified (owner: Play Console).
 - [ ] Imprint data from the owner → finish website imprint/privacy (legal).
 
 ## Next
