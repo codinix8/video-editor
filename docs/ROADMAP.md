@@ -3,6 +3,9 @@
 Build history: README "Stand" table. Source of the items below: HANDOVER.md §5–7 (2026-11-03) and onboarding.
 
 ## Done
+- [x] 2026-11-11 Fix D: crash report labels in `CrashLog.kt` localised in all 7 languages (4 keys `crash_label_*`;
+      neutral keys in the file, labels applied at display time by `CrashReportText` + `CrashReportTextTest`); still
+      versionCode 84 / 1.1.5, not tagged (task a0f44077).
 - [x] 2026-11-11 Fix A: remaining German error labels and exception texts localised in all 7 languages (18 new keys,
       `UserFacingException`/`ErrorText` + `ErrorTextTest`); version 1.1.5 (task 6f0c1893). Not tagged.
 - [x] 2026-11-11 Cause of the returned merges found and fixed in the repo (task 9167d767): every PR rewrote the same

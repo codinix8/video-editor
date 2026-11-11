@@ -59,6 +59,10 @@
     <string name="mic_hint">Se aplica a tu grabación al exportar. 100 %% = sin cambios, 50 %% suena la mitad.</string>
     <string name="crash_title">La app se cerró inesperadamente</string>
     <string name="crash_msg">Copia el informe y envíaselo al desarrollador.</string>
+    <string name="crash_label_time">Hora</string>
+    <string name="crash_label_thread">Hilo</string>
+    <string name="crash_label_version">Versión</string>
+    <string name="crash_label_device">Dispositivo</string>
     <string name="copy">Copiar todo</string>
     <string name="copied">Copiado al portapapeles</string>
     <string name="recovered">Grabación restaurada como borrador tras el cierre</string>

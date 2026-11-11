@@ -59,6 +59,10 @@
     <string name="mic_hint">Wirkt beim Export auf deine Aufnahme. 100 % = unverändert, 50 % klingt halb so laut.</string>
     <string name="crash_title">Die App ist zuvor abgestürzt</string>
     <string name="crash_msg">Bitte den Bericht kopieren und an den Entwickler schicken.</string>
+    <string name="crash_label_time">Zeit</string>
+    <string name="crash_label_thread">Thread</string>
+    <string name="crash_label_version">Version</string>
+    <string name="crash_label_device">Gerät</string>
     <string name="copy">Alles kopieren</string>
     <string name="copied">In die Zwischenablage kopiert</string>
     <string name="recovered">Aufnahme nach Absturz als Entwurf wiederhergestellt</string>

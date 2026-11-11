@@ -1023,7 +1023,7 @@ class MainActivity : AppCompatActivity() {
             prefs.edit().putBoolean("tips_shown", false).putBoolean("tip_headphones_shown", false).putInt("file_browser_hint_count", 0).apply(); showFirstRunTips()
         }
         sec.button(getString(R.string.settings_crash)) {
-            val rep = CrashLog.previous(this)
+            val rep = CrashLog.previous(this)?.let { CrashLog.localised(this, it) }
             if (rep == null) Toast.makeText(this, R.string.settings_no_crash, Toast.LENGTH_SHORT).show()
             else Sheet(this).setTitle(R.string.settings_crash)
                 .setView(android.widget.TextView(this).apply { text = rep; textSize = 11f; typeface = android.graphics.Typeface.MONOSPACE; setTextIsSelectable(true); setTextColor(0xFFDDDDE2.toInt()) })
@@ -2993,7 +2993,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
     }
 
     private fun showCrashReportIfAny() {
-        val report = CrashLog.takeLast(this) ?: return
+        val report = CrashLog.takeLast(this)?.let { CrashLog.localised(this, it) } ?: return
         val view = android.widget.ScrollView(this).apply {
             val pad = (16 * resources.displayMetrics.density).toInt()
             setPadding(pad, 0, pad, 0)

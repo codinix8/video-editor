@@ -59,6 +59,10 @@
     <string name="mic_hint">Applies to your recording on export. 100 % = unchanged, 50 % sounds half as loud.</string>
     <string name="crash_title">The app crashed last time</string>
     <string name="crash_msg">Please copy the report and send it to the developer.</string>
+    <string name="crash_label_time">Time</string>
+    <string name="crash_label_thread">Thread</string>
+    <string name="crash_label_version">Version</string>
+    <string name="crash_label_device">Device</string>
     <string name="copy">Copy all</string>
     <string name="copied">Copied to clipboard</string>
     <string name="recovered">Recording restored as a draft after the crash</string>

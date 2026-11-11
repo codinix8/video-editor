@@ -209,3 +209,12 @@ Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, READ
 ## 2026-11-11 – FINETUNING.md re-sync to 63 insights (task 9b560127)
 - Added the three insights of 2026-11-11 (protected-merge safety statements, one-off budget bumps, human in control
   for sensitive security/finance actions); refreshed the stale "PR CI is Next" note (CI exists since PR #12).
+
+## 2026-11-11 – Crash report stores neutral keys, labels localised at display time (task a0f44077)
+- `CrashLog.install` runs with the application context inside the uncaught-exception handler; resolving strings
+  there would not reliably follow the in-app language and adds work to a crashing process. The file therefore
+  stores language-neutral keys (`time`, `thread`, `version`, `device`); `CrashLog.localised(activity, report)`
+  applies `crash_label_*` from the activity context when the report is shown (start sheet and Settings).
+- Reports written by 1.1.4 and earlier (German keys) are mapped as well; the stack trace is never touched.
+- The copied text (clipboard) is the localised version the user sees.
+- No `v1.1.5` tag exists, so versionCode 84 / versionName 1.1.5 stay unchanged.
