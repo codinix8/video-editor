@@ -5,6 +5,8 @@ Build history: README "Stand" table. Source of the items below: HANDOVER.md §5�
 ## Done
 - [x] 2026-11-10 Closed-test update planned (proposal only, no code) → `docs/CLOSED_TEST_1_1_4_PLAN.md`
       (task d444acae, revised after review of PR #10).
+- [x] 2026-11-09 PR CI: `.github/workflows/pr.yml` runs `assembleDebug` + `lintDebug` on every PR to `main`,
+      no release/tag (task 0b65e2ce). Lint is non-blocking until a baseline exists; unit tests follow.
 - [x] 2026-11-10 Proposal for splitting `MainActivity.kt` → `docs/MAINACTIVITY_SPLIT.md` (12 move-only steps,
       no code; task de9795a4). Waiting for the owner's go on steps 1–5.
 - [x] 2026-11-10 Vazirmatn web font self-hosted on babacut.io; no Google Fonts request left (task 6c203aca).
@@ -23,7 +25,8 @@ Build history: README "Stand" table. Source of the items below: HANDOVER.md §5�
 - [ ] Imprint data from the owner → finish website imprint/privacy (legal).
 
 ## Next
-- [ ] CI for pull requests: build + unit tests + lint on every PR (prerequisite for auto-merge).
+- [ ] Lint baseline (`app/lint-baseline.xml`), then make `lintDebug` in `pr.yml` blocking (remove `continue-on-error`).
+- [ ] Add `testDebugUnitTest` to `pr.yml` together with the first unit tests (prerequisite for auto-merge).
 - [ ] First unit tests for pure logic (TimelineRemap, Captions chunking, Loudness, transcodeReason).
 - [ ] Skip the public APK release for docs-only pushes to `main` (`paths-ignore`). *(proposed 2026-11-09)*
 - [ ] Email: DKIM for babacut.io; babacut.net redirect.

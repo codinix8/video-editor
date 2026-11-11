@@ -1,0 +1,75 @@
+# Pull-request check: builds the debug APK and runs Android lint.
+# Deliberately publishes nothing: no GitHub release, no tag, no push to build-logs.
+# The public APK release stays in build.yml (push to main) and release.yml (tag v*).
+name: PR check (build + lint)
+
+on:
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install NDK, CMake and SDK platform
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;27.2.12479018" "cmake;3.22.1" "platforms;android-36" "build-tools;36.0.0" > /dev/null
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle (with cache)
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          # PR runs only read the cache; main-branch builds keep it fresh.
+          cache-read-only: true
+
+      - name: Build debug APK
+        id: build
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+
+      # Lint is reported but not yet blocking: the existing code was never linted in CI,
+      # so pre-existing findings must not turn every PR red. Follow-up: create a lint
+      # baseline (app/lint-baseline.xml) and then remove continue-on-error.
+      # Next: add testDebugUnitTest here once the first unit tests exist.
+      - name: Android lint (debug, non-blocking)
+        id: lint
+        continue-on-error: true
+        run: ./gradlew lintDebug --no-daemon
+
+      - name: Upload lint report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report
+          path: app/build/reports/lint-results-debug.*
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### PR check"
+            echo "- Build (assembleDebug): ${{ steps.build.outcome }}"
+            echo "- Lint (lintDebug): ${{ steps.lint.outcome }} (non-blocking, report in artifact \`lint-report\`)"
+            echo "- No release, tag or build-logs push is created by this workflow."
+          } >> "$GITHUB_STEP_SUMMARY"

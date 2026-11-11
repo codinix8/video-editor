@@ -19,7 +19,9 @@
   the stylesheet nor the font loads (unchanged, pre-existing).
 
 ## Risks
-- **No automated tests and no PR CI** – regressions are only found by manual phone testing; auto-merge is unsafe.
+- **No automated tests; PR CI only builds** – since 2026-11-09 `pr.yml` checks that every PR compiles
+  (`assembleDebug`) and runs `lintDebug`, but lint is non-blocking (no baseline yet) and there are no unit tests.
+  Regressions in behaviour are still only found by manual phone testing; auto-merge is unsafe.
 - **Every push to `main` publishes** a GitHub release with an APK (public repo) – also for docs-only merges
   (`build-102` came from docs PR #2). Fix proposed 2026-11-09 (`paths-ignore`).
 - **PR #1 is superseded** by merged PR #2; its remaining diff only deletes record lines – must not be merged.
