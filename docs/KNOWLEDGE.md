@@ -25,6 +25,10 @@ English digest; details in [HANDOVER.md](../HANDOVER.md) §2–3 (German).
 - Without an Android SDK (agent container) the pure tests can still run: download Temurin JDK 17 + kotlinc 2.0.21
   + junit/hamcrest/json jars, stub `android.graphics.Bitmap` and `overlay.TextRenderer` (needed by
   `OverlayModel.kt`), compile the sources with the tests and run `org.junit.runner.JUnitCore`.
+- PR CI (`.github/workflows/pr.yml`, since 2026-11-09): on `pull_request` to `main` → `assembleDebug`, then
+  `lintDebug` with `continue-on-error` (report artifact `lint-report`, outcome in the job summary). Permissions
+  `contents: read`, Gradle cache read-only, no release/tag/`build-logs` push. Lint is non-blocking at workflow level
+  (not via `abortOnError=false` in Gradle), so `lintVitalRelease` in `release.yml` keeps blocking store builds.
 - 16 KB page-size linker flags are set (Play requirement).
 - Bump `versionCode` (+1) for every build that goes to testers; current 83 / 1.1.4 (82 = owner build 1.1.4 on main, 83 from task b9d022fb).
 

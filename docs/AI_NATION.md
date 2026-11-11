@@ -15,6 +15,7 @@ Onboarded into AI Nation on 2026-11-08 (task 4e8e8c10). The project's own rules 
 | Known issues  | [`docs/KNOWN_ISSUES.md`](KNOWN_ISSUES.md) | **New.** Open bugs and risks. |
 | Owner profile | [`docs/FINETUNING.md`](FINETUNING.md) | **New (2026-11-08).** How the owner thinks, decides and gives feedback; mirrored in the hub fine-tuning store. |
 | Proposals     | [`docs/MAINACTIVITY_SPLIT.md`](MAINACTIVITY_SPLIT.md) | **New (2026-11-10).** Plan for splitting `MainActivity.kt` in 12 move-only steps; waiting for the owner. |
+| Play application | [`docs/PLAY_PRODUCTION_APPLICATION.md`](PLAY_PRODUCTION_APPLICATION.md) | **New (2026-11-10, revised).** German draft of the 2nd production-access request: Play Console figures Z1–Z7 + `[BESTÄTIGEN]` items the owner fills in; apply after the 1.1.4 polish. |
 | Status table  | [`/README.md`](../README.md) "Stand" | Existing, German, per-step build history. |
 | Repo rules    | [`/CLAUDE.md`](../CLAUDE.md) | **New.** Project rules + AI Nation section. |
 
@@ -32,7 +33,7 @@ via [`docs/_config.yml`](_config.yml).
   7-day trial). Free tier limited to 1080p with watermark. No revenue yet – app is not in production.
 - **Stack:** Kotlin, CameraX, Media3 (Transformer/ExoPlayer), OpenGL ES 2 compositor, whisper.cpp (JNI, submodule
   v1.9.4, NDK 27), Play Billing 8. compile/targetSdk 36, minSdk 26, AGP 8.7.3, Java 17. ~34 Kotlin files;
-  `MainActivity.kt` ~3300 lines. Version 1.1.3 (versionCode 81).
+  `MainActivity.kt` ~3300 lines. Version 1.1.4 (versionCode 82, tag `v1.1.4`, 2026-11-10).
 - **Run/build:** `./gradlew assembleDebug` (needs Android SDK, NDK 27.2.12479018, CMake 3.22.1, submodules).
 - **Deploy:** `build.yml` – every push to `main` builds a debug APK and a GitHub release `build-N`.
   `release.yml` – tag `v*` builds signed AAB + release APK (upload key from GitHub secrets); the AAB is uploaded
@@ -56,6 +57,12 @@ all blocking, no release. How to run the checks locally: `CONTRIBUTING.md`. `bui
 pushes to `main`. `release.yml` only builds release artifacts. `build-test-lint` can be
 made a required check for auto-merge (owner step in the GitHub settings, see `CONTRIBUTING.md`). Coverage is still
 thin: UI, recording, export and the native caption path are only tested by hand.
+**There are no automated tests in this repository.** Since 2026-11-09 `pr.yml` builds every pull request to `main`
+(`assembleDebug`) and runs `lintDebug` (non-blocking, no release). `build.yml` compiles and publishes a debug APK on
+pushes to `main`. `release.yml` only builds release artifacts. Auto-merge of
+agent PRs is still unsafe (build-only check). Recommended next step (ROADMAP): a lint baseline and
+`testDebugUnitTest` in `pr.yml` plus first unit tests for pure logic (`TimelineRemap`,
+`Captions` chunking, `Loudness`, `Downscaler.transcodeReason`).
 
 ## State and backlog (2026-11-09)
 
@@ -63,7 +70,8 @@ Inventory by task 9299e3fd (docs only, no code changed). Sources: `gh pr list`, 
 `gh run list`, `gh release list`, the workflows, a grep for TODO/FIXME and the record files in `docs/`.
 
 ### What works
-- App version 1.1.3 (versionCode 81) is on the Play internal and closed test; all features in HANDOVER §4 are
+- As of 2026-11-09 the record said 1.1.3 (81) was on the Play internal and closed test (owner statement; `v1.1.4`/82
+  tagged 2026-11-10, closed-track delivery unverified); all features in HANDOVER §4 are
   confirmed by the owner on his phone. 34 Kotlin files, ~8.7k lines (`MainActivity.kt` 3292 lines).
 - CI builds are green: the last `Build APK` runs on `main` (2026-11-03, 2026-11-08) succeeded in ~2 min; latest
   debug release is `build-102`. The last store build `release-1.1.3-8` (tag `v1.1.3`, 2026-10-26) succeeded.
@@ -105,6 +113,12 @@ for 14 days), an update for closed testers between test day 7 and 10, imprint da
 - `release.yml`: tag `v*` + manual → signed `bundleRelease assembleRelease`, release `release-<version>-N`.
 - (Historical, 2026-11-09: no tests existed.) Since tasks b9d022fb/40c40718, JVM unit tests run in `ci.yml`; no
   instrumentation tests exist.
+- `pr.yml` (added 2026-11-09, task 0b65e2ce): `pull_request` to `main` → `assembleDebug` + `lintDebug`
+  (lint `continue-on-error`, report artifact `lint-report`). Read-only permissions; no release, tag or `build-logs` push.
+  Next: lint baseline → blocking lint; `testDebugUnitTest` once tests exist.
+- `release.yml`: tag `v*` + manual → signed `bundleRelease assembleRelease`, release `release-<version>-N`.
+- **No unit/instrumentation tests exist and none run.** Therefore agent PRs must not be auto-merged. The PR build
+  check (backlog item 1) is done; unit tests are the next item.
 
 ### Proposed next tasks (submitted with `hub_propose_tasks`, waiting for owner release)
 1. Add a pull-request CI workflow (build + lint) without publishing a release.
@@ -113,4 +127,6 @@ for 14 days), an update for closed testers between test day 7 and 10, imprint da
 4. ~~Self-host the Vazirmatn web font on babacut.io (remove Google Fonts).~~ Done 2026-11-10 (task 6c203aca).
 5. Prepare the Play production re-application text (German draft for the owner, with numbers from the closed test).
 6. Plan the 1.1.4 closed-test update: collect small fixes from KNOWN_ISSUES into a "Bitte prüfen" list (proposal only).
+   *Done 2026-11-10 (task d444acae): `docs/CLOSED_TEST_1_1_4_PLAN.md`. Owner chose A + B, then apply (hub decision
+   2a5ce05a). Since the owner's `v1.1.4` (82) shipped other fixes, A + B go into the next version (83, proposed 1.1.5).*
 7. Proposal (no code) for splitting `MainActivity.kt` into smaller units, for the owner to approve ("erst reden").

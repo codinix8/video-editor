@@ -37,6 +37,8 @@ Zielgruppe: Creator; wichtig ist die persische Community (Farsi-Oberfläche, Nam
     alle drei blockierend.
     Erstellt **kein** Release, keinen Tag, keinen `build-logs`-Push. Lokale Befehle: `CONTRIBUTING.md`.
     `build-test-lint` als Pflichtprüfung für `main` setzt der Owner in den GitHub-Einstellungen (noch offen).
+  - `pr.yml` (seit 2026-11-09): jeder Pull Request auf `main` → `assembleDebug` + `lintDebug` (Lint vorerst nicht
+    blockierend, Bericht als Artifact `lint-report`). Erstellt **kein** Release, keinen Tag, keinen `build-logs`-Push.
 - Build dauert ~4,5 min. Gradle-Build-Cache ist aus (lieferte veraltete Zwischenstände). API: compileSdk/targetSdk 36,
   minSdk 26, AGP 8.7.3 (`android.suppressUnsupportedCompileSdk=36`), NDK 27.2.12479018, CMake 3.22.1,
   Submodule `third_party/whisper.cpp` v1.9.4, 16-KB-Page-Size-Linkerflags gesetzt, kein R8/Minify.
@@ -109,7 +111,10 @@ Mosaik-Videos, Erkennung Ali/Baba, Vorlagen ab der 4., Emojis, Filter ab dem 4.,
   ("requires more testing"); seitdem laufen **14 weitere Tage** mit ≥12 Testern → erneut beantragen ab ca.
   **9. November 2026**. Es wurde empfohlen, 1.1.3 als Update in den geschlossenen Test zu laden und zwischen Tag 7
   und 10 ein weiteres Update zu liefern. Antworten für den Antrag (300-Zeichen-Felder) sind im alten Chat formuliert;
-  beim zweiten Antrag konkreter mit Zahlen/Zitaten.
+  beim zweiten Antrag konkreter mit Zahlen/Zitaten. **Entwurf für den zweiten Antrag (2026-11-10):**
+  `docs/PLAY_PRODUCTION_APPLICATION.md` (Antworttexte + Liste der Console-Zahlen Z1–Z7, die der Nutzer abliest). Überarbeitet nach
+  Review: Aussagen, die nur der Nutzer kennt, als `[BESTÄTIGEN]`; Antrag laut seiner Wahl erst nach 1.1.4-Feinschliff
+  (Fehlermeldungen in 7 Sprachen – im Tag `v1.1.4` noch nicht enthalten).
 - Abo in der Console: `babacut_pro` aktiv, Pläne `monthly` (netto so gesetzt, dass DE 2,99 € brutto) und `annual`
   (19,99 € brutto) mit Angebot `trial7`; alter Prepaid-Plan `yearly` inaktiv. Lizenztester: das Konto des Nutzers.
 - Play App Signing aktiv; Upload-Schlüssel `babacut-upload.jks` (Alias `babacut`, gültig bis 2054) liegt beim Nutzer.
@@ -132,6 +137,9 @@ Mosaik-Videos, Erkennung Ali/Baba, Vorlagen ab der 4., Emojis, Filter ab dem 4.,
 ## 7. Offene Punkte / Ideen
 
 - Produktionsantrag erneut ab 9.11.; Update für Tester zwischen Tag 7–10 (z. B. 1.1.4 mit Kleinigkeiten).
+  Plan für das nächste Tester-Update mit Umfang und "Bitte prüfen"-Liste: [docs/CLOSED_TEST_1_1_4_PLAN.md](docs/CLOSED_TEST_1_1_4_PLAN.md)
+  (10.11.2026). Owner-Entscheidung steht (A + B, danach Antrag); `v1.1.4` (82) enthält die Fehlermeldungs-Übersetzung
+  noch nicht, darum kommt sie als 1.1.5 (Versionscode 83, Name vom Owner zu bestätigen).
 - Impressumsdaten → Webseite fertigstellen; DKIM; babacut.net-Weiterleitung.
 - Untertitel-Drift bei sehr langen Videos (Ton-Kontrolle-Meldung nur im Debug-Build) – nicht abschließend geklärt.
 - Farsi/Arabisch-Texte vom Nutzer gegenlesen; Screenshots je Sprache auf abgeschnittene Knöpfe prüfen.
