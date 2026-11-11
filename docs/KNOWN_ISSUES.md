@@ -1,6 +1,17 @@
 # Known issues and risks – BabaCut
 
 ## Open issues
+- German words in error toasts regardless of app language (`MainActivity.kt`: "Bild", "Umrechnung", "Umwandlung",
+  "Spracherkennung", "Entwurf", "Kachelvideo", "Overlay-Video"; `WhisperEngine.kt`: "Modell konnte nicht geladen
+  werden") – still on `main` after `v1.1.4`; the owner wants it fixed before the Play re-application.
+- German words leak into localised error messages (still on `main` after `v1.1.4`): fallback labels passed to
+  `R.string.error` / `player_error` ("Bild", "Umrechnung", "Umwandlung", "Video", "Spracherkennung", "Entwurf",
+  "Kachelvideo", "Overlay-Video"), German exception texts shown in toasts (`MainActivity.kt` 1324/1548/1870,
+  `WhisperEngine.kt` 92, `ModelManager.kt` 33) and in the export error sheet (`Exporter.kt` 136/220/228/301,
+  `OverlayAudioRenderer.kt` 239). Line numbers as of `40521ea`. Planned fix A in `docs/CLOSED_TEST_1_1_4_PLAN.md`
+  (versionCode 83). Deferred: GL/EGL exception texts (`GlUtil.kt`, `EglCore.kt`; not verified to reach the UI),
+  crash-report labels (`CrashLog.kt`). Verified: the 7 `strings.xml` files have the same 223 keys; this does not
+  prove runtime translation coverage (hard-coded Kotlin strings are not counted).
 - Caption drift on very long videos (audio-check message only in the debug build) – not resolved.
 - Website imprint is a placeholder (imprint data missing) – legal risk once the app is in production.
 - DKIM for babacut.io not configured; babacut.net redirect possibly missing.
@@ -27,5 +38,7 @@
   the GitHub debug builds.
 - `MainActivity.kt` (3326 lines) concentrates most UI logic – change risk is high. Split proposal (12 move-only
   steps, not started): `docs/MAINACTIVITY_SPLIT.md`.
-- Play production access not yet granted (rejected 2026-10-25); revenue depends on it.
+- Play production access not yet granted (rejected 2026-10-25); revenue depends on it. Re-application draft:
+  `docs/PLAY_PRODUCTION_APPLICATION.md` (needs Console figures Z1–Z7 and owner confirmations); closed-track delivery
+  of 1.1.2–1.1.4 is not provable from git.
 - Translation tables from the old container are lost; new strings must be added to all 7 `strings.xml` by hand.
