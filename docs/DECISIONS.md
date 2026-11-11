@@ -5,6 +5,14 @@ Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, READ
 ## 2026-11-11 – Delete the legacy pr.yml (task cea0d561)
 - `.github/workflows/pr.yml` deleted: it duplicated build + lint of `ci.yml` on every PR to `main`. `ci.yml`
   (`build-test-lint`) stays the only PR check. Delete-only PR: no new permissions, no secrets, no release/deployment.
+## 2026-11-11 – Error texts from resources via UserFacingException (task 6f0c1893)
+- Classes without a Context (`WhisperEngine`, `ModelManager`, `OverlayAudioRenderer`) throw
+  `UserFacingException(R.string.x, args)`; the UI turns it into text with `ErrorText.of` (activity/exporter context, so
+  the in-app language applies). Other exceptions keep their own (system) message; without one the localised label
+  is the fallback. Chosen over passing a Context into these classes (narrower change, testable on the JVM).
+- `Exporter` and `MainActivity` throw sites use the same exception; direct texts use `getString`.
+- Scope as in plan A plus Exporter's "Keine Segmente" (same file, reaches the export sheet). GL/EGL, CrashLog (D) and
+  the debug-only audio-check toast stay German. versionCode 84 / versionName 1.1.5, no tag.
 
 ## 2026-11-11 – Conflict-safe project record (task 9167d767)
 - Cause of 11 returned merges/reviews in 24 h: all agent PRs rewrite the same record lines (state summaries,

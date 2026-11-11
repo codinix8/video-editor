@@ -3,6 +3,8 @@
 Build history: README "Stand" table. Source of the items below: HANDOVER.md §5–7 (2026-11-03) and onboarding.
 
 ## Done
+- [x] 2026-11-11 Fix A: remaining German error labels and exception texts localised in all 7 languages (18 new keys,
+      `UserFacingException`/`ErrorText` + `ErrorTextTest`); version 1.1.5 (task 6f0c1893). Not tagged.
 - [x] 2026-11-11 Cause of the returned merges found and fixed in the repo (task 9167d767): every PR rewrote the same
       record lines → conflicts and duplicate entries. Conflict-safe record rules in `docs/AI_NATION.md`, union merge
       for `docs/DECISIONS.md`, duplicates/stale entries removed (ROADMAP, KNOWLEDGE, KNOWN_ISSUES, AI_NATION).
@@ -35,13 +37,9 @@ Build history: README "Stand" table. Source of the items below: HANDOVER.md §5�
       `docs/PLAY_PRODUCTION_APPLICATION.md`; waiting for owner figures Z1–Z7 and his `[BESTÄTIGEN]` answers.
       Owner choice: apply only after the 1.1.4 polish (error messages in 7 languages + release notes) is in the
       closed test.
-- [ ] Localise the remaining German error labels (7 languages) + Play release notes – not in the tagged
-      `v1.1.4` (versionCode 82); `main` is at 83 since PR #12 (unit tests), so the next build takes 84. Plan: `docs/CLOSED_TEST_1_1_4_PLAN.md` (open PR).
-- [ ] Ship error messages in all 7 languages to closed testers as 1.1.5 (versionCode 84; name to be confirmed).
-      Owner chose A + B, then the production application (hub decision 2a5ce05a). Plan: `docs/CLOSED_TEST_1_1_4_PLAN.md`
-      (A: ~15 German error texts incl. ModelManager download and Exporter/MediaStore errors; B: version + Play release
-      notes in 7 languages; D crash-report labels optional, not approved; C caption clamp deferred). `v1.1.4` (82,
-      2026-11-10) shipped other fixes. Which versions reached the closed track is unverified (owner: Play Console).
+- [ ] Ship 1.1.5 to closed testers: owner merges the 1.1.5 PR (task 6f0c1893), tags `v1.1.5`, internal test on
+      his phone, then the closed test "Closed Beta" with the release notes from `docs/CLOSED_TEST_1_1_4_PLAN.md` (B).
+      Which versions reached the closed track is unverified (owner: Play Console).
 - [ ] Imprint data from the owner → finish website imprint/privacy (legal).
 
 ## Next

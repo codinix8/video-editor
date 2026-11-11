@@ -127,9 +127,6 @@ for 14 days), an update for closed testers between test day 7 and 10, imprint da
 - `release.yml`: tag `v*` + manual → signed `bundleRelease assembleRelease`, release `release-<version>-N`.
 - (Historical, 2026-11-09: no tests existed.) Since tasks b9d022fb/40c40718, JVM unit tests run in `ci.yml`; no
   instrumentation tests exist.
-- `release.yml`: tag `v*` + manual → signed `bundleRelease assembleRelease`, release `release-<version>-N`.
-- **No unit/instrumentation tests exist and none run.** Therefore agent PRs must not be auto-merged. The PR build
-  check (backlog item 1) is done; unit tests are the next item.
 
 ### Proposed next tasks (submitted with `hub_propose_tasks`, waiting for owner release)
 1. Add a pull-request CI workflow (build + lint) without publishing a release.

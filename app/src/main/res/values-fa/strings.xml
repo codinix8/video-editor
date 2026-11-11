@@ -272,4 +272,23 @@
     <string name="permission_open_settings">باز کردن تنظیمات برنامه</string>
     <string name="tip_live_overlay">لایه‌هایی که اکنون اضافه می‌شوند از اینجا به بعد ضبط می‌شوند. برای متن روی کل ویدیو از دکمهٔ T در بازبینی استفاده کن.</string>
     <string name="export_actual_size">اندازهٔ فایل: %1$s</string>
+    <!-- Error texts and labels for error messages (1.1.5) -->
+    <string name="label_image">تصویر</string>
+    <string name="label_video">ویدیو</string>
+    <string name="label_conversion">تبدیل</string>
+    <string name="label_tile_video">ویدیوی کاشی</string>
+    <string name="label_overlay_video">ویدیوی لایه</string>
+    <string name="label_speech_recognition">تشخیص گفتار</string>
+    <string name="label_draft">پیش‌نویس</string>
+    <string name="err_video_unreadable">ویدیو خوانده نشد</string>
+    <string name="err_image_unreadable">تصویر خوانده نشد</string>
+    <string name="err_model_load">مدل زیرنویس بارگذاری نشد</string>
+    <string name="err_download_http">دانلود ناموفق بود: HTTP %1$d</string>
+    <string name="err_save_failed">ذخیره در گالری ناموفق بود</string>
+    <string name="err_mediastore">ورودی گالری ساخته نشد</string>
+    <string name="err_encode_failed">رمزگذاری ناموفق بود (کد %1$d)</string>
+    <string name="err_overlay_audio">صدای لایه: %1$s</string>
+    <string name="err_overlay_no_audio">لایه صدا ندارد</string>
+    <string name="err_no_segments">ضبطی برای خروجی وجود ندارد</string>
+    <string name="err_unknown">خطای ناشناخته</string>
 </resources>

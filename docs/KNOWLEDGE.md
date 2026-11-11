@@ -27,7 +27,7 @@ English digest; details in [HANDOVER.md](../HANDOVER.md) §2–3 (German).
   `OverlayModel.kt`), compile the sources with the tests and run `org.junit.runner.JUnitCore`.
 - `ci.yml` is the only PR check (legacy `pr.yml` deleted 2026-11-11, task cea0d561). `lintVitalRelease` in `release.yml` blocks store builds.
 - 16 KB page-size linker flags are set (Play requirement).
-- Bump `versionCode` (+1) for every build that goes to testers; current 83 / 1.1.4 (82 = owner build 1.1.4 on main, 83 from task b9d022fb, on `main` via PR #12); next is 84.
+- Bump `versionCode` (+1) for every build that goes to testers; current 84 / 1.1.5 (task 6f0c1893, error-text localisation; 82 = tag `v1.1.4`, 83 = PR #12); next is 85.
 
 ## Release
 - Tag `vX.Y.Z` → `release.yml` builds AAB + APK signed with the upload key (secrets `UPLOAD_KEYSTORE_B64`,
@@ -45,6 +45,9 @@ English digest; details in [HANDOVER.md](../HANDOVER.md) §2–3 (German).
 - `whisper/` – Whisper engine (JNI in `app/src/main/cpp`), model manager, captions, styles, emoji dictionary.
 - `Exporter.kt`, `VideoConcat.kt`, `OverlayAudioRenderer.kt`, `Loudness.kt` – export and audio mix.
 - `Downscaler.kt` – insert-time transcoding (rule in `TranscodePolicy.kt`, unit-tested); `TimelineRemap.kt` – remap captions/audio after cuts.
+- `UserFacingException.kt` – error texts for the UI: throw `UserFacingException(R.string.x, args)` where no Context
+  exists, show via `ErrorText.of` (`errorText(e, fallbackRes)` in MainActivity/Exporter). Never put German literals
+  into toasts/sheets; every new text goes into all 7 `strings.xml`.
 - `Drafts.kt`, `CrashLog.kt` – drafts and crash recovery; `Pro.kt` – billing.
 - Package id `de.codinix.babacut`, Kotlin namespace stays `de.codinix.videoeditor`.
 

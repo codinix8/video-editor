@@ -87,6 +87,10 @@ class Exporter(private val context: Context) {
         }
     }
 
+    /** Localised error text; see [ErrorText]. */
+    private fun errorText(e: Throwable, @androidx.annotation.StringRes fallback: Int = R.string.err_unknown): String =
+        ErrorText.of(e, context.getString(fallback)) { id, args -> context.getString(id, *args) }
+
     interface Listener {
         fun onProgress(percent: Int)
         fun onDone(uri: Uri)
@@ -114,7 +118,7 @@ class Exporter(private val context: Context) {
         audioMix: List<AudioMix> = emptyList(),
         micGain: Float = 1f
     ) {
-        if (segments.isEmpty()) { listener.onError("Keine Segmente"); return }
+        if (segments.isEmpty()) { listener.onError(context.getString(R.string.err_no_segments)); return }
         val outFile = File(context.cacheDir, "export_${System.currentTimeMillis()}.mp4")
 
         val info = VideoConcat.inspect(segments.first())
@@ -133,7 +137,7 @@ class Exporter(private val context: Context) {
                     main.post { transform(segments, targetHeight, outFile, listener, wavs, micGain) }
                 } catch (e: Exception) {
                     Log.e(TAG, "Overlay-Ton rendern fehlgeschlagen", e)
-                    main.post { listener.onError("Overlay-Ton: ${e.message}") }
+                    main.post { listener.onError(context.getString(R.string.err_overlay_audio, errorText(e))) }
                 }
             }
             return
@@ -217,7 +221,7 @@ class Exporter(private val context: Context) {
                             outFile.delete()
                             main.post { listener.onDone(uri) }
                         } catch (e: Exception) {
-                            main.post { listener.onError(e.message ?: "Speichern fehlgeschlagen") }
+                            main.post { listener.onError(errorText(e, R.string.err_save_failed)) }
                         }
                     }
                 }
@@ -225,7 +229,7 @@ class Exporter(private val context: Context) {
                 override fun onError(composition: Composition, exportResult: ExportResult, exportException: ExportException) {
                     Log.e(TAG, "Transformer-Fehler", exportException)
                     transformer = null
-                    listener.onError("Neukodierung fehlgeschlagen (Code ${exportException.errorCode})")
+                    listener.onError(context.getString(R.string.err_encode_failed, exportException.errorCode))
                 }
             })
             .build()
@@ -298,7 +302,7 @@ class Exporter(private val context: Context) {
                 put(MediaStore.Video.Media.IS_PENDING, 1)
             }
             val uri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values)
-                ?: throw IllegalStateException("MediaStore-Eintrag fehlgeschlagen")
+                ?: throw UserFacingException(R.string.err_mediastore)
             resolver.openOutputStream(uri)!!.use { out -> file.inputStream().use { it.copyTo(out) } }
             values.clear()
             values.put(MediaStore.Video.Media.IS_PENDING, 0)

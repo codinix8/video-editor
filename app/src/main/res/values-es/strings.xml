@@ -272,4 +272,23 @@
     <string name="permission_open_settings">Abrir ajustes de la app</string>
     <string name="tip_live_overlay">Las superposiciones añadidas ahora se graban desde aquí. Para texto sobre todo el vídeo, usa el botón T en la revisión.</string>
     <string name="export_actual_size">Tamaño del archivo: %1$s</string>
+    <!-- Error texts and labels for error messages (1.1.5) -->
+    <string name="label_image">Imagen</string>
+    <string name="label_video">Vídeo</string>
+    <string name="label_conversion">Conversión</string>
+    <string name="label_tile_video">Vídeo del recuadro</string>
+    <string name="label_overlay_video">Vídeo superpuesto</string>
+    <string name="label_speech_recognition">Reconocimiento de voz</string>
+    <string name="label_draft">Borrador</string>
+    <string name="err_video_unreadable">No se pudo leer el vídeo</string>
+    <string name="err_image_unreadable">No se pudo leer la imagen</string>
+    <string name="err_model_load">No se pudo cargar el modelo de subtítulos</string>
+    <string name="err_download_http">Error en la descarga: HTTP %1$d</string>
+    <string name="err_save_failed">No se pudo guardar en la galería</string>
+    <string name="err_mediastore">No se pudo crear la entrada en la galería</string>
+    <string name="err_encode_failed">Error de codificación (código %1$d)</string>
+    <string name="err_overlay_audio">Audio de la superposición: %1$s</string>
+    <string name="err_overlay_no_audio">La superposición no tiene audio</string>
+    <string name="err_no_segments">No hay grabación para exportar</string>
+    <string name="err_unknown">Error desconocido</string>
 </resources>
