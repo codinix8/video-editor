@@ -25,8 +25,7 @@ English digest; details in [HANDOVER.md](../HANDOVER.md) §2–3 (German).
 - Without an Android SDK (agent container) the pure tests can still run: download Temurin JDK 17 + kotlinc 2.0.21
   + junit/hamcrest/json jars, stub `android.graphics.Bitmap` and `overlay.TextRenderer` (needed by
   `OverlayModel.kt`), compile the sources with the tests and run `org.junit.runner.JUnitCore`.
-- Legacy `pr.yml` (2026-11-09, build + non-blocking lint, no tests) is still on `main` next to `ci.yml` and should
-  be deleted (workflow change = owner merge; see KNOWN_ISSUES). `lintVitalRelease` in `release.yml` blocks store builds.
+- `ci.yml` is the only PR check (legacy `pr.yml` deleted 2026-11-11, task cea0d561). `lintVitalRelease` in `release.yml` blocks store builds.
 - 16 KB page-size linker flags are set (Play requirement).
 - Bump `versionCode` (+1) for every build that goes to testers; current 83 / 1.1.4 (82 = owner build 1.1.4 on main, 83 from task b9d022fb, on `main` via PR #12); next is 84.
 

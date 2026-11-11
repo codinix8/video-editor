@@ -127,9 +127,6 @@ for 14 days), an update for closed testers between test day 7 and 10, imprint da
 - `release.yml`: tag `v*` + manual → signed `bundleRelease assembleRelease`, release `release-<version>-N`.
 - (Historical, 2026-11-09: no tests existed.) Since tasks b9d022fb/40c40718, JVM unit tests run in `ci.yml`; no
   instrumentation tests exist.
-- `pr.yml` (added 2026-11-09, task 0b65e2ce): `pull_request` to `main` → `assembleDebug` + `lintDebug`
-  (lint `continue-on-error`, report artifact `lint-report`). Read-only permissions; no release, tag or `build-logs` push.
-  Next: lint baseline → blocking lint; `testDebugUnitTest` once tests exist.
 - `release.yml`: tag `v*` + manual → signed `bundleRelease assembleRelease`, release `release-<version>-N`.
 - **No unit/instrumentation tests exist and none run.** Therefore agent PRs must not be auto-merged. The PR build
   check (backlog item 1) is done; unit tests are the next item.
