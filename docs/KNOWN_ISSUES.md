@@ -9,9 +9,12 @@
   "Kachelvideo", "Overlay-Video"), German exception texts shown in toasts (`MainActivity.kt` 1324/1548/1870,
   `WhisperEngine.kt` 92, `ModelManager.kt` 33) and in the export error sheet (`Exporter.kt` 136/220/228/301,
   `OverlayAudioRenderer.kt` 239). Line numbers as of `40521ea`. Planned fix A in `docs/CLOSED_TEST_1_1_4_PLAN.md`
-  (versionCode 83). Deferred: GL/EGL exception texts (`GlUtil.kt`, `EglCore.kt`; not verified to reach the UI),
+  (versionCode 84; 83 is taken on `main` since PR #12). Deferred: GL/EGL exception texts (`GlUtil.kt`, `EglCore.kt`; not verified to reach the UI),
   crash-report labels (`CrashLog.kt`). Verified: the 7 `strings.xml` files have the same 223 keys; this does not
   prove runtime translation coverage (hard-coded Kotlin strings are not counted).
+- Two CI workflows run on every PR to `main` (2026-11-11): the old `.github/workflows/pr.yml` ("PR check (build +
+  lint)", non-blocking lint, no tests) is still on `main` next to `ci.yml`, although PR #12 described it as renamed.
+  It duplicates build + lint and doubles CI minutes. Follow-up: delete `pr.yml` (workflow change = owner merge).
 - Caption drift on very long videos (audio-check message only in the debug build) – not resolved.
 - Website imprint is a placeholder (imprint data missing) – legal risk once the app is in production.
 - DKIM for babacut.io not configured; babacut.net redirect possibly missing.

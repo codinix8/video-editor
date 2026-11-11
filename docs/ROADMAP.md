@@ -3,6 +3,9 @@
 Build history: README "Stand" table. Source of the items below: HANDOVER.md §5–7 (2026-11-03) and onboarding.
 
 ## Done
+- [x] 2026-11-11 Task b9d022fb closed out: its code (`TranscodePolicy`, `TimelineRemapTest`, `TranscodePolicyTest`,
+      `MediaFormatConstantsTest`) reached `main` via PR #12 (1eb2c6c), not via PR #6. `main` CI run 43002550851:
+      54 tests, 0 failures. PR #6 is superseded (close, don't merge). Docs-only follow-up PR.
 - [x] 2026-11-10 CI on every push and PR (task 40c40718): `pr.yml` → `ci.yml` (workflow `CI`, check
       `build-test-lint`), build + unit tests + lint all blocking; new tests for `Loudness`, caption chunking and
       `EmojiDict`; `CONTRIBUTING.md` with local commands; lint baseline for 15 pre-existing errors. 54 tests, 0 failures
@@ -29,9 +32,9 @@ Build history: README "Stand" table. Source of the items below: HANDOVER.md §5�
       Owner choice: apply only after the 1.1.4 polish (error messages in 7 languages + release notes) is in the
       closed test.
 - [ ] Localise the remaining German error labels (7 languages) + Play release notes – not in the tagged
-      `v1.1.4` (versionCode 82); next build takes versionCode 83. Plan: `docs/CLOSED_TEST_1_1_4_PLAN.md` (open PR).
+      `v1.1.4` (versionCode 82); `main` is at 83 since PR #12 (unit tests), so the next build takes 84. Plan: `docs/CLOSED_TEST_1_1_4_PLAN.md` (open PR).
 - [ ] Re-apply for Play production access from ~2026-11-09 (concrete answers with numbers/quotes).
-- [ ] Ship error messages in all 7 languages to closed testers as 1.1.5 (versionCode 83; name to be confirmed).
+- [ ] Ship error messages in all 7 languages to closed testers as 1.1.5 (versionCode 84; name to be confirmed).
       Owner chose A + B, then the production application (hub decision 2a5ce05a). Plan: `docs/CLOSED_TEST_1_1_4_PLAN.md`
       (A: ~15 German error texts incl. ModelManager download and Exporter/MediaStore errors; B: version + Play release
       notes in 7 languages; D crash-report labels optional, not approved; C caption clamp deferred). `v1.1.4` (82,
@@ -58,4 +61,4 @@ Build history: README "Stand" table. Source of the items below: HANDOVER.md §5�
 - [ ] On-device person segmentation (MediaPipe) with temporal smoothing.
 - [ ] iOS port (estimated 60–70 % of the original effort).
 - [ ] Split `MainActivity.kt` (3326 lines) per `docs/MAINACTIVITY_SPLIT.md`: steps 1–5 (dead code, pure caption/gain
-      math + tests, `ProjectState`, `SessionStore`, drafts) after PR CI (#5) and unit tests (#6); steps 6–12 later.
+      math + tests, `ProjectState`, `SessionStore`, drafts) (prerequisite met 2026-11-11: CI and unit tests on `main`); steps 6–12 later.

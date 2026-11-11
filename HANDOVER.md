@@ -43,7 +43,7 @@ Zielgruppe: Creator; wichtig ist die persische Community (Farsi-Oberfläche, Nam
   minSdk 26, AGP 8.7.3 (`android.suppressUnsupportedCompileSdk=36`), NDK 27.2.12479018, CMake 3.22.1,
   Submodule `third_party/whisper.cpp` v1.9.4, 16-KB-Page-Size-Linkerflags gesetzt, kein R8/Minify.
 - Prüfen eines Builds per GitHub-API: `.../actions/runs?per_page=1` bzw. `.../actions/workflows/release.yml/runs`.
-- Versionierung: `versionCode` fortlaufend (aktuell **83**: 82 = 1.1.4 auf `main`, 83 ab Task b9d022fb; im Play-Store noch 81), `versionName` aktuell **1.1.4**.
+- Versionierung: `versionCode` fortlaufend (aktuell **83**: 82 = 1.1.4 auf `main`, 83 ab Task b9d022fb, seit PR #12 auf `main`; nächster Build 84; im Play-Store noch 81), `versionName` aktuell **1.1.4**.
 - **Wichtig für Tests auf dem Nutzer-Handy**: Die App ist dort über den **Play Store (interner Test)** installiert.
   GitHub-APKs haben eine andere Signatur und lassen sich nicht darüber installieren → neue Builds immer als
   `.aab` in den internen Test laden.
