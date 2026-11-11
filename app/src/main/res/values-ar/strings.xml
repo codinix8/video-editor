@@ -272,4 +272,23 @@
     <string name="permission_open_settings">فتح إعدادات التطبيق</string>
     <string name="tip_live_overlay">الطبقات المضافة الآن تُسجَّل من هنا فصاعدًا. لنص فوق الفيديو كله، استخدم زر T في المراجعة.</string>
     <string name="export_actual_size">حجم الملف: %1$s</string>
+    <!-- Error texts and labels for error messages (1.1.5) -->
+    <string name="label_image">صورة</string>
+    <string name="label_video">فيديو</string>
+    <string name="label_conversion">التحويل</string>
+    <string name="label_tile_video">فيديو البلاطة</string>
+    <string name="label_overlay_video">فيديو الطبقة</string>
+    <string name="label_speech_recognition">التعرّف على الكلام</string>
+    <string name="label_draft">مسودة</string>
+    <string name="err_video_unreadable">تعذّرت قراءة الفيديو</string>
+    <string name="err_image_unreadable">تعذّرت قراءة الصورة</string>
+    <string name="err_model_load">تعذّر تحميل نموذج الترجمة</string>
+    <string name="err_download_http">فشل التنزيل: HTTP %1$d</string>
+    <string name="err_save_failed">فشل الحفظ في المعرض</string>
+    <string name="err_mediastore">تعذّر إنشاء إدخال في المعرض</string>
+    <string name="err_encode_failed">فشل الترميز (الرمز %1$d)</string>
+    <string name="err_overlay_audio">صوت الطبقة: %1$s</string>
+    <string name="err_overlay_no_audio">لا يوجد صوت في الطبقة</string>
+    <string name="err_no_segments">لا يوجد تسجيل للتصدير</string>
+    <string name="err_unknown">خطأ غير معروف</string>
 </resources>

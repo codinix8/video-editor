@@ -272,4 +272,23 @@
     <string name="permission_open_settings">Uygulama ayarlarını aç</string>
     <string name="tip_live_overlay">Şimdi eklenen katmanlar buradan itibaren kaydedilir. Tüm video üzerine metin için incelemedeki T düğmesini kullan.</string>
     <string name="export_actual_size">Dosya boyutu: %1$s</string>
+    <!-- Error texts and labels for error messages (1.1.5) -->
+    <string name="label_image">Görsel</string>
+    <string name="label_video">Video</string>
+    <string name="label_conversion">Dönüştürme</string>
+    <string name="label_tile_video">Karo videosu</string>
+    <string name="label_overlay_video">Katman videosu</string>
+    <string name="label_speech_recognition">Konuşma tanıma</string>
+    <string name="label_draft">Taslak</string>
+    <string name="err_video_unreadable">Video okunamadı</string>
+    <string name="err_image_unreadable">Görsel okunamadı</string>
+    <string name="err_model_load">Altyazı modeli yüklenemedi</string>
+    <string name="err_download_http">İndirme başarısız: HTTP %1$d</string>
+    <string name="err_save_failed">Galeriye kaydetme başarısız</string>
+    <string name="err_mediastore">Galeri kaydı oluşturulamadı</string>
+    <string name="err_encode_failed">Kodlama başarısız (kod %1$d)</string>
+    <string name="err_overlay_audio">Katman sesi: %1$s</string>
+    <string name="err_overlay_no_audio">Katmanda ses yok</string>
+    <string name="err_no_segments">Dışa aktarılacak kayıt yok</string>
+    <string name="err_unknown">Bilinmeyen hata</string>
 </resources>

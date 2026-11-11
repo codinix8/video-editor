@@ -89,7 +89,7 @@ class WhisperEngine private constructor(private val handle: Long) {
 
         fun load(model: File): WhisperEngine {
             val h = nativeInit(model.absolutePath)
-            if (h == 0L) throw IllegalStateException("Modell konnte nicht geladen werden")
+            if (h == 0L) throw de.codinix.videoeditor.UserFacingException(de.codinix.videoeditor.R.string.err_model_load)
             Log.i(TAG, "Modell geladen: ${model.name}")
             return WhisperEngine(h)
         }

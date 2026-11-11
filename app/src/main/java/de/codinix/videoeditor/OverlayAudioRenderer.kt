@@ -236,7 +236,7 @@ object OverlayAudioRenderer {
         val bpf = decoded.bytesPerFrame
         val totalFrames = totalMs * sr / 1000
         val srcFrames = decoded.frames
-        if (srcFrames <= 0) throw IllegalStateException("Kein Ton im Overlay")
+        if (srcFrames <= 0) throw UserFacingException(R.string.err_overlay_no_audio)
 
         val src = RandomAccessFile(decoded.pcm, "r")
         val wav = RandomAccessFile(out, "rw")

@@ -704,7 +704,7 @@ class MainActivity : AppCompatActivity() {
             persistSession()
         } catch (e: Exception) {
             Log.e(TAG, "Overlay laden fehlgeschlagen", e)
-            Toast.makeText(this, getString(R.string.error, e.message ?: "Bild"), Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.error, errorText(e, R.string.label_image)), Toast.LENGTH_LONG).show()
         }
     }
 
@@ -1304,7 +1304,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
             publishMosaic(); updateTileButtons()
         } catch (e: Exception) {
             Log.e(TAG, "Kachelbild laden fehlgeschlagen", e)
-            Toast.makeText(this, getString(R.string.error, e.message ?: "Bild"), Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.error, errorText(e, R.string.label_image)), Toast.LENGTH_LONG).show()
         }
     }
 
@@ -1321,7 +1321,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
             try {
                 val raw = File(cacheDir, "tile_${System.currentTimeMillis()}_raw.mp4")
                 contentResolver.openInputStream(uri)?.use { input -> raw.outputStream().use { input.copyTo(it) } }
-                    ?: throw IllegalStateException("Video konnte nicht gelesen werden")
+                    ?: throw UserFacingException(R.string.err_video_unreadable)
                 main.post {
                     if (Downscaler.transcodeReason(raw) != null) {
                         val dest = File(cacheDir, "tile_${System.currentTimeMillis()}.mp4")
@@ -1332,7 +1332,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
                                 raw.delete()
                                 dialog.dismiss()
                                 if (out != null) installTileVideo(idx, out)
-                                else Toast.makeText(this, getString(R.string.error, "Umrechnung"), Toast.LENGTH_LONG).show()
+                                else Toast.makeText(this, getString(R.string.error, getString(R.string.label_conversion)), Toast.LENGTH_LONG).show()
                             })
                     } else {
                         dialog.dismiss()
@@ -1341,7 +1341,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Kachelvideo laden fehlgeschlagen", e)
-                main.post { dialog.dismiss(); Toast.makeText(this, getString(R.string.error, e.message ?: "Video"), Toast.LENGTH_LONG).show() }
+                main.post { dialog.dismiss(); Toast.makeText(this, getString(R.string.error, errorText(e, R.string.label_video)), Toast.LENGTH_LONG).show() }
             }
         }
     }
@@ -1365,7 +1365,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
     private fun attachTileVideo(v: VideoOverlay) {
         tilePlayers.remove(v.id)?.release()
         val p = newLeanPlayer()
-        watchErrors(p, "Kachelvideo")
+        watchErrors(p, getString(R.string.label_tile_video))
         p.setMediaItem(MediaItem.fromUri(Uri.fromFile(v.file)))
         p.repeatMode = Player.REPEAT_MODE_ALL
         p.volume = previewVolume(v)
@@ -1545,7 +1545,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
         bgExecutor.execute {
             try {
                 contentResolver.openInputStream(uri)?.use { input -> raw.outputStream().use { input.copyTo(it) } }
-                    ?: throw IllegalStateException("Video konnte nicht gelesen werden")
+                    ?: throw UserFacingException(R.string.err_video_unreadable)
                 val reason = Downscaler.transcodeReason(raw)
                 main.post {
                     if (reason != null) {
@@ -1558,14 +1558,14 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
                             onDone = { out ->
                                 raw.delete(); dialog.dismiss()
                                 if (out != null) installVideoOverlay(out, asBackground)
-                                else Toast.makeText(this, getString(R.string.error, "Umwandlung"), Toast.LENGTH_LONG).show()
+                                else Toast.makeText(this, getString(R.string.error, getString(R.string.label_conversion)), Toast.LENGTH_LONG).show()
                             })
                     } else installVideoOverlay(raw, asBackground)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Video-Overlay fehlgeschlagen", e)
                 raw.delete()
-                main.post { Toast.makeText(this, getString(R.string.error, e.message ?: "Video"), Toast.LENGTH_LONG).show() }
+                main.post { Toast.makeText(this, getString(R.string.error, errorText(e, R.string.label_video)), Toast.LENGTH_LONG).show() }
             }
         }
     }
@@ -1605,6 +1605,10 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
      * führt das zu OutOfMemory. Lokale Dateien brauchen keinen großen Puffer.
      */
     /** Fehler eines Video-Players als Meldung zeigen statt still stehen zu bleiben. */
+    /** Localised text for an error toast; see [ErrorText]. */
+    private fun errorText(e: Throwable, @androidx.annotation.StringRes fallback: Int): String =
+        ErrorText.of(e, getString(fallback)) { id, args -> getString(id, *args) }
+
     private fun watchErrors(p: ExoPlayer, what: String) {
         p.addListener(object : Player.Listener {
             override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
@@ -1627,7 +1631,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
     private fun attachVideoOverlay(overlay: VideoOverlay) {
         overlayPlayer?.release()
         val p = newLeanPlayer()
-        watchErrors(p, "Overlay-Video")
+        watchErrors(p, getString(R.string.label_overlay_video))
         p.setMediaItem(MediaItem.fromUri(Uri.fromFile(overlay.file)))
         p.repeatMode = Player.REPEAT_MODE_ALL
         p.volume = previewVolume(overlay)  // Nur mit Kopfhörern hörbar, sonst Mikrofon-Übersprechen
@@ -1867,7 +1871,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
             inPreferredConfig = android.graphics.Bitmap.Config.ARGB_8888
         }
         val raw = contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, opts) }
-            ?: throw IllegalStateException("Bild konnte nicht gelesen werden")
+            ?: throw UserFacingException(R.string.err_image_unreadable)
         val orientation = contentResolver.openInputStream(uri)?.use {
             androidx.exifinterface.media.ExifInterface(it)
                 .getAttributeInt(androidx.exifinterface.media.ExifInterface.TAG_ORIENTATION,
@@ -2237,7 +2241,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
                 Log.e(TAG, "Transkription fehlgeschlagen", e)
                 main.post {
                     dialog.dismiss(); transcribing = false
-                    Toast.makeText(this, getString(R.string.error, e.message ?: "Spracherkennung"), Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, getString(R.string.error, errorText(e, R.string.label_speech_recognition)), Toast.LENGTH_LONG).show()
                     if (inReview) player?.play()
                 }
             } finally {
@@ -3062,7 +3066,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
             return true
         } catch (e: Exception) {
             Log.e(TAG, "Entwurf speichern fehlgeschlagen", e)
-            Toast.makeText(this, getString(R.string.error, e.message ?: "Entwurf"), Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.error, errorText(e, R.string.label_draft)), Toast.LENGTH_LONG).show()
             return false
         }
     }
@@ -3218,7 +3222,7 @@ Apache License 2.0: Licensed under the Apache License, Version 2.0 (the "License
             Toast.makeText(this, R.string.draft_loaded, Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             Log.e(TAG, "Entwurf laden fehlgeschlagen", e)
-            Toast.makeText(this, getString(R.string.error, e.message ?: "Entwurf"), Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.error, errorText(e, R.string.label_draft)), Toast.LENGTH_LONG).show()
         }
     }
 
