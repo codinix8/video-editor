@@ -59,6 +59,10 @@
     <string name="mic_hint">S\'applique à ton enregistrement à l\'export. 100 %% = inchangé, 50 %% sonne deux fois moins fort.</string>
     <string name="crash_title">L\'appli a planté la dernière fois</string>
     <string name="crash_msg">Copie le rapport et envoie-le au développeur.</string>
+    <string name="crash_label_time">Heure</string>
+    <string name="crash_label_thread">Thread</string>
+    <string name="crash_label_version">Version</string>
+    <string name="crash_label_device">Appareil</string>
     <string name="copy">Tout copier</string>
     <string name="copied">Copié dans le presse-papiers</string>
     <string name="recovered">Enregistrement restauré en brouillon après le plantage</string>

@@ -59,6 +59,10 @@
     <string name="mic_hint">در خروجی روی ضبط تو اعمال می‌شود. ۱۰۰٪ = بدون تغییر، ۵۰٪ نصف بلندی.</string>
     <string name="crash_title">برنامه دفعهٔ قبل از کار افتاد</string>
     <string name="crash_msg">لطفاً گزارش را کپی کن و برای توسعه‌دهنده بفرست.</string>
+    <string name="crash_label_time">زمان</string>
+    <string name="crash_label_thread">رشته</string>
+    <string name="crash_label_version">نسخه</string>
+    <string name="crash_label_device">دستگاه</string>
     <string name="copy">کپی همه</string>
     <string name="copied">در کلیپ‌بورد کپی شد</string>
     <string name="recovered">ضبط پس از خرابی به‌عنوان پیش‌نویس بازیابی شد</string>

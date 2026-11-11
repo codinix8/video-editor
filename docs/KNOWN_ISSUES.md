@@ -11,14 +11,19 @@
     before a segment end can stick out into the next segment; a word can end before it starts after clamping.
 
 ## Resolved
+- 2026-11-11 Crash report labels ("Zeit", "Gerät", …) were German in every app language. Fixed in 1.1.5 (task
+  a0f44077, option D): `CrashLog.kt` now stores neutral keys (`time`, `thread`, `version`, `device`) and
+  `CrashReportText` labels them with the activity context when shown (4 new keys `crash_label_*` in all 7
+  `strings.xml`); old German reports are mapped too. Stack traces stay as delivered. Phone check by the owner pending.
 - 2026-11-11 Two CI workflows ran on every PR to `main` (legacy `pr.yml` next to `ci.yml`, doubled CI minutes).
   Fixed: `.github/workflows/pr.yml` deleted (task cea0d561); `ci.yml` (`build-test-lint`) is the only PR check.
 - 2026-11-11 German words leaked into localised error messages (fallback labels "Bild", "Umrechnung", "Umwandlung",
   "Video", "Spracherkennung", "Entwurf", "Kachelvideo", "Overlay-Video" and German exception texts in
   `MainActivity.kt`, `WhisperEngine.kt`, `ModelManager.kt`, `Exporter.kt`, `OverlayAudioRenderer.kt`). Fixed in 1.1.5
   (task 6f0c1893): 18 new string keys in all 7 `strings.xml` (incl. Exporter's "Keine Segmente", not in the plan
-  table); `UserFacingException` + `ErrorText` for classes without a Context. Still German by design (out of scope):
-  GL/EGL texts (`GlUtil.kt`, `EglCore.kt`), `CrashLog.kt` labels (option D), the debug-only "Ton-Kontrolle" toast.
+  table); `UserFacingException` + `ErrorText` for classes without a Context. `CrashLog.kt` labels (option D) followed
+  in task a0f44077, see the entry above. Still German by design (out of scope):
+  GL/EGL texts (`GlUtil.kt`, `EglCore.kt`) and the debug-only "Ton-Kontrolle" toast.
   System/Media3 exception messages are shown as delivered by Android. Phone check by the owner pending.
 - 2026-11-11 Agent PRs kept returning with "Conflict with main" (11 returns in 24 h) and the record collected
   duplicate/stale entries. Fixed at the root by conflict-safe record rules (`docs/AI_NATION.md`) and union merge for
@@ -46,11 +51,6 @@
   (`TimelineRemap`, transcode rule, `Loudness`, caption chunking, `EmojiDict`) and `lintDebug`, all blocking. UI,
   recording, export, drafts/session JSON and the native Whisper path are still only tested by hand on the phone, so a
   green `build-test-lint` does not prove that these work. `build-test-lint` is not yet a required check (owner step).
-- **Every push to `main` publishes** a GitHub release with an APK (public repo) – also for docs-only merges
-  (`build-102` came from docs PR #2). Fix proposed 2026-11-09 (`paths-ignore`).
-- **No automated tests; PR CI only builds** – since 2026-11-09 `pr.yml` checks that every PR compiles
-  (`assembleDebug`) and runs `lintDebug`, but lint is non-blocking (no baseline yet) and there are no unit tests.
-  Regressions in behaviour are still only found by manual phone testing; auto-merge is unsafe.
 - **PR #1 is superseded** by merged PR #2; its remaining diff only deletes record lines – must not be merged.
 - **Debug keystore with plaintext passwords** is committed (`keystore/`, `app/build.gradle.kts`). Only the debug
   signature is affected (Play uses the upload key + Play App Signing), but anyone can sign APKs that look like

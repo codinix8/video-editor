@@ -59,6 +59,10 @@
     <string name="mic_hint">Dışa aktarmada kaydına uygulanır. %%100 = değişmez, %%50 yarı yüksek duyulur.</string>
     <string name="crash_title">Uygulama önceki seferde çöktü</string>
     <string name="crash_msg">Lütfen raporu kopyalayıp geliştiriciye gönder.</string>
+    <string name="crash_label_time">Zaman</string>
+    <string name="crash_label_thread">İş parçacığı</string>
+    <string name="crash_label_version">Sürüm</string>
+    <string name="crash_label_device">Cihaz</string>
     <string name="copy">Tümünü kopyala</string>
     <string name="copied">Panoya kopyalandı</string>
     <string name="recovered">Kayıt çökme sonrası taslak olarak kurtarıldı</string>
