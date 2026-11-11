@@ -218,3 +218,8 @@ Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, READ
 - Reports written by 1.1.4 and earlier (German keys) are mapped as well; the stack trace is never touched.
 - The copied text (clipboard) is the localised version the user sees.
 - No `v1.1.5` tag exists, so versionCode 84 / versionName 1.1.5 stay unchanged.
+
+## 2026-11-11 – Part D re-dispatch builds on PR #17 instead of re-implementing (task 84b19ca3)
+- Task 84b19ca3 has the same scope as a0f44077, whose PR #17 already meets the definition of done (code, 7×4 strings,
+  `CrashReportTextTest`, KNOWN_ISSUES/DECISIONS). This branch is stacked on #17's commit and only adds the A+B+D note
+  to the ROADMAP "Ship 1.1.5" item. Merge either this PR or #17 (this one contains #17), not both.
