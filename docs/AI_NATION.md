@@ -51,6 +51,13 @@ copy/security/ui. Until decided, the developer and code-reviewer roles work on r
 
 ## CI status
 
+Since 2026-11-10 `ci.yml` (workflow `CI`, check `build-test-lint`; replaces `pr.yml` from 2026-11-09) runs on every
+push (all branches except `build-logs`) and every pull request to `main`: `assembleDebug`, the JVM unit tests
+(`testDebugUnitTest`; `TimelineRemap`, `TranscodePolicy`, `Loudness`, caption chunking, `EmojiDict`) and `lintDebug`,
+all blocking, no release. How to run the checks locally: `CONTRIBUTING.md`. `build.yml` compiles and publishes a debug APK on
+pushes to `main`. `release.yml` only builds release artifacts. `build-test-lint` can be
+made a required check for auto-merge (owner step in the GitHub settings, see `CONTRIBUTING.md`). Coverage is still
+thin: UI, recording, export and the native caption path are only tested by hand.
 **There are no automated tests in this repository.** Since 2026-11-09 `pr.yml` builds every pull request to `main`
 (`assembleDebug`) and runs `lintDebug` (non-blocking, no release). `build.yml` compiles and publishes a debug APK on
 pushes to `main`. `release.yml` only builds release artifacts. Auto-merge of
@@ -86,7 +93,8 @@ See [ROADMAP.md](ROADMAP.md) "Now": Play production re-application (possible fro
 for 14 days), an update for closed testers between test day 7 and 10, imprint data from the owner for the website.
 
 ### Risks
-- **No tests, no PR CI** (details below) – regressions are found only on the owner's phone.
+- ~~No tests, no PR CI~~ – since 2026-11-10 `ci.yml` runs build, 54 JVM unit tests and lint on every push/PR;
+  UI, recording and export are still only tested on the owner's phone.
 - ~~Website loads Google Fonts~~ – resolved 2026-11-10: Vazirmatn is self-hosted in `docs/assets/fonts/`
   (task 6c203aca; it was loaded by index, 404, support, imprint and privacy).
 - **Imprint is a placeholder** – legal risk once the app is in production.
@@ -103,6 +111,12 @@ for 14 days), an update for closed testers between test day 7 and 10, imprint da
   `build.log` to branch `build-logs`. **Does not run on pull requests.**
 - `build.yml`: push to `main` + manual → `assembleDebug`, uploads APK, creates release `build-N`; on failure pushes
   `build.log` to branch `build-logs`. Does not run on pull requests.
+- `ci.yml` (task 40c40718, 2026-11-10; was `pr.yml` from tasks 0b65e2ce/b9d022fb): push to any branch except
+  `build-logs` + `pull_request` to `main` + manual → `assembleDebug`, `testDebugUnitTest`, `lintDebug`, all blocking.
+  Read-only permissions; no release, tag or `build-logs` push.
+- `release.yml`: tag `v*` + manual → signed `bundleRelease assembleRelease`, release `release-<version>-N`.
+- (Historical, 2026-11-09: no tests existed.) Since tasks b9d022fb/40c40718, JVM unit tests run in `ci.yml`; no
+  instrumentation tests exist.
 - `pr.yml` (added 2026-11-09, task 0b65e2ce): `pull_request` to `main` → `assembleDebug` + `lintDebug`
   (lint `continue-on-error`, report artifact `lint-report`). Read-only permissions; no release, tag or `build-logs` push.
   Next: lint baseline → blocking lint; `testDebugUnitTest` once tests exist.

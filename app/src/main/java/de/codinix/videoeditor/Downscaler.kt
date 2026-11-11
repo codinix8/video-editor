@@ -56,17 +56,9 @@ object Downscaler {
                 if (!mime.startsWith("video/")) continue
                 val h = f.getInteger(android.media.MediaFormat.KEY_HEIGHT); val w = f.getInteger(android.media.MediaFormat.KEY_WIDTH)
                 val rot = if (f.containsKey(android.media.MediaFormat.KEY_ROTATION)) f.getInteger(android.media.MediaFormat.KEY_ROTATION) else 0
-                val visH = if (rot == 90 || rot == 270) w else h
                 val fps = if (f.containsKey(android.media.MediaFormat.KEY_FRAME_RATE)) try { f.getInteger(android.media.MediaFormat.KEY_FRAME_RATE) } catch (_: Exception) { f.getFloat(android.media.MediaFormat.KEY_FRAME_RATE).toInt() } else 30
                 val transfer = if (f.containsKey(android.media.MediaFormat.KEY_COLOR_TRANSFER)) f.getInteger(android.media.MediaFormat.KEY_COLOR_TRANSFER) else 0
-                val hdr = transfer == android.media.MediaFormat.COLOR_TRANSFER_ST2084 || transfer == android.media.MediaFormat.COLOR_TRANSFER_HLG
-                reason = when {
-                    mime != "video/avc" -> mime.removePrefix("video/").uppercase()
-                    visH > 1080 -> "${visH}p"
-                    fps > 31 -> "$fps fps"
-                    hdr -> "HDR"
-                    else -> null
-                }
+                reason = TranscodePolicy.reason(mime, w, h, rot, fps, transfer)
                 break
             }
             ex.release()
