@@ -272,4 +272,23 @@
     <string name="permission_open_settings">Ouvrir les paramètres de l\'appli</string>
     <string name="tip_live_overlay">Les superpositions ajoutées maintenant sont filmées à partir d\'ici. Pour un texte sur toute la vidéo, utilise le bouton T dans la relecture.</string>
     <string name="export_actual_size">Taille du fichier : %1$s</string>
+    <!-- Error texts and labels for error messages (1.1.5) -->
+    <string name="label_image">Image</string>
+    <string name="label_video">Vidéo</string>
+    <string name="label_conversion">Conversion</string>
+    <string name="label_tile_video">Vidéo de la case</string>
+    <string name="label_overlay_video">Vidéo en superposition</string>
+    <string name="label_speech_recognition">Reconnaissance vocale</string>
+    <string name="label_draft">Brouillon</string>
+    <string name="err_video_unreadable">Impossible de lire la vidéo</string>
+    <string name="err_image_unreadable">Impossible de lire l’image</string>
+    <string name="err_model_load">Impossible de charger le modèle de sous-titres</string>
+    <string name="err_download_http">Échec du téléchargement : HTTP %1$d</string>
+    <string name="err_save_failed">Échec de l’enregistrement dans la galerie</string>
+    <string name="err_mediastore">Impossible de créer l’entrée dans la galerie</string>
+    <string name="err_encode_failed">Échec de l’encodage (code %1$d)</string>
+    <string name="err_overlay_audio">Son de la superposition : %1$s</string>
+    <string name="err_overlay_no_audio">Pas de son dans la superposition</string>
+    <string name="err_no_segments">Aucun enregistrement à exporter</string>
+    <string name="err_unknown">Erreur inconnue</string>
 </resources>

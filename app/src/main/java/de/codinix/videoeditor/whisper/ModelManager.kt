@@ -30,7 +30,7 @@ class ModelManager(context: Context) {
         conn.instanceFollowRedirects = true
         conn.connectTimeout = 20_000; conn.readTimeout = 60_000
         conn.connect()
-        if (conn.responseCode !in 200..299) throw IllegalStateException("Download fehlgeschlagen: HTTP ${conn.responseCode}")
+        if (conn.responseCode !in 200..299) throw de.codinix.videoeditor.UserFacingException(de.codinix.videoeditor.R.string.err_download_http, conn.responseCode)
         val total = conn.contentLengthLong
         conn.inputStream.use { input ->
             tmp.outputStream().use { out ->

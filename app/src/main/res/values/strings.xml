@@ -272,4 +272,23 @@
     <string name="permission_open_settings">Open app settings</string>
     <string name="tip_live_overlay">Overlays added now are recorded from here on. For text over the whole video, use the T button in the review.</string>
     <string name="export_actual_size">File size: %1$s</string>
+    <!-- Error texts and labels for error messages (1.1.5) -->
+    <string name="label_image">Image</string>
+    <string name="label_video">Video</string>
+    <string name="label_conversion">Conversion</string>
+    <string name="label_tile_video">Tile video</string>
+    <string name="label_overlay_video">Overlay video</string>
+    <string name="label_speech_recognition">Speech recognition</string>
+    <string name="label_draft">Draft</string>
+    <string name="err_video_unreadable">Video could not be read</string>
+    <string name="err_image_unreadable">Image could not be read</string>
+    <string name="err_model_load">Caption model could not be loaded</string>
+    <string name="err_download_http">Download failed: HTTP %1$d</string>
+    <string name="err_save_failed">Saving to the gallery failed</string>
+    <string name="err_mediastore">Gallery entry could not be created</string>
+    <string name="err_encode_failed">Encoding failed (code %1$d)</string>
+    <string name="err_overlay_audio">Overlay audio: %1$s</string>
+    <string name="err_overlay_no_audio">No audio in the overlay</string>
+    <string name="err_no_segments">Nothing recorded to export</string>
+    <string name="err_unknown">Unknown error</string>
 </resources>
