@@ -9,3 +9,4 @@ exclude:
   - KNOWN_ISSUES.md
   - CONCEPT.md
   - FINETUNING.md
+  - MAINACTIVITY_SPLIT.md
