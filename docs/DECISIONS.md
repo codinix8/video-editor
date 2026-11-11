@@ -12,6 +12,19 @@ Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, READ
   (it changes `build.yml`, so it is not skipped) republishes versionCode 82 as a new `build-N`. Updated 2026-11-10
   when merging `main` (1.1.4) into this branch; before that the text said 81.
 - Skipped pushes do not consume a run number, so `build-N` numbers stay consecutive for real builds.
+## 2026-11-10 – Closed-test update planned (task d444acae, revised after review of PR #10)
+- Proposal only, no code ("erst reden, dann bauen"): `docs/CLOSED_TEST_1_1_4_PLAN.md` (German, for the owner).
+- Owner choice recorded, not re-asked (hub decision 2a5ce05a): "1.1.4 klein: Fehlermeldungen in allen 7 Sprachen +
+  Neuerungen-Text, danach Antrag" = scope A + B, then the production application. D (English crash-report labels)
+  stays optional and unapproved; C (TimelineRemap caption 300 ms clamp) deferred until PR #6 tests are on `main`.
+- The owner's own `v1.1.4` (82, f7999a1, 2026-11-10) shipped other fixes but not A, so A + B target the next
+  version: versionCode 83, proposed versionName 1.1.5 (owner to confirm). PR #6 also sets 82 and must be bumped.
+- Scope A extended per review: `ModelManager.kt` download error, `Exporter.kt` save/MediaStore/re-encode/overlay-audio
+  errors and `OverlayAudioRenderer.kt` "Kein Ton im Overlay" (all reach the toast or the export error sheet).
+  Explicitly deferred: GL/EGL exception texts (not verified to reach the UI), system `e.message`, log-only texts.
+- Claims narrowed: verified result is "the 7 `strings.xml` have the same 223 keys", not full runtime translation.
+- Closed-track rollout history is not inferable from versionCode; marked `[BESTÄTIGEN]` for the owner (Play Console).
+  "Changes were shipped during the test" may only be used in the application if the Console confirms it.
 ## 2026-11-09 – Pull-request CI (task 0b65e2ce)
 - New `.github/workflows/pr.yml` instead of adding `pull_request` to `build.yml`, so PR runs can never reach the
   release/`build-logs` steps. Permissions `contents: read`.
