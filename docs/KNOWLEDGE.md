@@ -6,12 +6,31 @@ English digest; details in [HANDOVER.md](../HANDOVER.md) §2–3 (German).
 - Needs Android SDK (platform 36, build-tools 36.0.0), NDK 27.2.12479018, CMake 3.22.1, Java 17.
 - `git submodule update --init --recursive` (whisper.cpp v1.9.4) before building.
 - `./gradlew assembleDebug`; CI build takes ~4.5 min. `android.suppressUnsupportedCompileSdk=36` with AGP 8.7.3.
+- CI (`.github/workflows/ci.yml`, workflow `CI`, job/check name `build-test-lint`; since 2026-11-10, was `pr.yml`):
+  on every push (except branch `build-logs`), every `pull_request` to `main` and manually → `assembleDebug`, then
+  `testDebugUnitTest` and `lintDebug` (both run after a successful build, both blocking; artifacts
+  `unit-test-report`, `lint-report`; outcomes in the job summary). Permissions `contents: read`; only runs on `main`
+  write the Gradle cache; no release/tag/`build-logs` push. Lint blocks on errors not listed in `app/lint-baseline.xml`
+  (15 pre-existing errors, 2026-11-10). A green step with `continue-on-error` says nothing about the result: PR #6's
+  lint looked green but had 15 errors. A baseline can be built from the CI artifact `lint-report`
+  (`lint-results-debug.xml`: keep Error/Fatal issues, make paths relative to `app/`). Renaming the job changes the check name: update the branch-protection rule too.
+- The runner token can read check-runs and job steps (`gh api repos/codinix8/video-editor/commits/<sha>/check-runs`,
+  `.../actions/runs/<id>/jobs`), so an agent can verify its own CI run after pushing.
+- Unit tests: `./gradlew testDebugUnitTest` (JUnit 4, `app/src/test/java/de/codinix/videoeditor/`). Keep tested
+  logic Android-free (pattern: `TranscodePolicy` decides, `Downscaler` reads `MediaFormat`). The android.jar stub
+  throws on any call (incl. `org.json`), so tests must not touch Android classes beyond compile-time constants.
+  `ci.yml` runs them blocking after `assembleDebug`; report artifact `unit-test-report`. Contributor guide with
+  local commands: `CONTRIBUTING.md` (repo root). Classes that only reference `org.json` inside methods (e.g.
+  `Caption`) are testable as long as the test does not call those methods.
+- Without an Android SDK (agent container) the pure tests can still run: download Temurin JDK 17 + kotlinc 2.0.21
+  + junit/hamcrest/json jars, stub `android.graphics.Bitmap` and `overlay.TextRenderer` (needed by
+  `OverlayModel.kt`), compile the sources with the tests and run `org.junit.runner.JUnitCore`.
 - PR CI (`.github/workflows/pr.yml`, since 2026-11-09): on `pull_request` to `main` → `assembleDebug`, then
   `lintDebug` with `continue-on-error` (report artifact `lint-report`, outcome in the job summary). Permissions
   `contents: read`, Gradle cache read-only, no release/tag/`build-logs` push. Lint is non-blocking at workflow level
   (not via `abortOnError=false` in Gradle), so `lintVitalRelease` in `release.yml` keeps blocking store builds.
 - 16 KB page-size linker flags are set (Play requirement).
-- Bump `versionCode` (+1) for every build that goes to testers; current 81 / 1.1.3.
+- Bump `versionCode` (+1) for every build that goes to testers; current 83 / 1.1.4 (82 = owner build 1.1.4 on main, 83 from task b9d022fb).
 
 ## Release
 - Tag `vX.Y.Z` → `release.yml` builds AAB + APK signed with the upload key (secrets `UPLOAD_KEYSTORE_B64`,
@@ -28,7 +47,7 @@ English digest; details in [HANDOVER.md](../HANDOVER.md) §2–3 (German).
 - `overlay/` – overlay models, gestures, mosaic, text rendering.
 - `whisper/` – Whisper engine (JNI in `app/src/main/cpp`), model manager, captions, styles, emoji dictionary.
 - `Exporter.kt`, `VideoConcat.kt`, `OverlayAudioRenderer.kt`, `Loudness.kt` – export and audio mix.
-- `Downscaler.kt` – insert-time transcoding; `TimelineRemap.kt` – remap captions/audio after cuts.
+- `Downscaler.kt` – insert-time transcoding (rule in `TranscodePolicy.kt`, unit-tested); `TimelineRemap.kt` – remap captions/audio after cuts.
 - `Drafts.kt`, `CrashLog.kt` – drafts and crash recovery; `Pro.kt` – billing.
 - Package id `de.codinix.babacut`, Kotlin namespace stays `de.codinix.videoeditor`.
 

@@ -3,6 +3,10 @@
 Build history: README "Stand" table. Source of the items below: HANDOVER.md §5–7 (2026-11-03) and onboarding.
 
 ## Done
+- [x] 2026-11-10 CI on every push and PR (task 40c40718): `pr.yml` → `ci.yml` (workflow `CI`, check
+      `build-test-lint`), build + unit tests + lint all blocking; new tests for `Loudness`, caption chunking and
+      `EmojiDict`; `CONTRIBUTING.md` with local commands; lint baseline for 15 pre-existing errors. 54 tests, 0 failures
+      (CI run 42888492366). Includes PR #5 and #6 (stacked).
 - [x] 2026-11-10 Closed-test update planned (proposal only, no code) → `docs/CLOSED_TEST_1_1_4_PLAN.md`
       (task d444acae, revised after review of PR #10).
 - [x] 2026-11-09 PR CI: `.github/workflows/pr.yml` runs `assembleDebug` + `lintDebug` on every PR to `main`,
@@ -10,6 +14,10 @@ Build history: README "Stand" table. Source of the items below: HANDOVER.md §5�
 - [x] 2026-11-10 Proposal for splitting `MainActivity.kt` → `docs/MAINACTIVITY_SPLIT.md` (12 move-only steps,
       no code; task de9795a4). Waiting for the owner's go on steps 1–5.
 - [x] 2026-11-10 Vazirmatn web font self-hosted on babacut.io; no Google Fonts request left (task 6c203aca).
+- [x] 2026-11-09 First JVM unit tests (task b9d022fb): 33 JUnit tests in `app/src/test` for `TimelineRemap` and
+      `TranscodePolicy` (rule behind `Downscaler.transcodeReason`); `pr.yml` runs `testDebugUnitTest` (blocking).
+- [x] 2026-11-09 PR CI: `.github/workflows/pr.yml` runs `assembleDebug` + `lintDebug` on every PR to `main`,
+      no release/tag (task 0b65e2ce). Lint is non-blocking until a baseline exists; unit tests follow.
 - [x] 2026-11-09 Decision `project.team` requested from the hub (task 4e8e8c10; waiting for Gremium/owner).
 - [x] 2026-11-09 Deep-integration inventory and backlog → `docs/AI_NATION.md` "State and backlog"; 7 tasks proposed
       to the hub (waiting for owner release, task 9299e3fd).
@@ -31,6 +39,10 @@ Build history: README "Stand" table. Source of the items below: HANDOVER.md §5�
 - [ ] Imprint data from the owner → finish website imprint/privacy (legal).
 
 ## Next
+- [ ] Owner: make `build-test-lint` a required status check for `main` (GitHub settings, see `CONTRIBUTING.md`).
+- [ ] More unit tests for pure logic: `Caption`/session JSON round-trip (needs a real `org.json` test dependency,
+      the android.jar stub throws), Whisper hallucination filter (extract from `WhisperEngine` first, its companion
+      loads the native library).
 - [ ] Lint baseline (`app/lint-baseline.xml`), then make `lintDebug` in `pr.yml` blocking (remove `continue-on-error`).
 - [ ] Add `testDebugUnitTest` to `pr.yml` together with the first unit tests (prerequisite for auto-merge).
 - [ ] First unit tests for pure logic (TimelineRemap, Captions chunking, Loudness, transcodeReason).

@@ -1,0 +1,97 @@
+# CI: builds the debug APK, runs the JVM unit tests and Android lint on every push and pull request.
+# All three steps are blocking. The job name "build-test-lint" is the status check to mark as required
+# for auto-merge (Settings → Branches → main → Require status checks).
+# Deliberately publishes nothing: no GitHub release, no tag, no push to build-logs.
+# The public APK release stays in build.yml (push to main) and release.yml (tag v*).
+name: CI
+
+on:
+  push:
+    # build-logs only carries CI failure logs (pushed by build.yml/release.yml), never code.
+    branches-ignore: [ build-logs ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # one run per event and branch/PR; a newer push cancels the older run of the same kind
+  group: ci-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: build-test-lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install NDK, CMake and SDK platform
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;27.2.12479018" "cmake;3.22.1" "platforms;android-36" "build-tools;36.0.0" > /dev/null
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle (with cache)
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          # Only runs on main write the Gradle cache; branches and PRs only read it.
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+
+      - name: Build debug APK
+        id: build
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+
+      # JVM unit tests (app/src/test). Blocking: a failing test turns the check red.
+      - name: Unit tests (testDebugUnitTest)
+        id: tests
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: ./gradlew testDebugUnitTest --no-daemon
+
+      - name: Upload unit test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-report
+          path: app/build/reports/tests/testDebugUnitTest/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      # Android lint. Blocking: errors fail the check (AGP default abortOnError); warnings only
+      # appear in the report. Runs even if tests failed, so both results are visible at once.
+      - name: Android lint (lintDebug)
+        id: lint
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: ./gradlew lintDebug --no-daemon
+
+      - name: Upload lint report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report
+          path: app/build/reports/lint-results-debug.*
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### CI (${{ github.event_name }})"
+            echo "- Build (assembleDebug): ${{ steps.build.outcome }}"
+            echo "- Unit tests (testDebugUnitTest): ${{ steps.tests.outcome }} (report in artifact \`unit-test-report\`)"
+            echo "- Lint (lintDebug): ${{ steps.lint.outcome }} (report in artifact \`lint-report\`)"
+            echo "- No release, tag or build-logs push is created by this workflow."
+          } >> "$GITHUB_STEP_SUMMARY"
