@@ -16,8 +16,9 @@
 - Website imprint is a placeholder (imprint data missing) – legal risk once the app is in production.
 - DKIM for babacut.io not configured; babacut.net redirect possibly missing.
 - `TimelineRemap` quirks found by the unit tests (behaviour kept, not yet confirmed as bugs):
-  - `map(t)` returns a value for t == end of the *last old* segment only if that segment is also last in the new
-    order; after a reorder, the old end time maps to null.
+  - `map(t)` returns a value for t == old end of a segment only for the segment that is *last in the new order*
+    (whichever old segment that is); for any other retained segment the old end time is the
+    start of the next old segment: it maps to that segment's new position if it is retained, otherwise to null.
   - `captions()`: the 300 ms minimum duration wins over the segment-end clamp, so a caption that starts < 320 ms
     before a segment end can stick out into the next segment; a word can end before it starts after clamping.
 

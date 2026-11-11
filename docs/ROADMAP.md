@@ -23,7 +23,8 @@ Build history: README "Stand" table. Source of the items below: HANDOVER.md §5�
       Owner choice: apply only after the 1.1.4 polish (error messages in 7 languages + release notes) is in the
       closed test.
 - [ ] Localise the remaining German error labels (7 languages) + Play release notes – not in the tagged
-      `v1.1.4` (versionCode 82); next build takes versionCode 83. Plan: `docs/CLOSED_TEST_1_1_4_PLAN.md` (open PR).
+      `v1.1.4` (versionCode 82); next build takes versionCode 83, or 84 if PR #6
+      (which sets 83) merges first. Plan: `docs/CLOSED_TEST_1_1_4_PLAN.md` (open PR).
 - [ ] Re-apply for Play production access from ~2026-11-09 (concrete answers with numbers/quotes).
 - [ ] Ship error messages in all 7 languages to closed testers as 1.1.5 (versionCode 83, or 84 if PR #6 – which
       already sets 83 – merges first; name to be confirmed).

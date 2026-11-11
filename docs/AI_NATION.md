@@ -85,7 +85,8 @@ See [ROADMAP.md](ROADMAP.md) "Now": Play production re-application (possible fro
 for 14 days), an update for closed testers between test day 7 and 10, imprint data from the owner for the website.
 
 ### Risks
-- **No tests, no PR CI** (details below) – regressions are found only on the owner's phone.
+- **Few tests** (details below): 33 JVM unit tests (TimelineRemap, TranscodePolicy) run in PR CI since PR #6; no
+  instrumentation/UI tests, so most regressions are still found only on the owner's phone.
 - ~~Website loads Google Fonts~~ – resolved 2026-11-10: Vazirmatn is self-hosted in `docs/assets/fonts/`
   (task 6c203aca; it was loaded by index, 404, support, imprint and privacy).
 - **Imprint is a placeholder** – legal risk once the app is in production.
@@ -101,7 +102,8 @@ for 14 days), an update for closed testers between test day 7 and 10, imprint da
   `build.log` to branch `build-logs`. Does not run on pull requests.
 - `pr.yml` (added 2026-11-09, task 0b65e2ce): `pull_request` to `main` → `assembleDebug` + `lintDebug`
   (lint `continue-on-error`, report artifact `lint-report`). Read-only permissions; no release, tag or `build-logs` push.
-  Next: lint baseline → blocking lint; `testDebugUnitTest` once tests exist.
+  Since PR #6 (task b9d022fb) also `testDebugUnitTest`, blocking (33 JVM tests, report `unit-test-report`).
+  Next: lint baseline → blocking lint (PR #12, stacked on PR #6).
 - `release.yml`: tag `v*` + manual → signed `bundleRelease assembleRelease`, release `release-<version>-N`.
 - **No unit/instrumentation tests exist and none run.** Therefore agent PRs must not be auto-merged. The PR build
   check (backlog item 1) is done; unit tests are the next item.

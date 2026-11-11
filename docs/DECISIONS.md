@@ -19,7 +19,10 @@ Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, READ
   record conflicts resolved by keeping both entries. `versionCode` stays 83 – the 1.1.5 polish build then takes 84
   if this PR merges first.)*
 - Tests document current behaviour, including two quirks found while writing them (see KNOWN_ISSUES).
-
+- Merge order (2026-11-11, returned for the merge decision): merge PR #6 first, then PR #12 (CI + lint baseline,
+  stacked on this branch) – or merge only PR #12, which contains all of PR #6 and closes it. Not both in reverse
+  order. Review notes from PR #6 (AI_NATION CI section, KNOWN_ISSUES `map(end)` wording, ROADMAP versionCode
+  wording) fixed docs-only; no code change, `versionCode` stays 83.
 ## 2026-11-10 – Play production re-application draft (task 036afa99, revised after review of PR #9)
 - Draft in German in `docs/PLAY_PRODUCTION_APPLICATION.md` (excluded from the site), answers kept near the
   ~300-character field limit noted in HANDOVER §5. Console figures are placeholders Z1–Z7; facts only the owner
@@ -41,7 +44,8 @@ Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, READ
   Neuerungen-Text, danach Antrag" = scope A + B, then the production application. D (English crash-report labels)
   stays optional and unapproved; C (TimelineRemap caption 300 ms clamp) deferred until PR #6 tests are on `main`.
 - The owner's own `v1.1.4` (82, f7999a1, 2026-11-10) shipped other fixes but not A, so A + B target the next
-  version: versionCode 83, proposed versionName 1.1.5 (owner to confirm). PR #6 also sets 82 and must be bumped.
+  version: versionCode 83, proposed versionName 1.1.5 (owner to confirm). PR #6 also sets 82 and must be bumped. *(2026-11-11: PR #6 now sets 83; the polish build takes 84 if PR #6 merges
+  first.)*
 - Scope A extended per review: `ModelManager.kt` download error, `Exporter.kt` save/MediaStore/re-encode/overlay-audio
   errors and `OverlayAudioRenderer.kt` "Kein Ton im Overlay" (all reach the toast or the export error sheet).
   Explicitly deferred: GL/EGL exception texts (not verified to reach the UI), system `e.message`, log-only texts.
