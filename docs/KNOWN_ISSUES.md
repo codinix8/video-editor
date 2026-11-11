@@ -1,9 +1,6 @@
 # Known issues and risks – BabaCut
 
 ## Open issues
-- German words in error toasts regardless of app language (`MainActivity.kt`: "Bild", "Umrechnung", "Umwandlung",
-  "Spracherkennung", "Entwurf", "Kachelvideo", "Overlay-Video"; `WhisperEngine.kt`: "Modell konnte nicht geladen
-  werden") – still on `main` after `v1.1.4`; the owner wants it fixed before the Play re-application.
 - German words leak into localised error messages (still on `main` after `v1.1.4`): fallback labels passed to
   `R.string.error` / `player_error` ("Bild", "Umrechnung", "Umwandlung", "Video", "Spracherkennung", "Entwurf",
   "Kachelvideo", "Overlay-Video"), German exception texts shown in toasts (`MainActivity.kt` 1324/1548/1870,
@@ -25,6 +22,9 @@
     before a segment end can stick out into the next segment; a word can end before it starts after clamping.
 
 ## Resolved
+- 2026-11-11 Agent PRs kept returning with "Conflict with main" (11 returns in 24 h) and the record collected
+  duplicate/stale entries. Fixed at the root by conflict-safe record rules (`docs/AI_NATION.md`) and union merge for
+  `docs/DECISIONS.md` (task 9167d767). Still open: PR #7 and the `pr.yml` deletion need the owner's merge.
 - 2026-11-10 Website loaded Google Fonts (Vazirmatn) – German warning-letter risk. Fixed: font self-hosted under
   `docs/assets/fonts/` (task 6c203aca). 404.html links `style.css` relatively, so on deep missing URLs neither
   the stylesheet nor the font loads (unchanged, pre-existing).

@@ -57,12 +57,26 @@ all blocking, no release. How to run the checks locally: `CONTRIBUTING.md`. `bui
 pushes to `main`. `release.yml` only builds release artifacts. `build-test-lint` can be
 made a required check for auto-merge (owner step in the GitHub settings, see `CONTRIBUTING.md`). Coverage is still
 thin: UI, recording, export and the native caption path are only tested by hand.
-**There are no automated tests in this repository.** Since 2026-11-09 `pr.yml` builds every pull request to `main`
-(`assembleDebug`) and runs `lintDebug` (non-blocking, no release). `build.yml` compiles and publishes a debug APK on
-pushes to `main`. `release.yml` only builds release artifacts. Auto-merge of
-agent PRs is still unsafe (build-only check). Recommended next step (ROADMAP): a lint baseline and
-`testDebugUnitTest` in `pr.yml` plus first unit tests for pure logic (`TimelineRemap`,
-`Captions` chunking, `Loudness`, `Downscaler.transcodeReason`).
+
+## Writing the record without conflicts (since 2026-11-11, task 9167d767)
+
+Every agent PR edits the same record files, so each merge put the other open PRs into conflict with `main`
+(11 returned merges/reviews in 24 h). Resolving with "keep both sides" then left duplicates and stale paragraphs
+behind. Rules for every record change:
+
+1. **Add, do not rewrite.** Add a new dated entry at the top of its section (DECISIONS, ROADMAP "Done",
+   KNOWN_ISSUES "Resolved"). Do not reword or re-date another task's entry; to correct one, add a new entry that
+   names the old one. `docs/DECISIONS.md` merges with `merge=union` (`.gitattributes`) because it is append-only.
+2. **One home per volatile fact.** `versionCode`/`versionName` live in `app/build.gradle.kts` and the one line in
+   `KNOWLEDGE.md` "Build"; the CI state lives in "CI status" above. Other files link there instead of restating
+   numbers ("next build takes 84" was copied into six files and had to be edited in all of them on every bump).
+3. **Short-lived branches.** Merge `origin/main` right before pushing and again before asking for a re-review; do
+   not stack a new task on another open PR.
+4. **Protected paths (`.github/workflows/*`) go in their own small PR**, with only the workflow and one DECISIONS
+   entry, and the PR body names the owner merge. These PRs wait for the owner and go stale; a small diff keeps the
+   re-merge trivial.
+5. **After resolving a conflict, check for duplicates** (`git diff origin/main -- docs/ HANDOVER.md`): a union or
+   "keep both" resolution of a rewritten line leaves both versions in the file.
 
 ## State and backlog (2026-11-09)
 
