@@ -25,10 +25,8 @@ English digest; details in [HANDOVER.md](../HANDOVER.md) §2–3 (German).
 - Without an Android SDK (agent container) the pure tests can still run: download Temurin JDK 17 + kotlinc 2.0.21
   + junit/hamcrest/json jars, stub `android.graphics.Bitmap` and `overlay.TextRenderer` (needed by
   `OverlayModel.kt`), compile the sources with the tests and run `org.junit.runner.JUnitCore`.
-- PR CI (`.github/workflows/pr.yml`, since 2026-11-09): on `pull_request` to `main` → `assembleDebug`, then
-  `lintDebug` with `continue-on-error` (report artifact `lint-report`, outcome in the job summary). Permissions
-  `contents: read`, Gradle cache read-only, no release/tag/`build-logs` push. Lint is non-blocking at workflow level
-  (not via `abortOnError=false` in Gradle), so `lintVitalRelease` in `release.yml` keeps blocking store builds.
+- Legacy `pr.yml` (2026-11-09, build + non-blocking lint, no tests) is still on `main` next to `ci.yml` and should
+  be deleted (workflow change = owner merge; see KNOWN_ISSUES). `lintVitalRelease` in `release.yml` blocks store builds.
 - 16 KB page-size linker flags are set (Play requirement).
 - Bump `versionCode` (+1) for every build that goes to testers; current 83 / 1.1.4 (82 = owner build 1.1.4 on main, 83 from task b9d022fb, on `main` via PR #12); next is 84.
 
@@ -64,6 +62,20 @@ English digest; details in [HANDOVER.md](../HANDOVER.md) §2–3 (German).
 - FINETUNING.md is a dated mirror of `hub_finetuning` (last sync 2026-11-11, 63 insights). Before relying on it,
   re-run `hub_finetuning` and compare count/dates; the hub wins on conflicts.
 - Any new Markdown file in `docs/` must be added to `exclude` in `docs/_config.yml`, or it is published on babacut.io.
+
+## Record merge conflicts (2026-11-11, task 9167d767)
+Tags: `scope/project` `area/merge` `area/review` `type/incident` `tech/git`
+- Symptom: 11 merges/reviews returned in 24 h, mostly "Conflict with main" plus "protected area (`build.yml`,
+  `pr.yml`): merge only by the owner".
+- Cause: every agent PR edits the same record files (HANDOVER, AI_NATION, ROADMAP, DECISIONS, KNOWLEDGE,
+  KNOWN_ISSUES) and rewrites shared lines (state summaries, "next versionCode", CI paragraphs). Each merge
+  conflicts every other open PR; "keep both" or union resolutions leave duplicates and stale paragraphs. Workflow
+  PRs wait for the owner, so they conflict again by the time he merges.
+- Fix: rules in `docs/AI_NATION.md` "Writing the record without conflicts" (add don't rewrite, one home per
+  volatile fact, short-lived branches, workflows in their own small PR, check for duplicates after a resolution);
+  `docs/DECISIONS.md merge=union` in `.gitattributes`. `merge=union` is safe only for append-only files and only
+  applies to local git merges; whether GitHub's merge check honours it is unverified.
+- Platform counterpart: hub incident R-163 (same pattern in mokisfood-website).
 
 ## Repo inventory facts (2026-11-09)
 - No GitHub issues exist; the owner reports bugs via screenshots in chat.

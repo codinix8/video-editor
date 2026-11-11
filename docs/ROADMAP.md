@@ -3,6 +3,9 @@
 Build history: README "Stand" table. Source of the items below: HANDOVER.md §5–7 (2026-11-03) and onboarding.
 
 ## Done
+- [x] 2026-11-11 Cause of the returned merges found and fixed in the repo (task 9167d767): every PR rewrote the same
+      record lines → conflicts and duplicate entries. Conflict-safe record rules in `docs/AI_NATION.md`, union merge
+      for `docs/DECISIONS.md`, duplicates/stale entries removed (ROADMAP, KNOWLEDGE, KNOWN_ISSUES, AI_NATION).
 - [x] 2026-11-10 `docs/FINETUNING.md` synced with the fine-tuning hub: 63 insights (17 BabaCut, 46 `_cross`; re-synced 2026-11-11),
       grouped by area, newest first, 3 superseded items marked (task 9b560127).
 
@@ -22,8 +25,6 @@ Build history: README "Stand" table. Source of the items below: HANDOVER.md §5�
 - [x] 2026-11-10 Vazirmatn web font self-hosted on babacut.io; no Google Fonts request left (task 6c203aca).
 - [x] 2026-11-09 First JVM unit tests (task b9d022fb): 33 JUnit tests in `app/src/test` for `TimelineRemap` and
       `TranscodePolicy` (rule behind `Downscaler.transcodeReason`); `pr.yml` runs `testDebugUnitTest` (blocking).
-- [x] 2026-11-09 PR CI: `.github/workflows/pr.yml` runs `assembleDebug` + `lintDebug` on every PR to `main`,
-      no release/tag (task 0b65e2ce). Lint is non-blocking until a baseline exists; unit tests follow.
 - [x] 2026-11-09 Decision `project.team` requested from the hub (task 4e8e8c10; waiting for Gremium/owner).
 - [x] 2026-11-09 Deep-integration inventory and backlog → `docs/AI_NATION.md` "State and backlog"; 7 tasks proposed
       to the hub (waiting for owner release, task 9299e3fd).
@@ -36,7 +37,6 @@ Build history: README "Stand" table. Source of the items below: HANDOVER.md §5�
       closed test.
 - [ ] Localise the remaining German error labels (7 languages) + Play release notes – not in the tagged
       `v1.1.4` (versionCode 82); `main` is at 83 since PR #12 (unit tests), so the next build takes 84. Plan: `docs/CLOSED_TEST_1_1_4_PLAN.md` (open PR).
-- [ ] Re-apply for Play production access from ~2026-11-09 (concrete answers with numbers/quotes).
 - [ ] Ship error messages in all 7 languages to closed testers as 1.1.5 (versionCode 84; name to be confirmed).
       Owner chose A + B, then the production application (hub decision 2a5ce05a). Plan: `docs/CLOSED_TEST_1_1_4_PLAN.md`
       (A: ~15 German error texts incl. ModelManager download and Exporter/MediaStore errors; B: version + Play release
@@ -49,10 +49,9 @@ Build history: README "Stand" table. Source of the items below: HANDOVER.md §5�
 - [ ] More unit tests for pure logic: `Caption`/session JSON round-trip (needs a real `org.json` test dependency,
       the android.jar stub throws), Whisper hallucination filter (extract from `WhisperEngine` first, its companion
       loads the native library).
-- [ ] Lint baseline (`app/lint-baseline.xml`), then make `lintDebug` in `pr.yml` blocking (remove `continue-on-error`).
-- [ ] Add `testDebugUnitTest` to `pr.yml` together with the first unit tests (prerequisite for auto-merge).
-- [ ] First unit tests for pure logic (TimelineRemap, Captions chunking, Loudness, transcodeReason).
-- [ ] Skip the public APK release for docs-only pushes to `main` (`paths-ignore`). *(proposed 2026-11-09)*
+- [ ] Skip the public APK release for docs-only pushes to `main` (`paths-ignore`): open PR #7, protected path
+      (`build.yml`), waits for the owner's merge.
+- [ ] Delete the legacy `.github/workflows/pr.yml` (duplicate of `ci.yml`; protected path, owner merge).
 - [ ] Email: DKIM for babacut.io; babacut.net redirect.
 - [ ] Owner proofreads FA/AR texts; check screenshots per language for clipped buttons.
 - [ ] Clarify caption drift on very long videos.

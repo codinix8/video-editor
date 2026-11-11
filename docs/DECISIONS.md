@@ -2,6 +2,19 @@
 
 Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, README and commit history.
 
+## 2026-11-11 – Conflict-safe project record (task 9167d767)
+- Cause of 11 returned merges/reviews in 24 h: all agent PRs rewrite the same record lines (state summaries,
+  "next versionCode", CI paragraphs), so each merge conflicts the rest; protected workflow PRs (#5, #7) also wait
+  for the owner and go stale. Same pattern as platform incident R-163 (mokisfood); the platform side (no re-review
+  after base merges, one documentation task per project at a time) was fixed there.
+- Repo side: five record rules in `docs/AI_NATION.md` ("Writing the record without conflicts"); `.gitattributes`
+  `merge=union` for `docs/DECISIONS.md` only (append-only). Not for ROADMAP/KNOWLEDGE/KNOWN_ISSUES: their lines are
+  edited in place, and union keeps both versions of an edited line (that is how the duplicates got in).
+- Cleaned up, no content change: duplicate ROADMAP items (PR CI, Play re-application), 3 "Next" items already done
+  by PR #12, stale `pr.yml` paragraphs in AI_NATION/KNOWLEDGE, duplicate German-error-text entry in KNOWN_ISSUES.
+- Not done here (protected paths, owner merge): PR #7 (`build.yml`), deleting the legacy `pr.yml`. No app code, no
+  versionCode bump.
+
 ## 2026-11-10 – FINETUNING.md mirrors the whole hub (task 9b560127)
 - `docs/FINETUNING.md` now lists every insight `hub_finetuning` returns for `video-editor`, including `_cross`
   ones, not only the ones harvested from this repo. Reason: agents read the file before talking to the owner;
