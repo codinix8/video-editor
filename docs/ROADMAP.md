@@ -18,6 +18,9 @@ Build history: README "Stand" table. Source of the items below: HANDOVER.md §5�
       `build-test-lint`), build + unit tests + lint all blocking; new tests for `Loudness`, caption chunking and
       `EmojiDict`; `CONTRIBUTING.md` with local commands; lint baseline for 15 pre-existing errors. 54 tests, 0 failures
       (CI run 42888492366). Includes PR #5 and #6 (stacked).
+- [x] 2026-11-09 No public APK release for docs-only pushes: `paths-ignore` (`docs/**`, `**/*.md`) in `build.yml`
+      (task f075de7b; PR #7 brought up to date with `main` again on 2026-11-11). Verify on the next docs-only
+      merge to `main` that no new `build-N` release appears.
 - [x] 2026-11-10 Closed-test update planned (proposal only, no code) → `docs/CLOSED_TEST_1_1_4_PLAN.md`
       (task d444acae, revised after review of PR #10).
 - [x] 2026-11-09 PR CI: `.github/workflows/pr.yml` runs `assembleDebug` + `lintDebug` on every PR to `main`,

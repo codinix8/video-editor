@@ -35,7 +35,8 @@ via [`docs/_config.yml`](_config.yml).
   v1.9.4, NDK 27), Play Billing 8. compile/targetSdk 36, minSdk 26, AGP 8.7.3, Java 17. ~34 Kotlin files;
   `MainActivity.kt` ~3300 lines. Version 1.1.4 (versionCode 82, tag `v1.1.4`, 2026-11-10).
 - **Run/build:** `./gradlew assembleDebug` (needs Android SDK, NDK 27.2.12479018, CMake 3.22.1, submodules).
-- **Deploy:** `build.yml` – every push to `main` builds a debug APK and a GitHub release `build-N`.
+- **Deploy:** `build.yml` – every push to `main` builds a debug APK and a GitHub release `build-N`, except
+  docs-only pushes (`paths-ignore: docs/**`, `**/*.md`; since 2026-11-09, task f075de7b).
   `release.yml` – tag `v*` builds signed AAB + release APK (upload key from GitHub secrets); the AAB is uploaded
   manually to the Play Console. Website: GitHub Pages from `docs/` (babacut.io).
 - **Play status:** internal test 1.1.3; closed test running; first production request rejected on 2026-10-25
@@ -113,12 +114,15 @@ for 14 days), an update for closed testers between test day 7 and 10, imprint da
 - **Imprint is a placeholder** – legal risk once the app is in production.
 - **Every push to `main` publishes a public GitHub release with an APK** (`build.yml`), also for docs-only merges
   (e.g. `build-102` from PR #2). Merges should be deliberate; a `paths-ignore` for `docs/**` would avoid this.
+  *Update 2026-11-09:* fixed by `paths-ignore` in `build.yml` (task f075de7b); still to verify on the next docs-only merge.
 - **Debug keystore with plaintext passwords committed** (`keystore/videoeditor.jks`, `app/build.gradle.kts`) –
   debug signature only; Play uses the upload key from GitHub secrets.
 - **`MainActivity.kt` concentration** (3292 lines) – high change risk.
 - No revenue until Play production access is granted.
 
 ### CI status
+- `build.yml`: push to `main` (not for docs-only pushes: `paths-ignore` `docs/**`, `**/*.md`) + manual → `assembleDebug`, uploads APK, creates release `build-N`; on failure pushes
+  `build.log` to branch `build-logs`. **Does not run on pull requests.**
 - `build.yml`: push to `main` + manual → `assembleDebug`, uploads APK, creates release `build-N`; on failure pushes
   `build.log` to branch `build-logs`. Does not run on pull requests.
 - `ci.yml` (task 40c40718, 2026-11-10; was `pr.yml` from tasks 0b65e2ce/b9d022fb): push to any branch except
