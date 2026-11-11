@@ -3,7 +3,7 @@
 Mirror of the AI Nation fine-tuning hub (`hub_finetuning`, project `video-editor`) for every agent working on BabaCut.
 Read it before writing to the owner or proposing work.
 
-- **Last sync:** 2026-11-10 (task 9b560127). The hub returned 60 insights: 17 for `video-editor`, 43 `_cross`
+- **Last sync:** 2026-11-11 (task 9b560127). The hub returned 63 insights: 17 for `video-editor`, 46 `_cross`
   (hold for all of the owner's projects). All are listed below; nothing still valid was removed.
 - **First harvest:** 2026-11-08 (task 9b8fbac3) from HANDOVER, README, commits and PR #1 (19 insights).
 - **Format:** `[scope · confidence · date]` – scope `BabaCut` = project-specific, `_cross` = all projects; date =
@@ -40,6 +40,11 @@ Read it before writing to the owner or proposing work.
   keep responses and status output compact and scannable. Evidence: messages "hall", "/dashboard", "/import".
 
 ## Decisions
+- **[_cross · medium · 2026-11-11]** He does not approve protected-area merges blindly: a PR that violates workflow
+  rules or has no CI/tests goes back to the developer; once the request states its safety properties (read-only,
+  no secrets, no deployment) he approves. State these properties in every PR description.
+  Evidence: "Workflow-Regeln nicht erfüllt" / "Kein CI ... keine eigenen Tests" → "Zurück an den Entwickler";
+  mokisfood PR #6 re-presented as "nur lesend, ohne Secrets, ohne Deployment" → "Mergen freigeben".
 - **[_cross · medium · 2026-11-10]** He approves owner-gated merges in protected areas (CI workflows,
   `.env.example`, docker-compose) when CI is green; bundle such merge requests into one batch approval instead of
   separate interruptions. Evidence: 8 of 8 `merge.owner` decisions (periscope, video-editor, zamann) →
@@ -76,7 +81,7 @@ Read it before writing to the owner or proposing work.
 - **[_cross · medium · 2026-11-10]** CI (lint, tests, build on every push and PR) in every repository so that
   reviewed PRs can be merged automatically; bold cleanup of stale artifacts such as merged branches.
   Evidence: identical /auftrag CI setup for periscope and video-editor; zamann "Ja, alle 86 löschen".
-  *BabaCut status:* PR CI is ROADMAP "Next" (hub task #5).
+  *BabaCut status:* done – `ci.yml` runs build, unit tests and blocking lint on every push and PR (PR #12).
 - **[_cross · medium · 2026-11-09]** Carry a task through without being asked: code review, CI, docs, fixing
   findings, a regular merge, then checking the result in production. Evidence: /auftrag PR #137.
   *BabaCut note:* agents do not merge here (CLAUDE.md); "production" = the owner's phone check of the build.
@@ -152,6 +157,11 @@ Read it before writing to the owner or proposing work.
   change. Evidence: HANDOVER §8.
 
 ## Security / legal
+- **[_cross · low · 2026-11-11]** For sensitive security or finance actions (removing a backdoor, reviewing invoices
+  with finance rights) he prefers to keep a human in control (an agent inside a browser session he opens, or a named
+  person reviewing) over fully autonomous agent access. Evidence: mokisfood BBC backdoor → "Agent arbeitet in einer
+  Browsersitzung, die Sie öffnen"; zamann 75 invoice reviews → "Sie ... prüfen selbst nach Runbook und melden nur
+  Zahlen".
 - **[_cross · low · 2026-11-09]** Tends to choose privacy-focused providers for his own infrastructure (Proton,
   Posteo). Evidence: "eigenes Mithra-Postfach (Proton über die Bridge oder Posteo)".
 - **[_cross · high · 2026-11-08]** No secrets in repo or docs; he hands them over per session and sets GitHub
@@ -178,6 +188,10 @@ Read it before writing to the owner or proposing work.
   platform safe-zone guides). Evidence: commits 5c15af5, 5d5b054, b03167d.
 
 ## Money
+- **[_cross · high · 2026-11-11]** When a role hits its daily budget limit and work is waiting, he grants a one-off
+  increase of about 50 % for today only, not a permanent raise; offer a temporary, bounded bump as the recommended
+  option. Evidence: budget.increase code-reviewer 100.17/100 $ → "auf 150 $ – nur heute"; 30.16/30 $ → "auf 45 $ –
+  nur heute".
 - **[BabaCut · high · 2026-11-08]** Subscription with visible-but-locked Pro features (crown, greyed rows,
   watermark, 1080p cap on free) instead of ads. Evidence: commit 722efaa; HANDOVER §4.
 - **[_cross · medium · 2026-11-08]** Spends readily when it buys autonomy (a few hundred EUR/month) but wants

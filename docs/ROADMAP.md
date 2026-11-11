@@ -3,7 +3,7 @@
 Build history: README "Stand" table. Source of the items below: HANDOVER.md §5–7 (2026-11-03) and onboarding.
 
 ## Done
-- [x] 2026-11-10 `docs/FINETUNING.md` synced with the fine-tuning hub: 60 insights (17 BabaCut, 43 `_cross`),
+- [x] 2026-11-10 `docs/FINETUNING.md` synced with the fine-tuning hub: 63 insights (17 BabaCut, 46 `_cross`; re-synced 2026-11-11),
       grouped by area, newest first, 3 superseded items marked (task 9b560127).
 
 - [x] 2026-11-11 Task b9d022fb closed out: its code (`TranscodePolicy`, `TimelineRemapTest`, `TranscodePolicyTest`,

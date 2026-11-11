@@ -13,7 +13,7 @@ Onboarded into AI Nation on 2026-11-08 (task 4e8e8c10). The project's own rules 
 | Decisions     | [`docs/DECISIONS.md`](DECISIONS.md) | **New.** Seeded with decisions found in HANDOVER/README/commits. |
 | Knowledge     | [`docs/KNOWLEDGE.md`](KNOWLEDGE.md) | **New.** Build/release facts and gotchas (English digest of HANDOVER §2–3). |
 | Known issues  | [`docs/KNOWN_ISSUES.md`](KNOWN_ISSUES.md) | **New.** Open bugs and risks. |
-| Owner profile | [`docs/FINETUNING.md`](FINETUNING.md) | **New (2026-11-08), synced 2026-11-10.** How the owner thinks, decides and gives feedback; dated mirror of the hub fine-tuning store (project + `_cross`). |
+| Owner profile | [`docs/FINETUNING.md`](FINETUNING.md) | **New (2026-11-08), synced 2026-11-11.** How the owner thinks, decides and gives feedback; dated mirror of the hub fine-tuning store (project + `_cross`). |
 | Proposals     | [`docs/MAINACTIVITY_SPLIT.md`](MAINACTIVITY_SPLIT.md) | **New (2026-11-10).** Plan for splitting `MainActivity.kt` in 12 move-only steps; waiting for the owner. |
 | Play application | [`docs/PLAY_PRODUCTION_APPLICATION.md`](PLAY_PRODUCTION_APPLICATION.md) | **New (2026-11-10, revised).** German draft of the 2nd production-access request: Play Console figures Z1–Z7 + `[BESTÄTIGEN]` items the owner fills in; apply after the 1.1.4 polish. |
 | Status table  | [`/README.md`](../README.md) "Stand" | Existing, German, per-step build history. |

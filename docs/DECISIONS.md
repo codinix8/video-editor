@@ -164,3 +164,7 @@ Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, READ
 - **No R8/minify.**
 - **Insert-time transcoding** of HEVC/AV1, >1080p, >30 fps and HDR videos to H.264 1080p (1.1.2).
 - **Captions re-recognised automatically after cut** (1.1.3).
+
+## 2026-11-11 – FINETUNING.md re-sync to 63 insights (task 9b560127)
+- Added the three insights of 2026-11-11 (protected-merge safety statements, one-off budget bumps, human in control
+  for sensitive security/finance actions); refreshed the stale "PR CI is Next" note (CI exists since PR #12).
