@@ -52,7 +52,7 @@ Build history: README "Stand" table. Source of the items below: HANDOVER.md ยง5โ
       loads the native library).
 - [ ] Skip the public APK release for docs-only pushes to `main` (`paths-ignore`): open PR #7, protected path
       (`build.yml`), waits for the owner's merge.
-- [ ] Delete the legacy `.github/workflows/pr.yml` (duplicate of `ci.yml`; protected path, owner merge).
+- [x] 2026-11-11 Delete the legacy `.github/workflows/pr.yml` (duplicate of `ci.yml`; task cea0d561, owner merge).
 - [ ] Email: DKIM for babacut.io; babacut.net redirect.
 - [ ] Owner proofreads FA/AR texts; check screenshots per language for clipped buttons.
 - [ ] Clarify caption drift on very long videos.

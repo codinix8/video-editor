@@ -38,8 +38,6 @@ Zielgruppe: Creator; wichtig ist die persische Community (Farsi-Oberfläche, Nam
     alle drei blockierend.
     Erstellt **kein** Release, keinen Tag, keinen `build-logs`-Push. Lokale Befehle: `CONTRIBUTING.md`.
     `build-test-lint` als Pflichtprüfung für `main` setzt der Owner in den GitHub-Einstellungen (noch offen).
-  - `pr.yml` (seit 2026-11-09): jeder Pull Request auf `main` → `assembleDebug` + `lintDebug` (Lint vorerst nicht
-    blockierend, Bericht als Artifact `lint-report`). Erstellt **kein** Release, keinen Tag, keinen `build-logs`-Push.
 - Build dauert ~4,5 min. Gradle-Build-Cache ist aus (lieferte veraltete Zwischenstände). API: compileSdk/targetSdk 36,
   minSdk 26, AGP 8.7.3 (`android.suppressUnsupportedCompileSdk=36`), NDK 27.2.12479018, CMake 3.22.1,
   Submodule `third_party/whisper.cpp` v1.9.4, 16-KB-Page-Size-Linkerflags gesetzt, kein R8/Minify.

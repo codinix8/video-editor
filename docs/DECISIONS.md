@@ -2,6 +2,9 @@
 
 Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, README and commit history.
 
+## 2026-11-11 – Delete the legacy pr.yml (task cea0d561)
+- `.github/workflows/pr.yml` deleted: it duplicated build + lint of `ci.yml` on every PR to `main`. `ci.yml`
+  (`build-test-lint`) stays the only PR check. Delete-only PR: no new permissions, no secrets, no release/deployment.
 ## 2026-11-11 – Error texts from resources via UserFacingException (task 6f0c1893)
 - Classes without a Context (`WhisperEngine`, `ModelManager`, `OverlayAudioRenderer`) throw
   `UserFacingException(R.string.x, args)`; the UI turns it into text with `ErrorText.of` (activity/exporter context, so
