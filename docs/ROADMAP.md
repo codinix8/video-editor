@@ -3,6 +3,9 @@
 Build history: README "Stand" table. Source of the items below: HANDOVER.md §5–7 (2026-11-03) and onboarding.
 
 ## Done
+- [x] 2026-11-10 `docs/FINETUNING.md` synced with the fine-tuning hub: 63 insights (17 BabaCut, 46 `_cross`; re-synced 2026-11-11),
+      grouped by area, newest first, 3 superseded items marked (task 9b560127).
+
 - [x] 2026-11-11 Task b9d022fb closed out: its code (`TranscodePolicy`, `TimelineRemapTest`, `TranscodePolicyTest`,
       `MediaFormatConstantsTest`) reached `main` via PR #12 (1eb2c6c), not via PR #6. `main` CI run 43002550851:
       54 tests, 0 failures. PR #6 now carries only this docs close-out (branch re-based on `main` by a no-force `-s ours` merge).

@@ -2,6 +2,13 @@
 
 Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, README and commit history.
 
+## 2026-11-10 – FINETUNING.md mirrors the whole hub (task 9b560127)
+- `docs/FINETUNING.md` now lists every insight `hub_finetuning` returns for `video-editor`, including `_cross`
+  ones, not only the ones harvested from this repo. Reason: agents read the file before talking to the owner;
+  cross-project rules (name the project, batch merge approvals, never drop his input silently) apply here too.
+- Superseded items stay in the file struck through with a pointer to their replacement (traceability); the hub
+  is the source of truth, the file is a dated mirror.
+
 ## 2026-11-11 – Task b9d022fb closed out (docs only)
 - The owner sent PR #6 back (merge decision); its commits then reached `main` inside PR #12 (1eb2c6c, stacked). No
   new code: re-implementing would have duplicated what is on `main`. PR #6's branch was then merged with `-s ours` onto `main` (no force push), so PR #6 now carries only this
@@ -157,3 +164,7 @@ Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, READ
 - **No R8/minify.**
 - **Insert-time transcoding** of HEVC/AV1, >1080p, >30 fps and HDR videos to H.264 1080p (1.1.2).
 - **Captions re-recognised automatically after cut** (1.1.3).
+
+## 2026-11-11 – FINETUNING.md re-sync to 63 insights (task 9b560127)
+- Added the three insights of 2026-11-11 (protected-merge safety statements, one-off budget bumps, human in control
+  for sensitive security/finance actions); refreshed the stale "PR CI is Next" note (CI exists since PR #12).
