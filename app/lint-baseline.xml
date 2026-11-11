@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.7.3">
+
+    <issue
+        id="SuspiciousIndentation"
+        severity="Error"
+        message="Suspicious indentation: This is indented but is not continuing the previous expression (`binding.gestureView.`...)">
+        <location
+            file="src/main/java/de/codinix/videoeditor/MainActivity.kt"
+            line="3201"
+            column="13"/>
+        <location
+            file="src/main/java/de/codinix/videoeditor/MainActivity.kt"
+            line="3200"
+            column="9"
+            message="Previous statement here"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        severity="Error"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`">
+        <location
+            file="src/main/java/de/codinix/videoeditor/MainActivity.kt"
+            line="1618"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        severity="Error"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`">
+        <location
+            file="src/main/java/de/codinix/videoeditor/MainActivity.kt"
+            line="1618"
+            column="72"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        severity="Error"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`">
+        <location
+            file="src/main/java/de/codinix/videoeditor/MainActivity.kt"
+            line="1619"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        severity="Error"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`">
+        <location
+            file="src/main/java/de/codinix/videoeditor/MainActivity.kt"
+            line="1620"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        severity="Error"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`">
+        <location
+            file="src/main/java/de/codinix/videoeditor/MainActivity.kt"
+            line="1621"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        severity="Error"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`">
+        <location
+            file="src/main/java/de/codinix/videoeditor/MainActivity.kt"
+            line="1622"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        severity="Error"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`">
+        <location
+            file="src/main/java/de/codinix/videoeditor/MainActivity.kt"
+            line="1623"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        severity="Error"
+        message="Incorrect formatting string `mic_hint`; missing conversion character in &apos;`% s`&apos;?">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="59"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        severity="Error"
+        message="Incorrect formatting string `mic_hint`; missing conversion character in &apos;`% s`&apos;?">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="59"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        severity="Error"
+        message="Incorrect formatting string `mic_hint`; missing conversion character in &apos;`% s`&apos;?">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="59"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        severity="Error"
+        message="Incorrect formatting string `mic_hint`; missing conversion character in &apos;`% s`&apos;?">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="59"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        severity="Error"
+        message="Incorrect formatting string `mic_hint`; missing conversion character in &apos;`% s`&apos;?">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="59"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        severity="Error"
+        message="Incorrect formatting string `mic_hint`; missing conversion character in &apos;`% s`&apos;?">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="59"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="MissingQuantity"
+        severity="Error"
+        message="For locale &quot;ar&quot; (Arabic) the following quantities should also be defined: `few` (e.g. &quot;3&quot;), `many` (e.g. &quot;11&quot;), `two` (e.g. &quot;2&quot;), `zero` (e.g. &quot;0&quot;)">
+        <location
+            file="src/main/res/values-ar/strings.xml"
+            line="193"
+            column="5"/>
+    </issue>
+
+</issues>

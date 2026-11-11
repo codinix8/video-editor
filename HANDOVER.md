@@ -31,13 +31,19 @@ Zielgruppe: Creator; wichtig ist die persische Community (Farsi-Oberfläche, Nam
   - `release.yml`: Tag `v*` oder manuell → `bundleRelease` + `assembleRelease`, signiert mit Upload-Schlüssel aus
     GitHub-Secrets `UPLOAD_KEYSTORE_B64`, `UPLOAD_KEYSTORE_PASSWORD`, `UPLOAD_KEY_ALIAS` (=`babacut`); Release
     `release-<version>-<run>` mit `BabaCut-<version>.aab` (Play Console) und `BabaCut-<version>-release.apk`.
+  - `ci.yml` (Workflow `CI`, Prüfung `build-test-lint`; seit 2026-11-10, vorher `pr.yml`): jeder Push auf jeden Branch
+    (außer `build-logs`) und jeder Pull Request auf `main` → `assembleDebug`, `testDebugUnitTest` (JVM-Unit-Tests in
+    `app/src/test`, Bericht `unit-test-report`) und `lintDebug` (Bericht `lint-report`; 15 Altfehler eingefroren in `app/lint-baseline.xml`),
+    alle drei blockierend.
+    Erstellt **kein** Release, keinen Tag, keinen `build-logs`-Push. Lokale Befehle: `CONTRIBUTING.md`.
+    `build-test-lint` als Pflichtprüfung für `main` setzt der Owner in den GitHub-Einstellungen (noch offen).
   - `pr.yml` (seit 2026-11-09): jeder Pull Request auf `main` → `assembleDebug` + `lintDebug` (Lint vorerst nicht
     blockierend, Bericht als Artifact `lint-report`). Erstellt **kein** Release, keinen Tag, keinen `build-logs`-Push.
 - Build dauert ~4,5 min. Gradle-Build-Cache ist aus (lieferte veraltete Zwischenstände). API: compileSdk/targetSdk 36,
   minSdk 26, AGP 8.7.3 (`android.suppressUnsupportedCompileSdk=36`), NDK 27.2.12479018, CMake 3.22.1,
   Submodule `third_party/whisper.cpp` v1.9.4, 16-KB-Page-Size-Linkerflags gesetzt, kein R8/Minify.
 - Prüfen eines Builds per GitHub-API: `.../actions/runs?per_page=1` bzw. `.../actions/workflows/release.yml/runs`.
-- Versionierung: `versionCode` fortlaufend (aktuell **81**), `versionName` aktuell **1.1.3**.
+- Versionierung: `versionCode` fortlaufend (aktuell **83**: 82 = 1.1.4 auf `main`, 83 ab Task b9d022fb, seit PR #12 auf `main`; nächster Build 84; im Play-Store noch 81), `versionName` aktuell **1.1.4**.
 - **Wichtig für Tests auf dem Nutzer-Handy**: Die App ist dort über den **Play Store (interner Test)** installiert.
   GitHub-APKs haben eine andere Signatur und lassen sich nicht darüber installieren → neue Builds immer als
   `.aab` in den internen Test laden.
@@ -58,7 +64,7 @@ Zielgruppe: Creator; wichtig ist die persische Community (Farsi-Oberfläche, Nam
 - `Exporter.kt`: schneller MediaMuxer-Concat (`VideoConcat.kt`) oder Media3 Transformer mit festen Bitraten
   (4K 45 / 2K 24 / 1080p 14 / 720p 7 / 480p 3 Mbit/s), Audio-Mix (`OverlayAudioRenderer.kt` → WAV), Mikrofon-Gain
   je Segment, Untertitel/Review-Texte/Wasserzeichen als Overlays. `Loudness.kt` (Regler-% = empfundene Lautstärke).
-- `Downscaler.kt`: Media3-Umwandlung nach H.264 1080p; `transcodeReason()` prüft HEVC/AV1, >1080p, >31 fps, HDR –
+- `Downscaler.kt`: Media3-Umwandlung nach H.264 1080p; `transcodeReason()` (Regel in `TranscodePolicy.kt`, mit Unit-Tests) prüft HEVC/AV1, >1080p, >31 fps, HDR –
   gilt für Bild-im-Bild, Hintergrund und Kachelvideos beim Einfügen.
 - `TimelineRemap.kt`: Umordnen/Löschen von Segmenten remappt Untertitel und Ton-Protokolle (mit Quell-Sprüngen);
   **seit 1.1.3 werden Untertitel nach einem Schnitt zusätzlich automatisch neu erkannt**.
@@ -105,7 +111,10 @@ Mosaik-Videos, Erkennung Ali/Baba, Vorlagen ab der 4., Emojis, Filter ab dem 4.,
   ("requires more testing"); seitdem laufen **14 weitere Tage** mit ≥12 Testern → erneut beantragen ab ca.
   **9. November 2026**. Es wurde empfohlen, 1.1.3 als Update in den geschlossenen Test zu laden und zwischen Tag 7
   und 10 ein weiteres Update zu liefern. Antworten für den Antrag (300-Zeichen-Felder) sind im alten Chat formuliert;
-  beim zweiten Antrag konkreter mit Zahlen/Zitaten.
+  beim zweiten Antrag konkreter mit Zahlen/Zitaten. **Entwurf für den zweiten Antrag (2026-11-10):**
+  `docs/PLAY_PRODUCTION_APPLICATION.md` (Antworttexte + Liste der Console-Zahlen Z1–Z7, die der Nutzer abliest). Überarbeitet nach
+  Review: Aussagen, die nur der Nutzer kennt, als `[BESTÄTIGEN]`; Antrag laut seiner Wahl erst nach 1.1.4-Feinschliff
+  (Fehlermeldungen in 7 Sprachen – im Tag `v1.1.4` noch nicht enthalten).
 - Abo in der Console: `babacut_pro` aktiv, Pläne `monthly` (netto so gesetzt, dass DE 2,99 € brutto) und `annual`
   (19,99 € brutto) mit Angebot `trial7`; alter Prepaid-Plan `yearly` inaktiv. Lizenztester: das Konto des Nutzers.
 - Play App Signing aktiv; Upload-Schlüssel `babacut-upload.jks` (Alias `babacut`, gültig bis 2054) liegt beim Nutzer.

@@ -11,6 +11,10 @@ Neueste Version: **Releases** (rechte Seitenleiste) → oberster Eintrag → `.a
 
 Auf dem Handy: Datei öffnen → „Aus dieser Quelle installieren" erlauben → installieren.
 
+## Prüfungen (CI)
+
+Jeder Push und jeder Pull Request baut die App, führt die Unit-Tests und Lint aus (Workflow `CI`, Prüfung `build-test-lint`). Details und lokale Befehle: [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Stand
 
 | Schritt | Inhalt | Status |

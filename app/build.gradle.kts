@@ -12,7 +12,7 @@ android {
         applicationId = "de.codinix.babacut"
         minSdk = 26
         targetSdk = 36
-        versionCode = 82
+        versionCode = 83
         versionName = "1.1.4"
         ndk { abiFilters += listOf("arm64-v8a") }
     }
@@ -59,6 +59,11 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+    lint {
+        // 15 pre-existing lint errors (2026-11-10) are frozen here so CI lint can block on NEW errors.
+        // Fix them one by one and remove the entries (see docs/KNOWN_ISSUES.md). Warnings are not baselined.
+        baseline = file("lint-baseline.xml")
+    }
     buildFeatures {
         viewBinding = true
         buildConfig = true
@@ -102,4 +107,7 @@ dependencies {
     implementation("androidx.media3:media3-common:$media3")
     implementation("androidx.media3:media3-exoplayer:$media3")
     implementation("androidx.media3:media3-ui:$media3")
+
+    // JVM unit tests (app/src/test) for pure logic; run with ./gradlew testDebugUnitTest
+    testImplementation("junit:junit:4.13.2")
 }
