@@ -10,11 +10,8 @@
   - `captions()`: the 300 ms minimum duration wins over the segment-end clamp, so a caption that starts < 320 ms
     before a segment end can stick out into the next segment; a word can end before it starts after clamping.
 
-- **15 lint errors frozen in `app/lint-baseline.xml`** (2026-11-10, task 40c40718) – CI ignores them, new ones block.
+- **9 lint errors frozen in `app/lint-baseline.xml`** (2026-11-10, task 40c40718; 16→9 by task 0eecba17; the old "15" undercounted) – CI ignores them, new ones block.
   Likely real problems, each needs its own fix:
-  - `values/strings.xml:59` `mic_hint`: `% s` read as a broken format string (`StringFormatInvalid`, 6 locales) –
-    probably a literal percent sign that should be `%%` or not marked as format.
-  - `values-ar/strings.xml:193`: Arabic plural lacks `zero`/`two`/`few`/`many` (`MissingQuantity`).
   - `MainActivity.kt:3200–3201`: `SuspiciousIndentation` – `publishMosaic(); updateTileButtons()` is indented as if
     inside the previous statement; check whether it should be in a block.
   - `MainActivity.kt:1618–1623`: Media3 `UnstableApi` used without `@OptIn` (`UnsafeOptInUsageError`, 7×).

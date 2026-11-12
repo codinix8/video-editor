@@ -56,7 +56,7 @@
     <string name="export_running_mix">رندر ویدیو (با صدای لایه)… %1$d %%</string>
     <string name="ok">باشه</string>
     <string name="mic_volume_title">صدای میکروفون</string>
-    <string name="mic_hint">در خروجی روی ضبط تو اعمال می‌شود. ۱۰۰٪ = بدون تغییر، ۵۰٪ نصف بلندی.</string>
+    <string name="mic_hint" formatted="false">در خروجی روی ضبط تو اعمال می‌شود. ۱۰۰٪ = بدون تغییر، ۵۰٪ نصف بلندی.</string>
     <string name="crash_title">برنامه دفعهٔ قبل از کار افتاد</string>
     <string name="crash_msg">لطفاً گزارش را کپی کن و برای توسعه‌دهنده بفرست.</string>
     <string name="crash_label_time">زمان</string>

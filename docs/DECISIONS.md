@@ -2,6 +2,15 @@
 
 Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, README and commit history.
 
+## 2026-11-12 – Literal percent via formatted="false", full Arabic plurals (task 0eecba17)
+- `mic_hint` is read with `getString(id)` without format args, so `%%` is never collapsed and showed literally in
+  tr/es/fr/ar. Decision: strings without args that contain `%` get `formatted="false"` and a single `%` (not `%%`);
+  this silences `StringFormatInvalid` and renders correctly. `StringsConsistencyTest` guards `mic_hint`.
+- Arabic `plurals/segments`: zero „لا مقاطع“, one „مقطع واحد“, two „مقطعان“, few „%d مقاطع“ (3–10),
+  many „%d مقطعًا“ (11–99), other „%d مقطع“ (100+). Owner proofreads AR (checklist 1.1.5, section E).
+- The 7 baseline entries were removed (16→9) so lint guards them again; `SuspiciousIndentation` and
+  `UnsafeOptInUsageError` stay frozen (separate tasks). versionCode stays 84: `v1.1.5` is not tagged.
+
 ## 2026-11-12 – Done log split out of ROADMAP/KNOWN_ISSUES, union-merged (task 5d8b5cdc)
 - 10 merges/reviews returned in 24 h after the first fix (#14). Remaining shared cause: the #14 rule "add a new entry
   at the top of ROADMAP 'Done' / KNOWN_ISSUES 'Resolved'" made every two parallel PRs insert at the same line, so the

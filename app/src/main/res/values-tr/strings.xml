@@ -56,7 +56,7 @@
     <string name="export_running_mix">Video işleniyor (katman sesiyle)… %1$d %%</string>
     <string name="ok">Tamam</string>
     <string name="mic_volume_title">Mikrofon ses düzeyi</string>
-    <string name="mic_hint">Dışa aktarmada kaydına uygulanır. %%100 = değişmez, %%50 yarı yüksek duyulur.</string>
+    <string name="mic_hint" formatted="false">Dışa aktarmada kaydına uygulanır. %100 = değişmez, %50 yarı yüksek duyulur.</string>
     <string name="crash_title">Uygulama önceki seferde çöktü</string>
     <string name="crash_msg">Lütfen raporu kopyalayıp geliştiriciye gönder.</string>
     <string name="crash_label_time">Zaman</string>

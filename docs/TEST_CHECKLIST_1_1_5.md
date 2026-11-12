@@ -56,6 +56,14 @@ reicht).
 - [ ] **Video ansehen.** In der Galerie öffnen.
       Erwartet: Das Video spielt mit Ton.
 
+## E. Prozentzeichen und arabische Mehrzahl (Aufgabe 0eecba17)
+
+- [ ] **Mikrofon-Lautstärke.** Sprache Türkisch, Spanisch, Französisch oder Arabisch einstellen, das Fenster
+      „Mikrofon-Lautstärke“ öffnen.
+      Erwartet: Der Hinweis zeigt ein einzelnes Prozentzeichen („100 %“ bzw. „%100“), nie „%%“.
+- [ ] **Arabisch gegenlesen.** Sprache Arabisch, 2, 3 und 11 Segmente aufnehmen.
+      Erwartet: „مقطعان“, „3 مقاطع“, „11 مقطعًا“. Bitte die Wörter auf Richtigkeit prüfen.
+
 ## Zum Schluss
 
 - [ ] Sprache wieder auf „Systemsprache“ (oder Deutsch) stellen, `test.jpg` löschen.
