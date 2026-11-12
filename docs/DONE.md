@@ -87,3 +87,6 @@ section of `docs/KNOWN_ISSUES.md`, which every PR used to edit at the same line.
   Open: owner proofreads FA/AR, then pastes the texts into the Play Console himself. Nothing uploaded.
 - 2026-11-12 [done] Design audit rework 2 (task 9defaf40, PR #22): merged `origin/main` into the branch; the only
   conflict was `docs/_config.yml`, both exclude entries kept (`design` and `RELEASE_NOTES_1_1_5.md`). No other change.
+- 2026-11-12 [done] Strings guard + 1.1.5 phone checklist (task 6e3ee84a): `StringsConsistencyTest` checks that
+  every key of `values/strings.xml` exists in all 6 translations and that no non-German locale contains the German
+  1.1.5 error words; no gaps found. Owner checklist `docs/TEST_CHECKLIST_1_1_5.md` (German, excluded from the site).
