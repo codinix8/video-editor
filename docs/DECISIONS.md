@@ -235,3 +235,13 @@ Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, READ
 - Task 84b19ca3 has the same scope as a0f44077, whose PR #17 already meets the definition of done (code, 7×4 strings,
   `CrashReportTextTest`, KNOWN_ISSUES/DECISIONS). This branch is stacked on #17's commit and only adds the A+B+D note
   to the ROADMAP "Ship 1.1.5" item. Merge either this PR or #17 (this one contains #17), not both.
+
+## 2026-11-12 – Design audit: top 5 favour the store app, website fixes batched (task 9defaf40)
+- The audit uses the hub's `app` skill profile (apple-design, emil-design-eng, ui-cheatsheet, review-animations,
+  break-ui, mobile-native) translated to Android. Owner decisions stay untouched: `supportsRtl=false`, TikTok-style
+  sheets, dark portrait theme, coloured progress bar, crown/watermark for Pro.
+- Top 5 = app items (insets, press feedback + targets, translation overflow, cancellable export, screenshot tests in
+  CI), because users and revenue are in the store app; website findings W1–W5 (all small) wait for the relaunch or a
+  small separate task.
+- App screenshots were not possible in the agent container (no Android SDK/emulator); the audit says so and marks
+  device-dependent items as *plausible* instead of inventing images.

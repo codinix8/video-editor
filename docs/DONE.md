@@ -75,3 +75,7 @@ section of `docs/KNOWN_ISSUES.md`, which every PR used to edit at the same line.
 - 2026-11-12 [done] Knowledge sync (task 0fe9cac9): `docs/KNOWLEDGE.md` got the hub-generated section "Aus dem
   Wissens-Hub" (403 items, 2 confidential excluded by the hub) via `hub_knowledge_sync`; the hand-written part above
   it is unchanged. The hub is master of that section: do not edit it by hand, re-run the sync instead.
+- 2026-11-12 [done] Design audit with the hub design skills (task 9defaf40, read-only): `docs/design/DESIGN-AUDIT-2026-11.md`
+  (18 app + 5 website findings, ranked, with rule and `file:line`), 10 website screenshots (1440×900, 390×844) in
+  `docs/design/screenshots/`; app audited statically (no Android SDK in the container). Top 5 proposed as owner tasks.
+  `docs/design/` excluded from the website in `docs/_config.yml`.

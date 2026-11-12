@@ -9,6 +9,9 @@
     order; after a reorder, the old end time maps to null.
   - `captions()`: the 300 ms minimum duration wins over the segment-end clamp, so a caption that starts < 320 ms
     before a segment end can stick out into the next segment; a word can end before it starts after clamping.
+- **Possible edge-to-edge overlap on Android 15/16** (design audit 2026-11, finding A1, unconfirmed on a device):
+  `targetSdk = 36` but no window-inset handling; top/bottom controls may sit under the status bar, cutout or nav bar.
+  Owner screenshot from his Android 16 phone would confirm. Other UI findings: `docs/design/DESIGN-AUDIT-2026-11.md`.
 
 - **15 lint errors frozen in `app/lint-baseline.xml`** (2026-11-10, task 40c40718) – CI ignores them, new ones block.
   Likely real problems, each needs its own fix:
