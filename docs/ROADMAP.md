@@ -11,7 +11,8 @@ Finished items: [`docs/DONE.md`](DONE.md) (append-only log; do not add "Done" it
       Owner choice: apply only after the 1.1.4 polish (error messages in 7 languages + release notes) is in the
       closed test.
 - [ ] Ship 1.1.5 to closed testers (owner scope "A + B + D", 2026-11-11): A = localised error texts (task 6f0c1893,
-      merged), B = release notes, D = localised crash report labels (task a0f44077, merged via PR #18 / 2babaec;
+      merged), B = release notes (Play "What's new" draft in 7 languages: `docs/RELEASE_NOTES_1_1_5.md`,
+      task 9c582082, PR #21; FA/AR wait for the owner's proofreading; nothing uploaded), D = localised crash report labels (task a0f44077, merged via PR #18 / 2babaec;
       PR #17 superseded). Owner tags `v1.1.5`, internal test on
       his phone, then the closed test "Closed Beta" with the release notes from `docs/CLOSED_TEST_1_1_4_PLAN.md` (B).
       Which versions reached the closed track is unverified (owner: Play Console).

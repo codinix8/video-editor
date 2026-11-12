@@ -82,3 +82,8 @@ section of `docs/KNOWN_ISSUES.md`, which every PR used to edit at the same line.
 - 2026-11-12 [done] Design audit rework (task 9defaf40, review on PR #22): 26 app screenshots from a GitHub Actions
   emulator (API 35, 390×844 dp, en / de at 130 % font / fa; test scene only) in `docs/design/screenshots/app/`;
   A1 edge-to-edge confirmed, new findings A19 (fa label-value spacing), A20 (no scrim), A21 (rail/watermark).
+- 2026-11-12 [done] Play "What's new" draft for 1.1.5 in 7 languages (task 9c582082, PR #21):
+  `docs/RELEASE_NOTES_1_1_5.md` (each language under 500 characters, excluded from babacut.io via `docs/_config.yml`).
+  Open: owner proofreads FA/AR, then pastes the texts into the Play Console himself. Nothing uploaded.
+- 2026-11-12 [done] Design audit rework 2 (task 9defaf40, PR #22): merged `origin/main` into the branch; the only
+  conflict was `docs/_config.yml`, both exclude entries kept (`design` and `RELEASE_NOTES_1_1_5.md`). No other change.

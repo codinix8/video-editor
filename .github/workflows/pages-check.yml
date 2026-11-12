@@ -1,0 +1,47 @@
+# Pages check: builds docs/ the way GitHub Pages does (official Jekyll action, github-pages gem)
+# and fails if a project-record file listed under `exclude:` in docs/_config.yml reaches the site.
+# Runs only when docs/ changes. Deliberately deploys nothing; the live site is still built by
+# GitHub Pages from main:/docs.
+name: Pages check
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths: [ 'docs/**', '.github/workflows/pages-check.yml' ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pages-exclude:
+    name: pages-exclude
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build docs/ with Jekyll (GitHub Pages)
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./docs
+          destination: ./_site
+
+      - name: Excluded record files are not in the site
+        run: |
+          set -eu
+          test -f _site/index.html || { echo "::error::_site/index.html missing"; exit 1; }
+          fail=0
+          for f in $(sed -n 's/^  - \(.*\.md\)$/\1/p' docs/_config.yml); do
+            base="${f%.md}"
+            for out in "_site/$f" "_site/$base.html" "_site/$base/index.html"; do
+              if [ -e "$out" ]; then echo "::error::$out is published but $f is excluded"; fail=1; fi
+            done
+            echo "ok: $f not in site"
+          done
+          # Every Markdown file in docs/ must be excluded (record files are never public pages).
+          for p in docs/*.md; do
+            f="$(basename "$p")"
+            grep -qx "  - $f" docs/_config.yml || { echo "::error::$f is not in docs/_config.yml exclude"; fail=1; }
+          done
+          exit $fail

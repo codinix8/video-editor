@@ -246,3 +246,13 @@ Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, READ
 - App screenshots come from a GitHub Actions emulator (API 35, 390×844 dp, en/de 130 %/fa), because agent
   containers have no Android SDK. The temporary workflow ran on a scratch branch only and is not merged; a permanent
   screenshot job stays improvement 5 and needs the owner's release (protected path `.github/workflows`).
+## 2026-11-12 – 1.1.5 release notes drafted, FA/AR await owner proofreading (task 9c582082)
+- Part B of 1.1.5: Play "What's new" text in 7 languages in `docs/RELEASE_NOTES_1_1_5.md` (each 274–381 of 500
+  characters), excluded from babacut.io via `docs/_config.yml`. Replaces the one-line draft in
+  `docs/CLOSED_TEST_1_1_4_PLAN.md`.
+- Content is limited to what git shows since `v1.1.4`: A (error messages) and D (crash report labels); no
+  "small improvements" claim, no superlatives.
+- **Open:** the owner proofreads FA and AR before pasting. Nothing was uploaded to the Play Console.
+- New CI workflow `pages-check.yml` builds `docs/` with the GitHub Pages Jekyll action on docs changes and fails if
+  an excluded record file reaches the site. ROADMAP/HANDOVER/KNOWN_ISSUES left untouched on purpose (a parallel PR
+  edits them, per the task brief).
