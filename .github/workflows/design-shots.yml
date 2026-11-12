@@ -1,15 +1,20 @@
-# TEMPORARY (task 9defaf40, design audit): app screenshots on an emulator. Lives only on the scratch
-# branch agent/9defaf40-app-screenshots, never merged; the branch is deleted after the run.
+# TEMPORARY (task a8ef1268, design audit follow-up): app screenshots on an emulator, test data only.
+# Removed again on the same branch before the PR is ready; never part of the merged diff.
 name: Design audit screenshots (temporary)
 on:
   push:
-    branches: [ agent/9defaf40-app-screenshots ]
+    branches: [ agent/a8ef1268-babacut-design-audit-add-missing-app-scr ]
+    paths: [ '.github/shots.sh', '.github/workflows/design-shots.yml' ]
 permissions:
   contents: read
 jobs:
   shots:
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [ 35, 34 ]
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,14 +38,14 @@ jobs:
       - name: Screenshots on emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 35
+          api-level: ${{ matrix.api }}
           target: google_apis
           arch: x86_64
           profile: pixel_6
           emulator-options: -no-window -gpu swiftshader_indirect -no-boot-anim -camera-back emulated -camera-front emulated
-          script: bash .github/shots.sh
+          script: bash .github/shots.sh ${{ matrix.api }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: design-shots
+          name: design-shots-api${{ matrix.api }}
           path: shots/
