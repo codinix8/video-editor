@@ -236,6 +236,16 @@ Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, READ
   `CrashReportTextTest`, KNOWN_ISSUES/DECISIONS). This branch is stacked on #17's commit and only adds the A+B+D note
   to the ROADMAP "Ship 1.1.5" item. Merge either this PR or #17 (this one contains #17), not both.
 
+## 2026-11-12 – Design audit: top 5 favour the store app, website fixes batched (task 9defaf40)
+- The audit uses the hub's `app` skill profile (apple-design, emil-design-eng, ui-cheatsheet, review-animations,
+  break-ui, mobile-native) translated to Android. Owner decisions stay untouched: `supportsRtl=false`, TikTok-style
+  sheets, dark portrait theme, coloured progress bar, crown/watermark for Pro.
+- Top 5 = app items (insets, press feedback + targets, translation overflow, cancellable export, screenshot tests in
+  CI), because users and revenue are in the store app; website findings W1–W5 (all small) wait for the relaunch or a
+  small separate task.
+- App screenshots come from a GitHub Actions emulator (API 35, 390×844 dp, en/de 130 %/fa), because agent
+  containers have no Android SDK. The temporary workflow ran on a scratch branch only and is not merged; a permanent
+  screenshot job stays improvement 5 and needs the owner's release (protected path `.github/workflows`).
 ## 2026-11-12 – 1.1.5 release notes drafted, FA/AR await owner proofreading (task 9c582082)
 - Part B of 1.1.5: Play "What's new" text in 7 languages in `docs/RELEASE_NOTES_1_1_5.md` (each 274–381 of 500
   characters), excluded from babacut.io via `docs/_config.yml`. Replaces the one-line draft in

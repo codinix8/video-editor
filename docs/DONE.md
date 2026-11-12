@@ -75,9 +75,18 @@ section of `docs/KNOWN_ISSUES.md`, which every PR used to edit at the same line.
 - 2026-11-12 [done] Knowledge sync (task 0fe9cac9): `docs/KNOWLEDGE.md` got the hub-generated section "Aus dem
   Wissens-Hub" (403 items, 2 confidential excluded by the hub) via `hub_knowledge_sync`; the hand-written part above
   it is unchanged. The hub is master of that section: do not edit it by hand, re-run the sync instead.
+- 2026-11-12 [done] Design audit with the hub design skills (task 9defaf40, read-only): `docs/design/DESIGN-AUDIT-2026-11.md`
+  (18 app + 5 website findings, ranked, with rule and `file:line`), 10 website screenshots (1440×900, 390×844) in
+  `docs/design/screenshots/`; app audited statically (no Android SDK in the container). Top 5 proposed as owner tasks.
+  `docs/design/` excluded from the website in `docs/_config.yml`.
+- 2026-11-12 [done] Design audit rework (task 9defaf40, review on PR #22): 26 app screenshots from a GitHub Actions
+  emulator (API 35, 390×844 dp, en / de at 130 % font / fa; test scene only) in `docs/design/screenshots/app/`;
+  A1 edge-to-edge confirmed, new findings A19 (fa label-value spacing), A20 (no scrim), A21 (rail/watermark).
 - 2026-11-12 [done] Play "What's new" draft for 1.1.5 in 7 languages (task 9c582082, PR #21):
   `docs/RELEASE_NOTES_1_1_5.md` (each language under 500 characters, excluded from babacut.io via `docs/_config.yml`).
   Open: owner proofreads FA/AR, then pastes the texts into the Play Console himself. Nothing uploaded.
+- 2026-11-12 [done] Design audit rework 2 (task 9defaf40, PR #22): merged `origin/main` into the branch; the only
+  conflict was `docs/_config.yml`, both exclude entries kept (`design` and `RELEASE_NOTES_1_1_5.md`). No other change.
 - 2026-11-12 [done] Strings guard + 1.1.5 phone checklist (task 6e3ee84a): `StringsConsistencyTest` checks that
   every key of `values/strings.xml` exists in all 6 translations and that no non-German locale contains the German
   1.1.5 error words; no gaps found. Owner checklist `docs/TEST_CHECKLIST_1_1_5.md` (German, excluded from the site).
