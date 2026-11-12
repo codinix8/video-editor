@@ -1,0 +1,46 @@
+# TEMPORARY (task 9defaf40, design audit): app screenshots on an emulator. Lives only on the scratch
+# branch agent/9defaf40-app-screenshots, never merged; the branch is deleted after the run.
+name: Design audit screenshots (temporary)
+on:
+  push:
+    branches: [ agent/9defaf40-app-screenshots ]
+permissions:
+  contents: read
+jobs:
+  shots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install NDK, CMake and SDK platform
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;27.2.12479018" "cmake;3.22.1" "platforms;android-36" "build-tools;36.0.0" > /dev/null
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: true
+      - name: Build debug APK
+        run: chmod +x gradlew && ./gradlew assembleDebug --no-daemon
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Screenshots on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          emulator-options: -no-window -gpu swiftshader_indirect -no-boot-anim -camera-back emulated -camera-front emulated
+          script: bash .github/shots.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: design-shots
+          path: shots/
