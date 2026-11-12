@@ -75,3 +75,6 @@ section of `docs/KNOWN_ISSUES.md`, which every PR used to edit at the same line.
 - 2026-11-12 [done] Knowledge sync (task 0fe9cac9): `docs/KNOWLEDGE.md` got the hub-generated section "Aus dem
   Wissens-Hub" (403 items, 2 confidential excluded by the hub) via `hub_knowledge_sync`; the hand-written part above
   it is unchanged. The hub is master of that section: do not edit it by hand, re-run the sync instead.
+- 2026-11-12 [done] Play "What's new" draft for 1.1.5 in 7 languages (task 9c582082, PR #21):
+  `docs/RELEASE_NOTES_1_1_5.md` (each language under 500 characters, excluded from babacut.io via `docs/_config.yml`).
+  Open: owner proofreads FA/AR, then pastes the texts into the Play Console himself. Nothing uploaded.
