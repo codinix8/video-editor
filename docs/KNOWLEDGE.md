@@ -106,7 +106,12 @@ Tags: `scope/project` `area/ui` `area/review` `type/howto`
 - Project profile `app` in `codinix8/ai-nation` `spec/skills.yaml`; the runner places only `apple-design` and
   `ui-cheatsheet` for the developer role (and only for UI tasks). The full set can be read from
   `spec/skills/emilkowalski/<skill>/` in the hub repo with `gh api`.
-- Agent containers have no Android SDK/emulator/Java: app screenshots are impossible there. Website screenshots work
+- Agent containers have no Android SDK/emulator/Java. App screenshots work on GitHub Actions instead:
+  `reactivecircus/android-emulator-runner@v2`, `google_apis` x86_64 API 35 (has ARM64 translation for the
+  arm64-only APK), KVM udev rule, `-camera-back emulated`; `adb shell wm size 1170x2532` + `wm density 480` gives
+  390×844 dp; per-app locale with `cmd locale set-app-locales de.codinix.babacut --locales fa-IR`; navigate by
+  `uiautomator dump` + resource-id bounds. Use API 35+, API 34 hides edge-to-edge problems. Back key on a sheet
+  with a focused EditText only closes the keyboard. Website screenshots work
   with the global Playwright (`/opt/tools/npm/lib/node_modules/playwright`, Chromium under `/opt/tools/pw-browsers/`).
 - Android translations of web rules used in the audit: touch target 48dp, pressed state = ripple/state list,
   text in sp, motion via `ValueAnimator` (respects animator scale), insets via `ViewCompat.setOnApplyWindowInsetsListener`.

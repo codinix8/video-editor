@@ -160,6 +160,6 @@ The project is managed by AI Nation. Agent rules: [CLAUDE.md](CLAUDE.md). Projec
 summary incl. "State and backlog" (2026-11-09): [docs/AI_NATION.md](docs/AI_NATION.md) (roadmap, decisions, knowledge and known issues live in `docs/`).
 Owner profile (how he works and decides): [docs/FINETUNING.md](docs/FINETUNING.md).
 Proposal for splitting `MainActivity.kt` (2026-11-10, waiting for the owner): [docs/MAINACTIVITY_SPLIT.md](docs/MAINACTIVITY_SPLIT.md).
-Design audit against the hub design skills (2026-11-12, read-only; top 5 proposed to the owner): [docs/design/DESIGN-AUDIT-2026-11.md](docs/design/DESIGN-AUDIT-2026-11.md).
+Design audit against the hub design skills (2026-11-12, read-only; top 5 proposed to the owner; app screenshots from an API 35 emulator, edge-to-edge overlap confirmed): [docs/design/DESIGN-AUDIT-2026-11.md](docs/design/DESIGN-AUDIT-2026-11.md).
 Team decision `project.team` requested on 2026-11-09 (see [docs/DECISIONS.md](docs/DECISIONS.md)).
 Record changes follow "Writing the record without conflicts" in [docs/AI_NATION.md](docs/AI_NATION.md) (2026-11-11). Finished work and resolved issues: [docs/DONE.md](docs/DONE.md) (append-only log, new bullets at the end; since 2026-11-12).

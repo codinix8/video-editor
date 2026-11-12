@@ -243,5 +243,6 @@ Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, READ
 - Top 5 = app items (insets, press feedback + targets, translation overflow, cancellable export, screenshot tests in
   CI), because users and revenue are in the store app; website findings W1–W5 (all small) wait for the relaunch or a
   small separate task.
-- App screenshots were not possible in the agent container (no Android SDK/emulator); the audit says so and marks
-  device-dependent items as *plausible* instead of inventing images.
+- App screenshots come from a GitHub Actions emulator (API 35, 390×844 dp, en/de 130 %/fa), because agent
+  containers have no Android SDK. The temporary workflow ran on a scratch branch only and is not merged; a permanent
+  screenshot job stays improvement 5 and needs the owner's release (protected path `.github/workflows`).

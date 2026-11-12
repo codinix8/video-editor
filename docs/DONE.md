@@ -79,3 +79,6 @@ section of `docs/KNOWN_ISSUES.md`, which every PR used to edit at the same line.
   (18 app + 5 website findings, ranked, with rule and `file:line`), 10 website screenshots (1440×900, 390×844) in
   `docs/design/screenshots/`; app audited statically (no Android SDK in the container). Top 5 proposed as owner tasks.
   `docs/design/` excluded from the website in `docs/_config.yml`.
+- 2026-11-12 [done] Design audit rework (task 9defaf40, review on PR #22): 26 app screenshots from a GitHub Actions
+  emulator (API 35, 390×844 dp, en / de at 130 % font / fa; test scene only) in `docs/design/screenshots/app/`;
+  A1 edge-to-edge confirmed, new findings A19 (fa label-value spacing), A20 (no scrim), A21 (rail/watermark).
