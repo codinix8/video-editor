@@ -13,6 +13,7 @@ Onboarded into AI Nation on 2026-11-08 (task 4e8e8c10). The project's own rules 
 | Decisions     | [`docs/DECISIONS.md`](DECISIONS.md) | **New.** Seeded with decisions found in HANDOVER/README/commits. |
 | Knowledge     | [`docs/KNOWLEDGE.md`](KNOWLEDGE.md) | **New.** Build/release facts and gotchas (English digest of HANDOVER §2–3). |
 | Known issues  | [`docs/KNOWN_ISSUES.md`](KNOWN_ISSUES.md) | **New.** Open bugs and risks. |
+| Done log      | [`docs/DONE.md`](DONE.md) | **New (2026-11-12).** Append-only log of finished work and resolved issues (was ROADMAP "Done" + KNOWN_ISSUES "Resolved"); new bullets at the end; `merge=union`. |
 | Owner profile | [`docs/FINETUNING.md`](FINETUNING.md) | **New (2026-11-08), synced 2026-11-11.** How the owner thinks, decides and gives feedback; dated mirror of the hub fine-tuning store (project + `_cross`). |
 | Proposals     | [`docs/MAINACTIVITY_SPLIT.md`](MAINACTIVITY_SPLIT.md) | **New (2026-11-10).** Plan for splitting `MainActivity.kt` in 12 move-only steps; waiting for the owner. |
 | Play application | [`docs/PLAY_PRODUCTION_APPLICATION.md`](PLAY_PRODUCTION_APPLICATION.md) | **New (2026-11-10, revised).** German draft of the 2nd production-access request: Play Console figures Z1–Z7 + `[BESTÄTIGEN]` items the owner fills in; apply after the 1.1.4 polish. |
@@ -65,9 +66,13 @@ Every agent PR edits the same record files, so each merge put the other open PRs
 (11 returned merges/reviews in 24 h). Resolving with "keep both sides" then left duplicates and stale paragraphs
 behind. Rules for every record change:
 
-1. **Add, do not rewrite.** Add a new dated entry at the top of its section (DECISIONS, ROADMAP "Done",
-   KNOWN_ISSUES "Resolved"). Do not reword or re-date another task's entry; to correct one, add a new entry that
-   names the old one. `docs/DECISIONS.md` merges with `merge=union` (`.gitattributes`) because it is append-only.
+1. **Add, do not rewrite – at the end of an append-only file.** Finished work and resolved issues go into
+   [`docs/DONE.md`](DONE.md) as one new bullet **at the end of the file**; decisions go into `docs/DECISIONS.md`
+   as a new dated entry. Both files merge with `merge=union` (`.gitattributes`), so two PRs that both appended an
+   entry merge without a conflict on a local `git merge origin/main`. Do not reword, re-date, reorder or delete
+   another task's entry; to correct one, append a new entry that names the old one. (Until 2026-11-12 the rule was
+   "add at the top of ROADMAP 'Done' / KNOWN_ISSUES 'Resolved'": two parallel PRs then always inserted at the same
+   line and conflicted, e.g. PR #16 vs #15 – task 5d8b5cdc.)
 2. **One home per volatile fact.** `versionCode`/`versionName` live in `app/build.gradle.kts` and the one line in
    `KNOWLEDGE.md` "Build"; the CI state lives in "CI status" above. Other files link there instead of restating
    numbers ("next build takes 84" was copied into six files and had to be edited in all of them on every bump).
@@ -78,6 +83,10 @@ behind. Rules for every record change:
    re-merge trivial.
 5. **After resolving a conflict, check for duplicates** (`git diff origin/main -- docs/ HANDOVER.md`): a union or
    "keep both" resolution of a rewritten line leaves both versions in the file.
+6. **Smallest record diff.** A task's record change is normally one bullet at the end of `docs/DONE.md` (plus a
+   DECISIONS entry if something was decided, and a KNOWLEDGE entry for a durable fact). Edit ROADMAP
+   ("Now/Next/Later"), KNOWN_ISSUES ("Open issues", "Risks") or HANDOVER only when the task changes that state, and
+   then only the lines of your own item. Every extra edit of a shared line is a future conflict.
 
 ## State and backlog (2026-11-09)
 

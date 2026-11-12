@@ -2,6 +2,18 @@
 
 Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, README and commit history.
 
+## 2026-11-12 – Done log split out of ROADMAP/KNOWN_ISSUES, union-merged (task 5d8b5cdc)
+- 10 merges/reviews returned in 24 h after the first fix (#14). Remaining shared cause: the #14 rule "add a new entry
+  at the top of ROADMAP 'Done' / KNOWN_ISSUES 'Resolved'" made every two parallel PRs insert at the same line, so the
+  second always conflicted (verified: PR #16 head `e8e6f13` vs `main` `3fc36eb` → conflict in `KNOWN_ISSUES.md`).
+- Decision: both logs move into the new append-only `docs/DONE.md` (new bullets at the end) with `merge=union` in
+  `.gitattributes`; ROADMAP keeps Now/Next/Later, KNOWN_ISSUES keeps Open issues/Risks. Rule 6 "smallest record
+  diff" in `docs/AI_NATION.md`. Tested: two branches appending to `DONE.md` → 1 conflict without the attribute,
+  0 with it (`git merge-tree`).
+- Not union: ROADMAP, KNOWN_ISSUES, KNOWLEDGE, HANDOVER (lines there are edited in place; union would silently keep
+  both versions). Other return reasons are not repo-side: workflow PRs need the owner's merge (none open now: #7, #16
+  merged) and a base merge after approval triggers a re-review by design (hub R-130).
+
 ## 2026-11-11 – Delete the legacy pr.yml (task cea0d561)
 - `.github/workflows/pr.yml` deleted: it duplicated build + lint of `ci.yml` on every PR to `main`. `ci.yml`
   (`build-test-lint`) stays the only PR check. Delete-only PR: no new permissions, no secrets, no release/deployment.

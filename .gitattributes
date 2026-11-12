@@ -2,3 +2,4 @@
 # concurrently added entries instead of stopping with a conflict (see docs/AI_NATION.md,
 # "Writing the record without conflicts"). Only for files whose entries are never rewritten.
 docs/DECISIONS.md merge=union
+docs/DONE.md merge=union

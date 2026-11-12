@@ -7,6 +7,7 @@ exclude:
   - DECISIONS.md
   - KNOWLEDGE.md
   - KNOWN_ISSUES.md
+  - DONE.md
   - CONCEPT.md
   - FINETUNING.md
   - CLOSED_TEST_1_1_4_PLAN.md
