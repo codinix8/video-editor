@@ -81,6 +81,20 @@ Tags: `scope/project` `area/merge` `area/review` `type/incident` `tech/git`
   applies to local git merges; whether GitHub's merge check honours it is unverified.
 - Platform counterpart: hub incident R-163 (same pattern in mokisfood-website).
 
+## Record merge conflicts, round 2: same insertion point (2026-11-12, task 5d8b5cdc)
+Tags: `scope/project` `area/merge` `area/docs` `area/review` `type/incident` `tech/git`
+- Symptom: 10 merges/reviews returned in 24 h after the first fix (#14): "Conflict with main", "protected area,
+  merge only by the owner" and re-reviews after a base merge.
+- Cause: the #14 rule told every PR to add its entry *at the top* of ROADMAP "Done" and KNOWN_ISSUES "Resolved".
+  Two branches that insert at the same line always conflict in git, however small the entries are (PR #16 vs #15).
+  `merge=union` covered only DECISIONS.
+- Fix: append-only `docs/DONE.md` (new bullets at the end, never edit old ones) with `merge=union`; ROADMAP and
+  KNOWN_ISSUES keep only state that is edited in place; rule 6 "smallest record diff" in `docs/AI_NATION.md`.
+  Verified with `git merge-tree`: 1 conflict without the attribute, 0 with it.
+- Limits: `merge=union` works for local merges (the merger and agents run `git merge origin/main` locally); whether
+  GitHub's own mergeability check honours it is unverified. Union is only safe for files whose lines are never
+  edited. Workflow PRs (owner-only merge) and re-review after a base merge (hub R-130) are expected returns, not bugs.
+
 ## Repo inventory facts (2026-11-09)
 - No GitHub issues exist; the owner reports bugs via screenshots in chat.
 - Branch `build-logs` is written by CI only (force-push of the last failing `build.log`); not a work branch.

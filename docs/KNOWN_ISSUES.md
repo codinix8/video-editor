@@ -10,28 +10,6 @@
   - `captions()`: the 300 ms minimum duration wins over the segment-end clamp, so a caption that starts < 320 ms
     before a segment end can stick out into the next segment; a word can end before it starts after clamping.
 
-## Resolved
-- 2026-11-11 Crash report labels ("Zeit", "Gerät", …) were German in every app language. Fixed in 1.1.5 (task
-  a0f44077, option D): `CrashLog.kt` now stores neutral keys (`time`, `thread`, `version`, `device`) and
-  `CrashReportText` labels them with the activity context when shown (4 new keys `crash_label_*` in all 7
-  `strings.xml`); old German reports are mapped too. Stack traces stay as delivered. Phone check by the owner pending.
-- 2026-11-11 Two CI workflows ran on every PR to `main` (legacy `pr.yml` next to `ci.yml`, doubled CI minutes).
-  Fixed: `.github/workflows/pr.yml` deleted (task cea0d561); `ci.yml` (`build-test-lint`) is the only PR check.
-- 2026-11-11 German words leaked into localised error messages (fallback labels "Bild", "Umrechnung", "Umwandlung",
-  "Video", "Spracherkennung", "Entwurf", "Kachelvideo", "Overlay-Video" and German exception texts in
-  `MainActivity.kt`, `WhisperEngine.kt`, `ModelManager.kt`, `Exporter.kt`, `OverlayAudioRenderer.kt`). Fixed in 1.1.5
-  (task 6f0c1893): 18 new string keys in all 7 `strings.xml` (incl. Exporter's "Keine Segmente", not in the plan
-  table); `UserFacingException` + `ErrorText` for classes without a Context. `CrashLog.kt` labels (option D) followed
-  in task a0f44077, see the entry above. Still German by design (out of scope):
-  GL/EGL texts (`GlUtil.kt`, `EglCore.kt`) and the debug-only "Ton-Kontrolle" toast.
-  System/Media3 exception messages are shown as delivered by Android. Phone check by the owner pending.
-- 2026-11-11 Agent PRs kept returning with "Conflict with main" (11 returns in 24 h) and the record collected
-  duplicate/stale entries. Fixed at the root by conflict-safe record rules (`docs/AI_NATION.md`) and union merge for
-  `docs/DECISIONS.md` (task 9167d767). Still open: PR #7 needs the owner's merge.
-- 2026-11-10 Website loaded Google Fonts (Vazirmatn) – German warning-letter risk. Fixed: font self-hosted under
-  `docs/assets/fonts/` (task 6c203aca). 404.html links `style.css` relatively, so on deep missing URLs neither
-  the stylesheet nor the font loads (unchanged, pre-existing).
-
 - **15 lint errors frozen in `app/lint-baseline.xml`** (2026-11-10, task 40c40718) – CI ignores them, new ones block.
   Likely real problems, each needs its own fix:
   - `values/strings.xml:59` `mic_hint`: `% s` read as a broken format string (`StringFormatInvalid`, 6 locales) –
@@ -40,6 +18,9 @@
   - `MainActivity.kt:3200–3201`: `SuspiciousIndentation` – `publishMosaic(); updateTileButtons()` is indented as if
     inside the previous statement; check whether it should be in a block.
   - `MainActivity.kt:1618–1623`: Media3 `UnstableApi` used without `@OptIn` (`UnsafeOptInUsageError`, 7×).
+
+## Resolved
+Resolved issues: [`docs/DONE.md`](DONE.md) (append-only log; do not add "Resolved" entries here).
 
 ## Risks
 - **Every push to `main` publishes** a GitHub release with an APK (public repo). Docs-only merges no longer do
