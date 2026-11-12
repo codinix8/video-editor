@@ -90,3 +90,9 @@ section of `docs/KNOWN_ISSUES.md`, which every PR used to edit at the same line.
 - 2026-11-12 [done] Strings guard + 1.1.5 phone checklist (task 6e3ee84a): `StringsConsistencyTest` checks that
   every key of `values/strings.xml` exists in all 6 translations and that no non-German locale contains the German
   1.1.5 error words; no gaps found. Owner checklist `docs/TEST_CHECKLIST_1_1_5.md` (German, excluded from the site).
+- 2026-11-12 [fixed] Two localisation lint errors (task 0eecba17): `mic_hint` is `formatted="false"` with a single
+  `%` in all 7 `strings.xml` (it is read with `getString(id)` without args, so the old `%%` in tr/es/fr/ar showed
+  literally as "%%"); Arabic `plurals/segments` gained `zero`/`two`/`few`/`many` (other now `%d مقطع` for 100+),
+  pending the owner's AR proofreading. The 7 `StringFormatInvalid`/`MissingQuantity` entries left
+  `app/lint-baseline.xml` (16→9 issues), so CI guards them; `StringsConsistencyTest` checks `mic_hint`.
+  versionCode stays 84 / 1.1.5 (not tagged yet).

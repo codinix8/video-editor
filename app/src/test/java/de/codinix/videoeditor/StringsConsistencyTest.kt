@@ -60,6 +60,26 @@ class StringsConsistencyTest {
         if (leaks.isNotEmpty()) fail("German text in a non-German locale:\n" + leaks.joinToString("\n"))
     }
 
+    /**
+     * Strings read with getString(id) without format args show "%%" literally. Such strings must be
+     * formatted="false" with a single "%" (mic_hint showed "%%" in tr/es/fr/ar until task 0eecba17).
+     */
+    @Test fun noArgPercentStrings_areUnformattedWithSinglePercent() {
+        val problems = (listOf("values") + locales.map { "values-$it" }).flatMap { dir ->
+            val text = File(resDir, "$dir/strings.xml").readText()
+            listOf("mic_hint").mapNotNull { key ->
+                val m = Regex("""<string\s+name="$key"([^>]*)>([\s\S]*?)</string>""").find(text)
+                    ?: return@mapNotNull "$dir: $key missing"
+                when {
+                    !m.groupValues[1].contains("""formatted="false"""") -> "$dir: $key needs formatted=\"false\""
+                    m.groupValues[2].contains("%%") -> "$dir: $key contains \"%%\" (shown literally)"
+                    else -> null
+                }
+            }
+        }
+        if (problems.isNotEmpty()) fail("Percent strings:\n" + problems.joinToString("\n"))
+    }
+
     @Test fun wordCheck_catchesALeak() {
         val value = "Export fehlgeschlagen: Bild"
         val hits = germanHits(value)

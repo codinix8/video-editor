@@ -56,7 +56,7 @@
     <string name="export_running_mix">جارٍ إنتاج الفيديو (مع صوت الطبقة)… %1$d %%</string>
     <string name="ok">حسنًا</string>
     <string name="mic_volume_title">مستوى صوت الميكروفون</string>
-    <string name="mic_hint">يُطبَّق على تسجيلك عند التصدير. 100 %% = بلا تغيير، 50 %% نصف الارتفاع.</string>
+    <string name="mic_hint" formatted="false">يُطبَّق على تسجيلك عند التصدير. 100 % = بلا تغيير، 50 % نصف الارتفاع.</string>
     <string name="crash_title">توقف التطبيق في المرة السابقة</string>
     <string name="crash_msg">يرجى نسخ التقرير وإرساله إلى المطوّر.</string>
     <string name="crash_label_time">الوقت</string>
@@ -195,8 +195,13 @@
         <item>بابا (الأدق، بطيء)</item>
     </string-array>
     <plurals name="segments">
+        <!-- Arabic plural forms: owner AR proofreading pending (task 0eecba17) -->
+        <item quantity="zero">لا مقاطع</item>
         <item quantity="one">مقطع واحد</item>
-        <item quantity="other">%d مقاطع</item>
+        <item quantity="two">مقطعان</item>
+        <item quantity="few">%d مقاطع</item>
+        <item quantity="many">%d مقطعًا</item>
+        <item quantity="other">%d مقطع</item>
     </plurals>
     <string name="file_browser_hint">الضغط المطوّل يفتح مستعرض الملفات – للفيديوهات التي لا يعرضها منتقي المعرض (مثل التنزيلات)</string>
     <string name="recording_paused_background">تم إيقاف التسجيل مؤقتًا – حُفظ المقطع (كان التطبيق في الخلفية)</string>

@@ -56,7 +56,7 @@
     <string name="export_running_mix">Rendu de la vidéo (avec son superposé)… %1$d %%</string>
     <string name="ok">OK</string>
     <string name="mic_volume_title">Volume du micro</string>
-    <string name="mic_hint">S\'applique à ton enregistrement à l\'export. 100 %% = inchangé, 50 %% sonne deux fois moins fort.</string>
+    <string name="mic_hint" formatted="false">S\'applique à ton enregistrement à l\'export. 100 % = inchangé, 50 % sonne deux fois moins fort.</string>
     <string name="crash_title">L\'appli a planté la dernière fois</string>
     <string name="crash_msg">Copie le rapport et envoie-le au développeur.</string>
     <string name="crash_label_time">Heure</string>

@@ -17,11 +17,8 @@
   `docs/design/screenshots/app/api35-fa-02-settings-sheet.png`): e.g. "فارسیزبان برنامه"; `SheetRows.kt:53`, `:83-85`.
   Text-level fix, `supportsRtl=false` stays. Part of proposed task `5b1362db`.
 
-- **15 lint errors frozen in `app/lint-baseline.xml`** (2026-11-10, task 40c40718) – CI ignores them, new ones block.
+- **9 lint errors frozen in `app/lint-baseline.xml`** (2026-11-10, task 40c40718; 16→9 by task 0eecba17; the old "15" undercounted) – CI ignores them, new ones block.
   Likely real problems, each needs its own fix:
-  - `values/strings.xml:59` `mic_hint`: `% s` read as a broken format string (`StringFormatInvalid`, 6 locales) –
-    probably a literal percent sign that should be `%%` or not marked as format.
-  - `values-ar/strings.xml:193`: Arabic plural lacks `zero`/`two`/`few`/`many` (`MissingQuantity`).
   - `MainActivity.kt:3200–3201`: `SuspiciousIndentation` – `publishMosaic(); updateTileButtons()` is indented as if
     inside the previous statement; check whether it should be in a block.
   - `MainActivity.kt:1618–1623`: Media3 `UnstableApi` used without `@OptIn` (`UnsafeOptInUsageError`, 7×).

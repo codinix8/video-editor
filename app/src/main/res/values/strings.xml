@@ -56,7 +56,7 @@
     <string name="export_running_mix">Rendering video (with overlay sound)… %1$d %%</string>
     <string name="ok">OK</string>
     <string name="mic_volume_title">Microphone volume</string>
-    <string name="mic_hint">Applies to your recording on export. 100 % = unchanged, 50 % sounds half as loud.</string>
+    <string name="mic_hint" formatted="false">Applies to your recording on export. 100 % = unchanged, 50 % sounds half as loud.</string>
     <string name="crash_title">The app crashed last time</string>
     <string name="crash_msg">Please copy the report and send it to the developer.</string>
     <string name="crash_label_time">Time</string>

@@ -34,7 +34,7 @@ Zielgruppe: Creator; wichtig ist die persische Community (Farsi-Oberfläche, Nam
     `release-<version>-<run>` mit `BabaCut-<version>.aab` (Play Console) und `BabaCut-<version>-release.apk`.
   - `ci.yml` (Workflow `CI`, Prüfung `build-test-lint`; seit 2026-11-10, vorher `pr.yml`): jeder Push auf jeden Branch
     (außer `build-logs`) und jeder Pull Request auf `main` → `assembleDebug`, `testDebugUnitTest` (JVM-Unit-Tests in
-    `app/src/test`, Bericht `unit-test-report`) und `lintDebug` (Bericht `lint-report`; 15 Altfehler eingefroren in `app/lint-baseline.xml`),
+    `app/src/test`, Bericht `unit-test-report`) und `lintDebug` (Bericht `lint-report`; 9 Altfehler eingefroren (vorher 16 Einträge; die 2 Lokalisierungsfehler behoben in Aufgabe 0eecba17) in `app/lint-baseline.xml`),
     alle drei blockierend.
     Erstellt **kein** Release, keinen Tag, keinen `build-logs`-Push. Lokale Befehle: `CONTRIBUTING.md`.
     `build-test-lint` als Pflichtprüfung für `main` setzt der Owner in den GitHub-Einstellungen (noch offen).

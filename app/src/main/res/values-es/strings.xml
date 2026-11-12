@@ -56,7 +56,7 @@
     <string name="export_running_mix">Renderizando (con sonido de superposición)… %1$d %%</string>
     <string name="ok">OK</string>
     <string name="mic_volume_title">Volumen del micrófono</string>
-    <string name="mic_hint">Se aplica a tu grabación al exportar. 100 %% = sin cambios, 50 %% suena la mitad.</string>
+    <string name="mic_hint" formatted="false">Se aplica a tu grabación al exportar. 100 % = sin cambios, 50 % suena la mitad.</string>
     <string name="crash_title">La app se cerró inesperadamente</string>
     <string name="crash_msg">Copia el informe y envíaselo al desarrollador.</string>
     <string name="crash_label_time">Hora</string>
