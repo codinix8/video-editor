@@ -235,3 +235,14 @@ Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, READ
 - Task 84b19ca3 has the same scope as a0f44077, whose PR #17 already meets the definition of done (code, 7×4 strings,
   `CrashReportTextTest`, KNOWN_ISSUES/DECISIONS). This branch is stacked on #17's commit and only adds the A+B+D note
   to the ROADMAP "Ship 1.1.5" item. Merge either this PR or #17 (this one contains #17), not both.
+
+## 2026-11-12 – 1.1.5 release notes drafted, FA/AR await owner proofreading (task 9c582082)
+- Part B of 1.1.5: Play "What's new" text in 7 languages in `docs/RELEASE_NOTES_1_1_5.md` (each 274–381 of 500
+  characters), excluded from babacut.io via `docs/_config.yml`. Replaces the one-line draft in
+  `docs/CLOSED_TEST_1_1_4_PLAN.md`.
+- Content is limited to what git shows since `v1.1.4`: A (error messages) and D (crash report labels); no
+  "small improvements" claim, no superlatives.
+- **Open:** the owner proofreads FA and AR before pasting. Nothing was uploaded to the Play Console.
+- New CI workflow `pages-check.yml` builds `docs/` with the GitHub Pages Jekyll action on docs changes and fails if
+  an excluded record file reaches the site. ROADMAP/HANDOVER/KNOWN_ISSUES left untouched on purpose (a parallel PR
+  edits them, per the task brief).

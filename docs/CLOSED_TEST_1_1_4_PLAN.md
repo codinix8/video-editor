@@ -11,7 +11,7 @@
 
 - Alle Texte aus der Tabelle unten (plus "Keine Segmente" im Export) kommen jetzt aus den 7 Sprachdateien.
   Versionscode 84, Versionsname 1.1.5. Kein Tag gesetzt – das machst du nach dem Merge (`v1.1.5`).
-- "Neuerungen"-Text für die Play Console (B), zum Einfügen:
+- "Neuerungen"-Text für die Play Console (B): **ersetzt durch `docs/RELEASE_NOTES_1_1_5.md`** (Aufgabe 9c582082, 2026-11-12). Alter Kurzentwurf:
   - de-DE: Fehlermeldungen jetzt in allen Sprachen. Kleine Verbesserungen.
   - en-US: Error messages are now shown in all languages. Small improvements.
   - tr-TR: Hata mesajları artık tüm dillerde. Küçük iyileştirmeler.
