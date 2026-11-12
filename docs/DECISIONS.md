@@ -246,3 +246,16 @@ Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, READ
 - New CI workflow `pages-check.yml` builds `docs/` with the GitHub Pages Jekyll action on docs changes and fails if
   an excluded record file reaches the site. ROADMAP/HANDOVER/KNOWN_ISSUES left untouched on purpose (a parallel PR
   edits them, per the task brief).
+
+## 2026-11-12 – Strings consistency guard and 1.1.5 phone checklist (task 6e3ee84a)
+- New JVM unit test `StringsConsistencyTest` (runs in `testDebugUnitTest`, CI `build-test-lint`): reads the seven
+  `res/values…/strings.xml` as plain text (regex, no Android or XML-parser classes) and fails if a key
+  (`string`/`plurals`/`string-array`, `translatable="false"` skipped) from `values/` is missing in de/tr/es/fr/fa/ar,
+  or if EN/tr/es/fr/fa/ar contains a German word from the 1.1.5 A/D localisation (small explicit list: "Fehler",
+  "fehlgeschlagen", "Bild", "Umrechnung", "Umwandlung", "Spracherkennung", "Entwurf", "Kachelvideo", "Overlay-Video",
+  "Zeit", "Gerät", "Keine Segmente"; whole words only). "Video" is left out on purpose (same word in EN/ES/FR).
+  Extend the list when a new German leak is fixed.
+- First run on main (2026-11-12): 251 entries in every file, no gaps, no German leaks, so no string fix and no
+  `versionCode` change (stays 84 while `v1.1.5` is untagged).
+- German owner checklist for the internal test of 1.1.5: `docs/TEST_CHECKLIST_1_1_5.md` (error in EN and FA, crash
+  report labels, export sheet), excluded from babacut.io via `docs/_config.yml`.

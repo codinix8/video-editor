@@ -14,7 +14,7 @@ Finished items: [`docs/DONE.md`](DONE.md) (append-only log; do not add "Done" it
       merged), B = release notes (Play "What's new" draft in 7 languages: `docs/RELEASE_NOTES_1_1_5.md`,
       task 9c582082, PR #21; FA/AR wait for the owner's proofreading; nothing uploaded), D = localised crash report labels (task a0f44077, merged via PR #18 / 2babaec;
       PR #17 superseded). Owner tags `v1.1.5`, internal test on
-      his phone, then the closed test "Closed Beta" with the release notes from `docs/CLOSED_TEST_1_1_4_PLAN.md` (B).
+      his phone (checklist: `docs/TEST_CHECKLIST_1_1_5.md`, task 6e3ee84a), then the closed test "Closed Beta" with the release notes from `docs/CLOSED_TEST_1_1_4_PLAN.md` (B).
       Which versions reached the closed track is unverified (owner: Play Console).
 - [ ] Imprint data from the owner → finish website imprint/privacy (legal).
 
