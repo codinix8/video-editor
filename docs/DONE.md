@@ -72,3 +72,6 @@ section of `docs/KNOWN_ISSUES.md`, which every PR used to edit at the same line.
   entry at the top of its section" made every two parallel PRs insert at the same line of ROADMAP "Done" /
   KNOWN_ISSUES "Resolved" (PR #16 vs #15). Both logs moved into this append-only file with `merge=union`; misplaced
   lint-baseline item moved back to KNOWN_ISSUES "Open issues"; knowledge entry in `docs/KNOWLEDGE.md`.
+- 2026-11-12 [done] Knowledge sync (task 0fe9cac9): `docs/KNOWLEDGE.md` got the hub-generated section "Aus dem
+  Wissens-Hub" (403 items, 2 confidential excluded by the hub) via `hub_knowledge_sync`; the hand-written part above
+  it is unchanged. The hub is master of that section: do not edit it by hand, re-run the sync instead.
