@@ -103,3 +103,8 @@ small separate task; they are not in the top 5 because the store app is where us
   feedback on touch, system insets and long translations in 7 languages were never checked systematically.
 - Many web rules (CSS easing, `:active`) need translation to Android; a small Android cheat-sheet in the record
   would make future audits faster.
+
+## Proposed tasks (hub, 2026-11-12, waiting for the owner's release)
+
+1. `d3bf1d65` Edge-to-Edge insets · 2. `6e53b97d` press feedback + 48dp · 3. `5b1362db` long-translation overflow ·
+4. `067dc3c3` cancellable export · 5. `5cf6cd1c` app screenshots in CI.

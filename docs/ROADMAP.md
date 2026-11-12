@@ -29,7 +29,7 @@ Finished items: [`docs/DONE.md`](DONE.md) (append-only log; do not add "Done" it
 - [ ] Owner proofreads FA/AR texts; check screenshots per language for clipped buttons.
 - [ ] Clarify caption drift on very long videos.
 - [ ] Design audit 2026-11 follow-ups (task 9defaf40, `docs/design/DESIGN-AUDIT-2026-11.md`): top 5 proposed as
-      tasks, waiting for the owner's release – edge-to-edge insets, pressed feedback + 48dp targets, long-translation
+      tasks (hub ids `d3bf1d65`, `6e53b97d`, `5b1362db`, `067dc3c3`, `5cf6cd1c`), waiting for the owner's release – edge-to-edge insets, pressed feedback + 48dp targets, long-translation
       overflow, cancellable export, app screenshots in CI. Website findings W1–W5 fit the website relaunch.
 
 ## Later
