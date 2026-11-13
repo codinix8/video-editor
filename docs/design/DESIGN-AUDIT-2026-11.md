@@ -6,6 +6,9 @@ from the designer role (R-254).
 **Rework 2026-11-12 (g41, review on PR #22):** app screenshots added from an Android emulator (see "Screenshots").
 A1 is now confirmed on a device image, three new app findings (A19–A21) come from the images.
 
+**Round 2 2026-11-13 (g47/g48, task `fa0e1afc`):** all main views in en/de/fa, device matrix API 30/35/36 + 360×640 dp;
+status of the device-dependent findings in "Screenshot round 2 and device verification"; new findings A22, A23.
+
 ## Basis
 
 - **Rulebook:** the vendored design skills of the hub, profile `app` for `video-editor` (`spec/skills.yaml` in
@@ -46,6 +49,54 @@ A1 is now confirmed on a device image, three new app findings (A19–A21) come f
   is the starting point for improvement 5.
 - Desktop 1440×900 does not apply to the app (portrait-only phone app); it is covered for the website.
 
+## Screenshot round 2 and device verification (task `fa0e1afc`, 2026-11-13)
+
+All main views in en, de and fa, plus a device matrix to check the device-dependent findings. No app code was
+changed (1.1.5 is tagged from `main`).
+
+**Capture note (reproducible).** Debug APK built from `main` at c84b3f5 (versionCode 84) inside a temporary
+workflow on the scratch branch `agent/fa0e1afc-app-shots` (never merged; copies of the script and workflow are kept
+as [`shots.sh.txt`](screenshots/app/2026-11-13/shots.sh.txt) and
+[`design-shots.yml.txt`](screenshots/app/2026-11-13/design-shots.yml.txt)). Emulator: GitHub Actions,
+`reactivecircus/android-emulator-runner`, image `google_apis` x86_64 with ARM64 translation, AVD profile `pixel_6`,
+gesture navigation on API 35/36 (`navigation_mode` 2), font scale 1.0, app locale via `cmd locale set-app-locales`
+(API ≥ 33) or the system locale (API 30). Device facts per run in `<tag>-device.txt`.
+
+| Tag | Android | Screen | Run | Views |
+|-----|---------|--------|-----|-------|
+| `api35` | 15 (API 35) | 1170×2532 @ 480 dpi = 390×844 dp | [43347814682](https://github.com/codinix8/video-editor/actions/runs/43347814682) | 01–11 in en, de, fa (+ ar 02, 08) |
+| `api36` | 16 (API 36) | 390×844 dp | 43347814682 | 01, 08, 09 en; 02, 08 fa; 02 ar |
+| `api30` | 11 (API 30) | 390×844 dp, 3-button nav | [43341857246](https://github.com/codinix8/video-editor/actions/runs/43341857246) (job hit the 60-min limit after view 09 of fa) | 01, 08 en; 08 de; 02, 08 fa |
+| `api35small` | 15 (API 35) | 720×1280 @ 320 dpi = **360×640 dp** | 43347814682 | 01, 08 en; 02 fa; 11 de |
+
+**Test data:** the emulator's synthetic camera scene (no person, no user media), the typed overlay text
+"BabaCut Test", a recorded segment of about 12–30 s. Nothing leaves the run except the artifact.
+
+Two round-1 images (run 43341857246) are kept as `run1-*` because round 2 did not show the same state.
+
+**Files** in [`screenshots/app/2026-11-13/`](screenshots/app/2026-11-13/), `<tag>-<locale>-<nn>-<view>.png`:
+01 record idle · 02 settings sheet · 03 overlay editing (text overlay selected with its edit column) · 04 mosaic
+layout popup · 05 tile mode (2×2, top-left tile selected) · 06 recording · 07 paused with one segment (segment
+bar) · 08 review · 09 review/cut (scrubbed, paused) · 10 caption sheet · 11 export sheet. The round-1 files in
+`screenshots/app/` stay unchanged because the 1.1.6 concept links them.
+
+**Not covered:** 04/05 on the small screen (the mosaic button sits below the visible part of the tool rail there,
+see A21), font scales other than 1.0 (A11, 200 %), the delete confirmation pill (A4) and the drag hint (A3).
+Still images cannot show motion, so the review-animations rules (A2, A14, A15) are not judged here.
+
+### Device-dependent findings: status
+
+| Finding | Status | Evidence (all under `screenshots/app/2026-11-13/`) |
+|---------|--------|-----------------------------------------------------|
+| **A1** edge-to-edge | **Device-specific: confirmed on API 35 and 36, not reproduced on API 30.** On API 35/36 the app draws under the status bar: the review progress line (red) runs through the clock, the segment bar (`segmentBar` at y 36–54 px) lies inside the reported cutout inset of 135 px, and on the record screen the white status icons vanish completely on the bright scene. Same on the small screen. On API 30 the status bar is opaque black and the 3-button nav bar stays clear (edge-to-edge is only enforced from API 35). | `api35-en-08-review.png`, `api36-en-08-review.png`, `api35-en-01-record-idle.png`, `api35small-en-08-review.png`; contrast `api30-en-08-review.png`, `api30-en-01-record-idle.png` |
+| **A19** fa/ar label spacing | **Confirmed on all tested devices (API 30, 35, 36, small screen), fa and ar.** Besides the settings rows the same run-together happens in the caption sheet ("تشخیص خودکارزبان") and the text sheet ("100 %شفافیت متن"), and the switch row label touches the switch. | `api35-fa-02-settings-sheet.png`, `api36-fa-02-settings-sheet.png`, `api30-fa-02-settings-sheet.png`, `api35small-fa-02-settings-sheet.png`, `api35-ar-02-settings-sheet.png`, `api36-ar-02-settings-sheet.png`, `api35-fa-10-caption-sheet.png`, `run1-api35-fa-03-text-sheet.png` |
+| A18 fa/ar numbers in mixed text | **Confirmed (was plausible).** The review status "pos / total · 1 segment" is built by string concatenation; in fa/ar the bidi algorithm reorders the parts: the segment count fuses with the total ("۰:۰۸ / ۱۰:۱۴ بخش" instead of position / total · 1 segment). | `api35-fa-08-review.png`, `api35-fa-07-segment-bar.png`, `api30-fa-08-review.png`, `api35-ar-08-review.png` |
+| A20 no scrim | **Confirmed on every device.** Review hint and grey pills are hard to read on the bright scene. | `api35-de-08-review.png`, `api35small-en-08-review.png` |
+| A21 tool rail below the fold | **Confirmed, worse on the small screen.** At 360×640 dp only 7 rail buttons are visible (settings to text); portrait, mosaic, mic and the rest are off-screen; so 04/05 could not be scripted. | `api35small-en-01-record-idle.png`, `api35-en-01-record-idle.png` |
+| A4 status pill vs. buttons | Not reproduced at font scale 1.0 in en/de/fa (pill fits); `tap_again_delete` not triggered – stays plausible. | `api35-de-09-review-cut.png` |
+| A22 *(new)* segment bar invisible on bright footage | **Confirmed.** `SegmentProgressView` paints recorded segments white on a 33 % white track; on the bright scene the whole bar disappears after recording (pixels at y 45 are pure white), only the live green segment shows. Same rule as A20; fix together with A1/A20 (scrim or dark outline). | `api35-en-07-segment-bar.png`; code `SegmentProgressView.kt:20-21` |
+| A23 *(new)* "0:13 / 0:12" | **Confirmed (low).** After scrubbing to the end the review status shows a position larger than the total, because `fmt()` truncates seconds and the player position can pass the summed duration by a few hundred ms. | `run1-api35-en-09-review-cut.png` (round 2 caught the loop restart instead); `MainActivity.kt:2736`, `:3270-3273` |
+
 ## Findings
 
 Effort: S ≤ ½ day, M ≈ 1–2 days, L > 2 days (agent time incl. CI). "A" = app, "W" = website.
@@ -54,11 +105,11 @@ Effort: S ≤ ½ day, M ≈ 1–2 days, L > 2 days (agent time incl. CI). "A" = 
 
 | # | Finding | Rule (skill) | Evidence | Effort |
 |---|---------|--------------|----------|--------|
-| A1 | **No window-inset handling.** `targetSdk = 36` makes Android 15+ draw edge-to-edge (status-bar colour in the theme is ignored), but nothing in `app/src/main` handles insets. Segment bar (12dp from top) and review back button can sit under the status bar/camera cutout; the record button (44dp from bottom) and save button can collide with the 3-button nav bar. **Confirmed on API 35:** the red segment bar is drawn under the status-bar clock and icons, white status icons vanish on bright footage (`api35-en-10-review-text.png`, `api35-en-09-review.png`, `api35-en-01-record-idle.png`; API 34 still shows a black status bar, `api34-en-01-record-idle.png`). The owner's phone is Android 16. | mobile-native #7 "content stops at the notch", #10 status bar | `app/build.gradle.kts:14`; `res/values/themes.xml:3-4`; `activity_main.xml:31`, `:390`; `view_review.xml:186`; no `WindowInsets`/`fitsSystemWindows` anywhere; screenshots `app/api35-en-09-review.png`, `app/api35-en-10-review-text.png` | M |
+| A1 | **No window-inset handling.** `targetSdk = 36` makes Android 15+ draw edge-to-edge (status-bar colour in the theme is ignored), but nothing in `app/src/main` handles insets. Segment bar (12dp from top) and review back button can sit under the status bar/camera cutout; the record button (44dp from bottom) and save button can collide with the 3-button nav bar. **Confirmed on API 35:** the red segment bar is drawn under the status-bar clock and icons, white status icons vanish on bright footage (`api35-en-10-review-text.png`, `api35-en-09-review.png`, `api35-en-01-record-idle.png`; API 34 still shows a black status bar, `api34-en-01-record-idle.png`). The owner's phone is Android 16. **Round 2 (fa0e1afc): also on API 36 and 360×640 dp; not on API 30 → device-specific (API 35+).** | mobile-native #7 "content stops at the notch", #10 status bar | `app/build.gradle.kts:14`; `res/values/themes.xml:3-4`; `activity_main.xml:31`, `:390`; `view_review.xml:186`; no `WindowInsets`/`fitsSystemWindows` anywhere; screenshots `app/api35-en-09-review.png`, `app/api35-en-10-review-text.png` | M |
 | A2 | **No pressed state on buttons.** Round rail buttons, pills, sheet rows, Pro cards and mosaic items are plain shapes without ripple/state list: a tap shows nothing until the sheet opens, the app feels laggy. | apple-design §1 "respond on pointer-down", §10; review-animations "button press feedback 100–160 ms" | `res/drawable/bg_round_button.xml`, `bg_round_button_accent.xml`, `bg_pill.xml`; `Sheet.kt:124`; `SheetRows.kt:47-50`; `MainActivity.kt:911-918`, `:1198-1206` | S–M |
 | A3 | **Single-line canvas text clips long translations.** The reorder hint is drawn with one `drawText`, centred, no width limit: fr `drag_hint` (67 chars, 12px·density) is far wider than the ~328dp bar; both ends are cut. de/tr similar. | break-ui CATALOG "labels from data", "container at 320px" | `ScrubBarView.kt:161-162`; `res/values-fr/strings.xml:162` | S |
 | A4 | **Review status pill can cover its neighbour buttons** *(plausible)*. `wrap_content` anchored to parent, no `constrainedWidth`/`maxLines`; fr/de `tap_again_delete` exceeds the ~232dp between back and save-draft and blocks their taps. Emulator: the de status "0:06 / 0:15 · 1 Segment" at 130 % font still fits (`app/api35-de130-09-review.png`); `tap_again_delete` was not triggered, so the item stays plausible. | break-ui "long translated strings" | `view_review.xml:121-133`; `MainActivity.kt:2736` | S |
-| A19 | *(new, screenshot)* **fa settings rows run label and value together** ("فارسیزبان برنامه", "تاپ (سریع)تشخیص"): with `supportsRtl=false` the Persian label aligns to the right edge of its weighted box and the value view has no start margin, so both words touch and read as one; a switch row label touches the switch. Arabic presumably the same (not captured). Fix stays text-level (alignment + margin), `supportsRtl=false` is kept. | break-ui RTL/bidi; ui-cheatsheet spacing | `SheetRows.kt:53`, `:83-85`; `app/api35-fa-02-settings-sheet.png` | S |
+| A19 | *(new, screenshot)* **fa settings rows run label and value together** ("فارسیزبان برنامه", "تاپ (سریع)تشخیص"): with `supportsRtl=false` the Persian label aligns to the right edge of its weighted box and the value view has no start margin, so both words touch and read as one; a switch row label touches the switch. **Round 2 (fa0e1afc): confirmed in fa and ar on API 30/35/36 and 360×640 dp, also in the caption and text sheets.** Fix stays text-level (alignment + margin), `supportsRtl=false` is kept. | break-ui RTL/bidi; ui-cheatsheet spacing | `SheetRows.kt:53`, `:83-85`; `app/api35-fa-02-settings-sheet.png` | S |
 
 ### Medium
 
