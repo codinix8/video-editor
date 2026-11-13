@@ -243,3 +243,91 @@ record before they land here; the source line keeps the hub knowledge item id.
   `docs/DONE.md` 2026-11-12 "Design audit rework 2", `docs/DECISIONS.md` 2026-11-13 "The website stays HTML only"
   (task dd98d806). Corrections to the hub draft: the incident date is 2026-11-12 (hub: 2026-11-13); "prevention"
   repeated the check text and now names the glob fix from task dd98d806, which already removed the hotspot.
+
+## 2026-11-13 – Concept mockups: Playwright in the cloud runner, and a pages check that missed concept files
+
+- **Area:** tooling (Playwright in the cloud runner), docs/CI (`docs/_config.yml`, `pages-check.yml`); no app code.
+- **Symptom:** while writing the 1.1.6 design concept (task 277c2965, PR #25) two things got in the way:
+  (1) Playwright mockups could not be rendered the usual way – `npx playwright install` failed with `EACCES`, and
+  local images did not appear when the mockup HTML was loaded with `page.setContent`; (2) the new concept file
+  under `docs/concepts/` was not covered by `pages-check.yml`, so CI could not prove it stayed off babacut.io.
+  (Hub draft: the symptom was the task title; the concept itself had no incident.)
+- **Cause:** (1) the runner cannot write the Playwright browser folder, but ships a headless shell at
+  `/opt/pw-browsers/chromium_headless_shell-1243`; `setContent` renders on `about:blank`, which may not load
+  `file://` images. (2) the pages check of that time only tested exclude entries ending in `.md` and the top-level
+  `docs/*.md` files, not files in subfolders.
+- **Check:** (1) `ls /opt/pw-browsers/` shows the preinstalled shell; a mockup with blank image boxes points to the
+  `about:blank` origin. (2) today: the `pages-exclude` job prints `checked <n> Markdown files under docs/` – the count
+  must include files in subfolders.
+- **Fix:** (1) launch Chromium with `executablePath: '/opt/pw-browsers/chromium_headless_shell-1243/…'`, write the
+  mockup HTML to a file and open it with `page.goto('file://…')`. (2) PR #25 excluded the folders `concepts` and
+  `changes` and listed `concepts/2026-11-13-design-polish-1-1-6.md` by path so the check covered it. The result,
+  `docs/concepts/2026-11-13-design-polish-1-1-6.md`, presents the five audit improvements (d3bf1d65 insets,
+  6e53b97d press feedback + 48dp, 5b1362db long translations incl. fa/ar A19, 067dc3c3 cancellable export,
+  5cf6cd1c app screenshots in CI) with 11 mockups.
+- **Prevention:** (1) is in `docs/KNOWLEDGE.md` (Playwright mockups in the cloud container); the browser path can
+  differ per runner (see hub #2270: `/opt/tools/pw-browsers` unreadable – then install into an own
+  `PLAYWRIGHT_BROWSERS_PATH`). (2) is obsolete since task dd98d806 (PR #34): `docs/_config.yml` excludes every
+  Markdown file by the glob `"*.md"` and `pages-check.yml` checks every `docs/**/*.md` against the built site. Do
+  **not** list concept files by path any more (project rule in `CLAUDE.md`).
+- **Watch:** Projektmanager.
+- **Source:** hub task `277c2965-6ff5-46ed-b46b-e41668b3b709` (video-editor), knowledge item 2560. Record:
+  `docs/DONE.md` 2026-11-13 "Concept for BabaCut 1.1.6 design polish", fragment of PR #25 (`c84b3f5`).
+  Corrections to the hub draft: symptom was the task title; check and prevention repeated the pages-check text,
+  which dd98d806 has since made obsolete – prevention now names the glob. The `EACCES` detail is taken from the hub
+  draft; the repo record only describes the working path.
+
+## 2026-11-13 – App screenshots in CI: API 30 emulator timed out, a launcher ANR dialog swallowed taps
+
+- **Area:** tooling (emulator screenshot workflow in GitHub Actions), design audit; no app code.
+- **Symptom:** in the design audit round 2 (task fa0e1afc, PR #26) the screenshot runs for the comparison devices
+  failed: the API 30 job hit the 60-minute job limit after 3 locales, and on the small 360×640 dp emulator every tap
+  of run 1 went nowhere. (Hub draft: the symptom was the task title and cause/check/prevention were "not stated".)
+- **Cause:** the API 30 `google_apis` x86_64 image runs ARM translation and is about 3× slower than API 35. On the
+  small emulator a system dialog "Pixel Launcher isn't responding" covered the app. API < 33 also has no
+  `cmd locale set-app-locales`, so the per-app locale switch did not work there.
+- **Check:** look at the job duration per API level and at a screenshot of the first failing step – a system ANR
+  dialog or the wrong language shows at once. `adb shell uiautomator dump` lists `android:id/aerr_wait` when the
+  ANR dialog is open.
+- **Fix:** the capture script presses `android:id/aerr_wait` inside its dump helper, switches the system locale on
+  API < 33 (`adb root`, `persist.sys.locale`, zygote restart) and taps the last clickable `TextView` for a sheet's
+  positive action (sheet buttons are `TextView`s, locale-independent). Result: all 11 main views in en/de/fa on API
+  35 (390×844 dp) plus comparison images on API 36, API 30 and 360×640 dp in
+  `docs/design/screenshots/app/2026-11-13/`; `DESIGN-AUDIT-2026-11.md` got a finding → status → screenshot table
+  (A1 device-specific: API 35/36 incl. the small screen, not API 30; A19 confirmed in fa and ar on all devices).
+- **Prevention:** give API < 33 emulator jobs ≥ 90 minutes or fewer views; keep the ANR guard in the dump helper.
+  Both how-tos are in the PR #26 fragment knowledge (folded into `docs/KNOWLEDGE.md`). The capture workflow lives
+  only on the scratch branch `agent/fa0e1afc-app-shots`; task 5cf6cd1c (screenshots in CI) should take these
+  settings over.
+- **Watch:** Projektmanager.
+- **Source:** hub task `fa0e1afc-1e64-4faf-8fbc-290547e3a551` (video-editor), knowledge item 2563. Record: fragment of
+  PR #26 (`5b7674c`, sections Handover/Known issues/Knowledge), `docs/KNOWN_ISSUES.md` A1/A19.
+  Corrections to the hub draft: cause, check and prevention were "not stated" and are filled in from the PR #26
+  fragment; the result list is unchanged.
+
+## 2026-11-13 – Rework of PR #27: task branch existed only on the remote
+
+- **Area:** AI Nation process (git in the runner clone), docs (Play production application); no app code.
+- **Symptom:** for the rework round on PR #27 (task f16621ce, owner review at `6cce0e5`) the task branch
+  `agent/f16621ce-babacut-make-the-play-production-applica` existed on GitHub but could not be checked out as
+  `origin/<branch>` in the fresh runner clone. (Hub draft: the symptom was the task title and the cause "not
+  stated".)
+- **Cause:** per the source task's learning, the runner clone does not always fetch remote-only task branches, so
+  `origin/<branch>` is missing. The exact trigger (clone depth or refspec) was not recorded.
+- **Check:** `git ls-remote origin refs/heads/<branch>` shows the branch on the remote while
+  `git rev-parse --verify origin/<branch>` fails.
+- **Fix:** check out the PR head SHA (`gh pr view <n> --json commits`, or
+  `git fetch origin refs/pull/<n>/head`), commit the rework and push with `git push origin HEAD:refs/heads/<branch>`.
+  The rework (commit `4a4c0d7`, base merge `1739218`, PR merged as `906c822`) made K4 an explicit source choice
+  (a tester feedback / b own tests during the closed test / c mixed per change / d unknown or omit), gave C1 a
+  source sentence only for a/b/c, stopped the A3 fallback from claiming "own tests" unless K4 is b or c, and split
+  K7 (A1 level) and K8 (B3 range).
+- **Prevention:** for rework rounds start with `git fetch origin <branch>:refs/remotes/origin/<branch>` or the PR
+  head SHA instead of assuming `origin/<branch>` exists. If the same happens in other projects, report it as a
+  runner (platform) issue.
+- **Watch:** Projektmanager.
+- **Source:** hub task `f16621ce-edd3-4c9e-87cd-c87db80242e1` (video-editor), knowledge item 2564. Record:
+  `docs/DONE.md` 2026-11-13 "Play production application updated to 1.1.5", fragment of PR #27 (`906c822`,
+  Decisions "Review round on PR #27"). Corrections to the hub draft: symptom was the task title; check and
+  prevention repeated the cause text. The branch gotcha itself is taken from the hub draft; the repo record does not
+  describe it (PR #27 head branch and commits verified with `gh pr view 27`).
