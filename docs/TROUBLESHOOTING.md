@@ -189,3 +189,57 @@ record before they land here; the source line keeps the hub knowledge item id.
   (hub: 2026-11-13, the derivation date); the log bullet went to `docs/DONE.md`, not HANDOVER; "prevention"
   repeated the check text and was rewritten with the smaller-request approach from task 228be7ef. The 146 KB size
   is taken from the hub draft; the record states the item count (403, 2 confidential excluded).
+
+## 2026-11-12 – `gh pr create` in the agent container did not find the pushed branch (strings guard task)
+
+- **Area:** AI Nation process (git, GitHub CLI in the agent container); no app code.
+- **Symptom:** in task 6e3ee84a (strings consistency test and 1.1.5 phone checklist) `gh pr create` did not pick up
+  the branch that had just been pushed with `git push -u origin <branch>`, so the PR could not be opened with the
+  plain command. (Hub draft: the symptom was the task title plus a status line about 1.1.5; the task itself had no
+  app incident – the gotcha came from its learnings.)
+- **Cause:** per the source task's learning, the upstream of the branch is not always recorded in the agent
+  container after `git push -u`, and `gh` then cannot work out the head branch. The exact trigger was not
+  recorded; this is a tooling quirk of the container, not of this repo.
+- **Check:** after the push, `git rev-parse --abbrev-ref --symbolic-full-name @{u}` must print
+  `origin/<branch>`; if it fails, or `gh pr create` asks for or rejects the head branch, the upstream is missing.
+- **Fix:** open the PR with the head branch named explicitly:
+  `gh pr create --base main --head <branch> --fill` (or with `--title`/`--body`). The task's own result was
+  unaffected: `StringsConsistencyTest` (JVM, plain-text parse of the 7 `strings.xml`) checks that every key of
+  `values/` exists in de/tr/es/fr/fa/ar and that EN/tr/es/fr/fa/ar contain none of the German 1.1.5 error words;
+  CI `build-test-lint` green, no gaps or leaks, so no string fix and no versionCode change (PR #23, merged as
+  `febce28`).
+- **Prevention:** always pass `--head <branch>` to `gh pr create` in agent runs; it costs nothing when the
+  upstream is set. If the same failure shows up in other projects, report it as a platform (runner) issue instead
+  of working around it per repo.
+- **Watch:** Projektmanager.
+- **Source:** hub task `6e3ee84a-b322-4e93-9972-264616e8b76c` (video-editor), knowledge item 2532. Record:
+  `docs/DECISIONS.md` 2026-11-12 "Strings consistency guard and 1.1.5 phone checklist", `docs/DONE.md`.
+  Corrections to the hub draft: the incident date is 2026-11-12 (hub: 2026-11-13, the derivation date); the
+  symptom was the task title and a status line, and check/prevention were "not stated" – rewritten around the
+  `gh pr create` gotcha that the draft gave as cause. The gotcha itself is taken from the hub draft; the repo
+  record does not describe it.
+
+## 2026-11-12 – Design audit PR #22 not mergeable: conflict in `docs/_config.yml`
+
+- **Area:** merge, docs (website config, project record); no app code.
+- **Symptom:** PR #22 (design audit, task 9defaf40) could not be merged: merging `origin/main` into the branch
+  produced a conflict in `docs/_config.yml`.
+- **Cause:** two parallel PRs each appended a per-file exclude entry at the same place of the `exclude:` list in
+  `docs/_config.yml` – PR #22 added `design`, PR #21 (task 9c582082) added `RELEASE_NOTES_1_1_5.md`. Two branches
+  that insert at the same line always conflict. A plain merge conflict, no app or CI failure.
+- **Check:** before handing a PR to review, run `git fetch origin && git merge-tree --write-tree origin/main HEAD`
+  (exit code 1 and `CONFLICT` lines mean a conflict) or `gh pr view <n> --json mergeable`. Treat shared lists that
+  every task appends to (here the exclude list) as conflict hotspots.
+- **Fix (task 9defaf40, rework 2):** merged `origin/main` into the PR branch and kept both sides (`design` and
+  `RELEASE_NOTES_1_1_5.md`); audit content untouched, CI green (`build-test-lint`, `pages-exclude`), PR merged as
+  `c172fe7`; logged in `docs/DONE.md`. The root cause was removed later by task dd98d806 (PR #34): the exclude list
+  is now one glob `"*.md"` plus the folders `changes`, `concepts`, `design`, and `pages-check.yml` checks the built
+  site instead of per-file lines.
+- **Prevention:** do not add per-file entries to `docs/_config.yml` (project rule in `CLAUDE.md`); new record files
+  are Markdown and already excluded by the glob. Any new list that every task appends to should get the same
+  treatment (one glob, a fragment file, or `merge=union` for append-only files).
+- **Watch:** Projektmanager.
+- **Source:** hub task `9defaf40-48b7-41cf-9336-c0f8a2c8b1ce` (video-editor), knowledge item 2533. Record:
+  `docs/DONE.md` 2026-11-12 "Design audit rework 2", `docs/DECISIONS.md` 2026-11-13 "The website stays HTML only"
+  (task dd98d806). Corrections to the hub draft: the incident date is 2026-11-12 (hub: 2026-11-13); "prevention"
+  repeated the check text and now names the glob fix from task dd98d806, which already removed the hotspot.
