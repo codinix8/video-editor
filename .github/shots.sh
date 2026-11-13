@@ -52,12 +52,12 @@ flow(){ # $1 = prefix, $2 = values dir suffix
   # tile/mosaic mode: layout popup, then 2x2 grid with tile buttons
   start; tapid mosaicButton && { shot "$p-12-mosaic-popup" 1
     b=$(grep -o 'class="android.widget.ImageView"[^>]*bounds="[^"]*"' /tmp/u.xml | grep -o 'bounds="[^"]*"' | sed -n 5p | tr -c '0-9' ' ')
-    [ -n "$b" ] && { tapb "$b"; shot "$p-13-mosaic-2x2" 3; } || log "mosaic 2x2 not found"; }
+    [ -n "$b" ] && { tapb "$b"; shot "$p-13-mosaic-2x2" 3; adb shell input tap 290 1500; shot "$p-13b-mosaic-tile-selected" 2; } || log "mosaic 2x2 not found"; }
   # recording, review with scrub bar, captions sheet, export sheet + progress
   start; tapid recordButton && { shot "$p-07-recording" 4; tapid recordButton; sleep 3; }
   tapid finishButton && shot "$p-09-review" 8
   adb shell input tap 585 1400; shot "$p-14-review-paused" 2
-  tapid captionsButton && { shot "$p-15-captions-sheet" 2; back; back; }
+  tapid captionsButton && { shot "$p-15-captions-sheet" 2; back; sleep 1; }
   tapid reviewSaveButton && { shot "$p-16-export-sheet" 2; taptext "$SAVE" && { shot "$p-17-export-progress" 1; shot "$p-18-export-progress-later" 4; }; }
   shot "$p-19-after-export" 25
 }
