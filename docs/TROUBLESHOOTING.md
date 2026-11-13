@@ -31,6 +31,42 @@ record before they land here; the source line keeps the hub knowledge item id.
   Corrections to the hub draft: the symptom was the task title only and the cause was "not stated"; both were
   filled in from `docs/DECISIONS.md`, `docs/AI_NATION.md` and the PR history (PR #1, #4).
 
+## 2026-11-12 – Returned merges, round 2: parallel PRs inserted record entries at the same line
+
+- **Area:** docs (project record), merge, review; no app code.
+- **Symptom:** after the first conflict fix (task 9167d767, PR #14), 10 of the project's merges/reviews still came
+  back within 24 h. Reasons: "Conflict with main", "protected area, merge only by the owner" and a required
+  re-review after a base merge. Docs-only PRs could not be merged without a manual conflict resolution.
+- **Cause:** the rule added by PR #14 told every PR to put its entry *at the top* of ROADMAP "Done" and
+  KNOWN_ISSUES "Resolved". Two branches that insert at the same line always conflict in git, however small the
+  entries are (verified: PR #16 head `e8e6f13` vs `main` `3fc36eb` → conflict in `KNOWN_ISSUES.md`; PR #16 vs
+  #15). `merge=union` covered only `docs/DECISIONS.md` at that time. The other two return reasons are not
+  repo-side: PRs touching protected paths (`.github/workflows/`) need the owner's merge, and a base merge after
+  approval triggers a re-review by design (hub R-130).
+- **Check:** before opening a PR, run `git fetch origin && git merge-tree --write-tree origin/main HEAD` (git ≥ 2.38;
+  exit code 1 and `CONFLICT` lines mean a conflict). Flag any record rule that makes every task write at the same
+  line. Count returned merges/reviews by reason: many "Conflict with main" returns on the same files point to a
+  systemic cause, not to single PRs.
+- **Fix (task 5d8b5cdc, PR #19, merged):** finished work and resolved issues moved into the append-only
+  `docs/DONE.md` (new bullets at the end, old ones never edited) with `merge=union` in `.gitattributes`; ROADMAP
+  keeps only Now/Next/Later and KNOWN_ISSUES only Open issues/Risks, changed in place; rule 6 "smallest record
+  diff" in `docs/AI_NATION.md`. Verified with `git merge-tree`: two branches appending to `DONE.md` gave 1 conflict
+  without the attribute, 0 with it. Since pipeline v18 each task writes its own change fragment in
+  `docs/changes/`, so tasks no longer touch shared record lines at all.
+- **Prevention:** write the record as a new fragment file (`docs/changes/`) or an append at the end of a
+  `merge=union` file; never make a rule that inserts at a fixed line. Use `merge=union` only for files whose lines
+  are never edited (not ROADMAP, KNOWN_ISSUES, KNOWLEDGE, HANDOVER – union would silently keep both versions).
+  Keep workflow changes in their own small PR so the owner-only merge does not block other work. Whether GitHub's
+  own mergeability check honours `merge=union` is unverified; the merger merges locally.
+- **Watch:** Projektmanager.
+- **Source:** hub task `5d8b5cdc-3e5a-42a4-ab9b-a51e6a1f9e9a` (video-editor), knowledge item 2378. Record:
+  `docs/DECISIONS.md` 2026-11-12 "Done log split out of ROADMAP/KNOWN_ISSUES", `docs/KNOWLEDGE.md` "Record merge
+  conflicts, round 2". Corrections to the hub draft: the incident date is 2026-11-12 (hub: 2026-11-13, the
+  derivation date); "rule #14" is the rule added by PR #14; "prevention" repeated the check text and was rewritten;
+  the owner-only merge and the re-review after a base merge are expected returns, not part of the cause; the
+  pipeline v18 change fragments and the limits of `merge=union` were added. Commit `e8e6f13` (PR #16's old head)
+  is not on `main`; the reference is taken from `docs/DECISIONS.md`.
+
 ## 2026-11-10 – CI ran no tests and lint was green only because errors were swallowed
 
 - **Area:** CI (`.github/workflows/ci.yml`), lint, unit tests; no app behaviour.
