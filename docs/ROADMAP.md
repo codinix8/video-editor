@@ -6,10 +6,10 @@ Build history: README "Stand" table. Source of the items below: HANDOVER.md §5�
 Finished items: [`docs/DONE.md`](DONE.md) (append-only log; do not add "Done" items here).
 
 ## Now
-- [ ] Re-apply for Play production access from ~2026-11-09. Draft ready (2026-11-10, task 036afa99, revised):
-      `docs/PLAY_PRODUCTION_APPLICATION.md`; waiting for owner figures Z1–Z7 and his `[BESTÄTIGEN]` answers.
-      Owner choice: apply only after the 1.1.4 polish (error messages in 7 languages + release notes) is in the
-      closed test.
+- [ ] Re-apply for Play production access from ~2026-11-09. Draft updated to 1.1.5 / versionCode 84 (2026-11-13,
+      task f16621ce): `docs/PLAY_PRODUCTION_APPLICATION.md` with a German owner runbook (Console paths for Z1–Z7,
+      confirmations K1–K8, answers already known from the record). Owner reads the values only after 1.1.5 is in
+      the closed test "Closed Beta" (owner choice 2a5ce05a); nothing submitted.
 - [ ] Ship 1.1.5 to closed testers (owner scope "A + B + D", 2026-11-11): A = localised error texts (task 6f0c1893,
       merged), B = release notes (Play "What's new" draft in 7 languages: `docs/RELEASE_NOTES_1_1_5.md`,
       task 9c582082, PR #21; FA/AR wait for the owner's proofreading; nothing uploaded), D = localised crash report labels (task a0f44077, merged via PR #18 / 2babaec;
