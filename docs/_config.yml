@@ -18,4 +18,5 @@ exclude:
   - TEST_CHECKLIST_1_1_5.md
   - concepts
   - changes
+  - TROUBLESHOOTING.md
   - concepts/2026-11-13-design-polish-1-1-6.md
