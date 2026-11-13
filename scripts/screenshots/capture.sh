@@ -53,7 +53,9 @@ for L in $LOCALES; do
   start; shot "$p-01-record" 1
   tapid settingsButton && shot "$p-02-settings-sheet"
   # text sheet with typed test text (not confirmed, so no overlay remains)
-  start; tapid addTextButton && { adb shell input text "BabaCut%sTest"; shot "$p-03-text-sheet" 2; }
+  start; tapid addTextButton && { adb shell input text "BabaCut%sTest"; shot "$p-03-text-sheet" 4
+    # the IME can lag behind on slow emulators: retake once if the dump does not show the full text yet
+    grep -q "BabaCut Test" /tmp/u.xml || { log "text incomplete, retake"; shot "$p-03-text-sheet" 4; }; }
   # one ~6 s segment of the synthetic emulator camera, then review and its sheets
   start
   if tapid recordButton; then
