@@ -16,3 +16,6 @@ exclude:
   - design
   - RELEASE_NOTES_1_1_5.md
   - TEST_CHECKLIST_1_1_5.md
+  - concepts
+  - changes
+  - concepts/2026-11-13-design-polish-1-1-6.md
