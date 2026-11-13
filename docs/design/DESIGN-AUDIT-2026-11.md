@@ -97,6 +97,50 @@ Still images cannot show motion, so the review-animations rules (A2, A14, A15) a
 | A22 *(new)* segment bar invisible on bright footage | **Confirmed.** `SegmentProgressView` paints recorded segments white on a 33 % white track; on the bright scene the whole bar disappears after recording (pixels at y 45 are pure white), only the live green segment shows. Same rule as A20; fix together with A1/A20 (scrim or dark outline). | `api35-en-07-segment-bar.png`; code `SegmentProgressView.kt:20-21` |
 | A23 *(new)* "0:13 / 0:12" | **Confirmed (low).** After scrubbing to the end the review status shows a position larger than the total, because `fmt()` truncates seconds and the player position can pass the summed duration by a few hundred ms. | `run1-api35-en-09-review-cut.png` (round 2 caught the loop restart instead); `MainActivity.kt:2736`, `:3270-3273` |
 
+## Screenshot round 3: export progress, 48dp, long translations (task `a8ef1268`, 2026-11-13)
+
+Closes the gaps of round 2: the export progress dialog was never captured, and the device-dependent items
+48dp targets (A6) and long-translation overflow (A3, A4, A10, A11) had no status. No app code was changed
+(1.1.5 is tagged from `main`).
+
+**Capture note (reproducible).** Debug APK built from `main` at 906c822 (versionCode 84) inside a temporary workflow
+on the scratch branch `agent/a8ef1268-app-shots` (never merged; copies kept as
+[`shots3.sh.txt`](screenshots/app/2026-11-13-r3/shots3.sh.txt) and
+[`design-shots-r3.yml.txt`](screenshots/app/2026-11-13-r3/design-shots-r3.yml.txt)). Emulator as in round 2:
+`google_apis` x86_64 **API 35**, `pixel_6`, 1170×2532 @ 480 dpi = 390×844 dp, gesture navigation; locales **en, de,
+fa, fr** at font scale 1.0, plus **en and de at font scale 2.0** (`fs200`). Run
+[43356352053](https://github.com/codinix8/video-editor/actions/runs/43356352053) (~20 min). Test data only: the
+emulator's synthetic camera scene, a recorded segment of ~10–15 s, the typed overlay text "BabaCut Test".
+A first run (43354139152) was unusable: a "Pixel Launcher isn't responding" dialog swallowed the taps; the script now
+disables the launcher package and sets `hide_error_dialogs` before installing the app.
+
+**Files** in [`screenshots/app/2026-11-13-r3/`](screenshots/app/2026-11-13-r3/): `12-delete-armed` (review after the
+first delete tap, en/de/fa/fr + fs200 en/de), `13-drag-hint` (fr, attempt), `14-export-sheet` (en, fa),
+`15-export-progress` (en/de/fa/fr, `15b` en 3 s later), `fs200-01/02/08` (record idle, settings, review at 200 %
+font, en/de), `en-21/23/24` (record idle, text-overlay sheet, mosaic popup) and the measurement
+[`api35-en-targets-under-48dp.txt`](screenshots/app/2026-11-13-r3/api35-en-targets-under-48dp.txt) (clickable
+bounds from `uiautomator dump`, px/3 = dp).
+
+### Device-dependent findings: status (round 3)
+
+| Finding | Status | Evidence (under `screenshots/app/2026-11-13-r3/` unless noted) |
+|---------|--------|-----------------------------------------------------------------|
+| **A6** targets < 48dp | **Confirmed (measured).** Settings 44×44 dp, overlay "remove" and "edit text" 44×44 dp, sheet close X 36×36 dp, mosaic popup items 56×44 dp, preview-sound button 52×25 dp. *New detail:* the sheet buttons (Cancel/Save/Generate) are 175×46 dp, also under 48. Tile buttons (media, camera, fill, video) are 44×44 dp in the layout (`activity_main.xml:283-324`); round 3 did not dump the tile view. dp values are density-independent, so this holds on every device. | `api35-en-targets-under-48dp.txt`, `api35-en-21-record-idle.png`, `api35-en-23-overlay-text-sheet.png`, `api35-en-24-mosaic-popup.png`, `api35-en-14-export-sheet.png` |
+| **A4** status pill vs. buttons | **Confirmed visually (was plausible); tap blocking not reproduced.** At font 1.0 `tap_again_delete` spans x 49–1121 px in **fr** and 156–1014 px in **de**, so it is drawn across the back (36–192) and save-draft (978–1134) buttons; en (328–842) and fa fit. At 200 % even the normal status "0:09 / 0:15 · 1 Segment" covers both buttons (de, full width in the armed state). The pill is `clickable=false`, so taps should still reach the buttons below; the defect is unreadable text and hidden icons, not lost taps. | `api35-fr-12-delete-armed.png`, `api35-de-12-delete-armed.png`, `api35-en-12-delete-armed.png`, `api35-fa-12-delete-armed.png`, `api35-de-fs200-08-review.png`, `api35-de-fs200-12-delete-armed.png` |
+| **A11** quality label at large font | **Confirmed at 200 % (was plausible).** "720p" breaks into "720 / p" and is clipped by the 52dp circle; the status pill on the record screen wraps to two lines (en and de). | `api35-de-fs200-01-record-idle.png`, `api35-en-fs200-01-record-idle.png` |
+| **A10** scrub-bar text ignores font size | **Confirmed.** At 200 % the scrub-bar time labels ("0:09.5", "0:15.4") keep their 1.0 size while all `sp` text doubles. | `api35-de-fs200-08-review.png` vs `api35-de-12-delete-armed.png` |
+| A20b *(new detail)* review hint at large font | **Confirmed (medium, same fix as A3/A20).** At 200 % the review hint "Tippen: Pause/Weiter · Läuft in Schleife" wraps and its first letters are cut off at the left screen edge. | `api35-de-fs200-08-review.png` |
+| **A3** drag hint clips long translations | **Not reproduced by the script – stays plausible.** The long-press via `input motionevent` scrubbed instead of lifting a segment (12 px slop, A13), so the canvas hint was never drawn. The code path (one `drawText`, no width limit, `ScrubBarView.kt:161-162`) is unchanged; verifying it needs a real long-press or the planned screenshot tests (improvement 5). | `api35-fr-13-drag-hint.png` (shows the scrub state, not the hint) |
+| **A5 / A16** export | **Confirmed.** The progress is a stock Material dialog with title and a text percentage only ("Assemblage de la vidéo… 23 %"): no progress bar, no cancel button, different style from the custom sheets. In fa the title is left-aligned while the body is right-aligned (`supportsRtl=false`). Before this round the concept had to rebuild this dialog from code. | `api35-fr-15-export-progress.png`, `api35-en-15-export-progress.png`, `api35-en-15b-export-progress.png`, `api35-de-15-export-progress.png`, `api35-fa-15-export-progress.png` |
+
+At 200 % the settings sheet itself wraps cleanly (no clipping) in de and en (`api35-*-fs200-02-settings-sheet.png`).
+Light vs. bright footage: all rounds use the emulator's bright synthetic scene; the export screenshots show the dark
+(paused, dimmed) state, so both ends are covered for A20/A22.
+
+**Main views with test data, en/de/fa – complete set:** record idle, settings, overlay editing, mosaic popup, tile
+mode, recording, segment bar, review, review/cut, caption sheet, export sheet (round 2, `2026-11-13/`) plus export
+progress (round 3, `2026-11-13-r3/`).
+
 ## Findings
 
 Effort: S ≤ ½ day, M ≈ 1–2 days, L > 2 days (agent time incl. CI). "A" = app, "W" = website.
