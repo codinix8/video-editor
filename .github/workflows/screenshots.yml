@@ -12,9 +12,8 @@ on:
       - 'app/src/main/res/**'
       - 'app/src/main/java/**/*View*.kt'
       - 'app/src/main/java/**/Sheet*.kt'
-      # changes to the screenshot run itself test themselves (workflow_dispatch only works once this file is on main)
-      - '.github/workflows/screenshots.yml'
-      - 'scripts/screenshots/**'
+  # manual run; to test a change to this workflow or scripts/screenshots/ on a branch:
+  #   gh workflow run screenshots.yml --ref <branch>
   workflow_dispatch:
 
 permissions:
