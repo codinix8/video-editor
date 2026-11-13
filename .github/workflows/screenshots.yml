@@ -77,13 +77,21 @@ jobs:
         run: |
           "$ANDROID_HOME/emulator/emulator" -avd shots -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim \
             -camera-back emulated -camera-front emulated > "$RUNNER_TEMP/emulator.log" 2>&1 &
+          EMU_PID=$!
           ADB="$ANDROID_HOME/platform-tools/adb"
-          timeout 120 "$ADB" wait-for-device
+          "$ADB" start-server
+          # cold boot without snapshot takes a few minutes; poll up to 10 min, fail early if the emulator process dies
+          booted=0
           for i in $(seq 1 120); do
-            [ "$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ] && break
+            kill -0 "$EMU_PID" 2>/dev/null || { echo "emulator process exited"; break; }
+            [ "$(timeout 10 "$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ] && { booted=1; break; }
             sleep 5
           done
-          [ "$("$ADB" shell getprop sys.boot_completed | tr -d '\r')" = 1 ] || { tail -50 "$RUNNER_TEMP/emulator.log"; exit 1; }
+          if [ "$booted" != 1 ]; then
+            "$ADB" devices -l || true
+            tail -80 "$RUNNER_TEMP/emulator.log"
+            exit 1
+          fi
           "$ADB" shell input keyevent 82
           for s in window_animation_scale transition_animation_scale animator_duration_scale; do "$ADB" shell settings put global $s 0; done
           echo "emulator booted after ~$((i * 5)) s"
