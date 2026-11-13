@@ -7,7 +7,10 @@ TAG=$1; SIZE=$2; DENS=$3; shift 3; LOCALES="$*"
 PKG=de.codinix.babacut
 OUT=shots; mkdir -p "$OUT"
 log(){ echo "== $*"; }
-dump(){ adb shell uiautomator dump /sdcard/u.xml >/dev/null 2>&1; adb pull /sdcard/u.xml /tmp/u.xml >/dev/null 2>&1 || : > /tmp/u.xml; }
+rawdump(){ adb shell uiautomator dump /sdcard/u.xml >/dev/null 2>&1; adb pull /sdcard/u.xml /tmp/u.xml >/dev/null 2>&1 || : > /tmp/u.xml; }
+# a system "isn't responding" dialog (seen on the small-screen run) blocks every tap: press "Wait" and dump again
+dump(){ rawdump; local i; for i in 1 2 3; do grep -q 'android:id/aerr_wait' /tmp/u.xml || return 0
+  tapb "$(bounds 'resource-id="android:id/aerr_wait"')"; log "dismissed ANR dialog"; sleep 3; rawdump; done; }
 shot(){ sleep "${2:-2}"; adb exec-out screencap -p > "$OUT/$TAG-$1.png"; dump; cp /tmp/u.xml "$OUT/$TAG-$1.xml"; log "shot $TAG-$1"; }
 bounds(){ tr '>' '\n' < /tmp/u.xml | grep "$1" | grep -o 'bounds="[^"]*"' | sed -n "${2:-1}p" | tr -c '0-9' ' '; }
 tapb(){ local b=$1; [ -z "$b" ] && return 1; read -r x1 y1 x2 y2 <<< "$b"; adb shell input tap $(( (x1+x2)/2 )) $(( (y1+y2)/2 )); }
@@ -18,12 +21,14 @@ tapfrac(){ dump; local b; b=$(bounds "resource-id=\"$PKG:id/$1\""); [ -z "$b" ] 
 # last android.widget.Button on screen (Sheet puts the positive button last)
 taplastbutton(){ dump; local n; n=$(tr '>' '\n' < /tmp/u.xml | grep -c 'class="android.widget.Button"'); [ "$n" -gt 0 ] || { log "no button"; return 1; }
   tapb "$(bounds 'class="android.widget.Button"' "$n")"; log "tap last button"; sleep 1; }
+# positive sheet button = last clickable TextView (Sheet adds negative first, positive last); locale-independent
+tappositive(){ dump; tapb "$(tr '>' '\n' < /tmp/u.xml | grep 'class="android.widget.TextView"' | grep 'clickable="true"' | tail -1 | grep -o 'bounds="[^"]*"' | tr -c '0-9' ' ')" && log "tap positive"; sleep 1; }
 # n-th clickable node (1-based) of the current top window
 tapclickable(){ dump; tapb "$(bounds 'clickable="true"' "$1")" && log "tap clickable $1"; sleep 1; }
 back(){ adb shell input keyevent KEYCODE_BACK; sleep 1; }
 closesheet(){ back; dump; grep -q 'design_bottom_sheet' /tmp/u.xml && back; true; }
 SDK=$(adb shell getprop ro.build.version.sdk | tr -d '\r')
-start(){ adb shell am force-stop $PKG; adb shell am start -W -n $PKG/de.codinix.videoeditor.MainActivity >/dev/null; sleep 8; }
+start(){ adb shell am force-stop $PKG; adb shell am start -W -n $PKG/de.codinix.videoeditor.MainActivity >/dev/null; sleep 8; dump; }
 waitboot(){ adb wait-for-device; until [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = 1 ]; do sleep 2; done; sleep 10; }
 setlocale(){ # $1 = BCP-47 tag
   if [ "$SDK" -ge 33 ]; then adb shell cmd locale set-app-locales $PKG --locales "$1"
@@ -53,7 +58,7 @@ for L in $LOCALES; do
   start; shot "$p-01-record-idle" 1
   tapid settingsButton && { shot "$p-02-settings-sheet"; closesheet; }
   # overlay editing: add a text overlay, it stays selected with its edit column
-  start; tapid addTextButton && { adb shell input text "BabaCut%sTest"; sleep 1; taplastbutton; shot "$p-03-overlay-edit"; tapid removeOverlayButton; }
+  start; tapid addTextButton && { adb shell input text "BabaCut%sTest"; sleep 2; tappositive; sleep 1; shot "$p-03-overlay-edit"; tapid removeOverlayButton; }
   # mosaic: layout popup, pick 2x2 (6th clickable entry: off, 2 rows, 2 cols, 3 rows, 3 cols, 2x2)
   start; tapid mosaicButton && { shot "$p-04-mosaic-popup"; tapclickable 6; sleep 1;
     # tile mode: select the top-left tile

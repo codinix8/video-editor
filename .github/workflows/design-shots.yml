@@ -16,7 +16,7 @@ jobs:
         include:
           - { tag: api35, api: 35, size: 1170x2532, density: 480 }   # 390x844 dp
           - { tag: api36, api: 36, size: 1170x2532, density: 480 }   # 390x844 dp
-          - { tag: api30, api: 30, size: 1170x2532, density: 480 }   # 390x844 dp
+          # api30 kept from run 43341857246
           - { tag: api35small, api: 35, size: 720x1280, density: 320 } # 360x640 dp
     steps:
       - uses: actions/checkout@v4
