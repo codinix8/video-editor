@@ -22,7 +22,7 @@ Onboarded into AI Nation on 2026-11-08 (task 4e8e8c10). The project's own rules 
 | Repo rules    | [`/CLAUDE.md`](../CLAUDE.md) | **New.** Project rules + AI Nation section. |
 
 `docs/` is also the public website (GitHub Pages, babacut.io). The record files above are excluded from the site
-via [`docs/_config.yml`](_config.yml).
+via [`docs/_config.yml`](_config.yml) (one glob `"*.md"`, no per-file list; new record files need no edit there).
 
 ## State summary (2026-11-08)
 
@@ -88,6 +88,10 @@ behind. Rules for every record change:
    DECISIONS entry if something was decided, and a KNOWLEDGE entry for a durable fact). Edit ROADMAP
    ("Now/Next/Later"), KNOWN_ISSUES ("Open issues", "Risks") or HANDOVER only when the task changes that state, and
    then only the lines of your own item. Every extra edit of a shared line is a future conflict.
+7. **No append-at-the-end lists in shared config.** A list that every task extends (formerly the per-file
+   `exclude:` list in `docs/_config.yml`) is the same-line conflict of rule 1 in a config file; `merge=union` only
+   covers local merges of the two log files. Replace such lists with a pattern or a directory (since
+   2026-11-13 `"*.md"`, task dd98d806). Before a PR: `git merge-tree --write-tree origin/main HEAD`.
 
 ## State and backlog (2026-11-09)
 
