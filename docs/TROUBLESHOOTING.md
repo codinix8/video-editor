@@ -161,3 +161,31 @@ record before they land here; the source line keeps the hub knowledge item id.
 - **Watch:** Projektmanager.
 - **Source:** hub task `6f0c1893-6e11-4dd9-bc4e-05365c9ed4a0` (video-editor), knowledge item 2261. Record:
   `docs/DECISIONS.md` 2026-11-11 "Error texts from resources via UserFacingException", `docs/DONE.md`.
+
+## 2026-11-12 – Knowledge sync: `hub_knowledge_sync` result too large for the tool output
+
+- **Area:** docs (project record), integration (AI Nation hub tools); no app code.
+- **Symptom:** during the first knowledge sync (task 0fe9cac9), `hub_knowledge_sync` for `docs/KNOWLEDGE.md`
+  returned about 146 KB (403 items). The MCP client cut the response off at its output limit, so `content_md`
+  could not be copied into the file reliably from the visible tool output.
+- **Cause:** the generated section "Aus dem Wissens-Hub" holds every non-confidential hub item for the project,
+  so the payload exceeds the MCP tool output limit; the client saves the full result to a tool-result file
+  instead. The agent container has no `python3` and no `jq` for scripting the payload, only `node`.
+- **Check:** a tool result that ends with a "saved to …" / "exceeds maximum allowed tokens" notice, or a payload
+  far larger than usual. Read the saved result file, not the visible output, and compare the item count and size
+  with the hub's summary before writing anything.
+- **Fix:** parse the saved tool-result file with `node`, extract `content_md` and write it to
+  `docs/KNOWLEDGE.md` directly instead of retyping it; review `git diff --stat` (only the generated section may
+  change), then commit, add the log bullet in `docs/DONE.md` (PR #20) – or, since pipeline v18, a change
+  fragment in `docs/changes/` – and open the PR.
+- **Prevention:** keep the request small: the sync only reads entries outside the generated section, so send the
+  hand-written part plus empty `BEGIN hub-knowledge`/`END hub-knowledge` markers instead of the full file (found
+  in task 228be7ef, PR #32). Expect the response to land in a file and plan the `node` extraction from the start;
+  never edit the generated section by hand – re-run the sync.
+- **Watch:** Projektmanager.
+- **Source:** hub task `0fe9cac9-f116-4a40-8d6e-28bc0b0f8138` (video-editor), knowledge item 2391. Record:
+  `docs/DONE.md` 2026-11-12 "Knowledge sync (task 0fe9cac9)", PR #20 (commit `5ea5e0a`); follow-up sync
+  `docs/changes/2026-11-13-228be7ef.md` (PR #32). Corrections to the hub draft: the incident date is 2026-11-12
+  (hub: 2026-11-13, the derivation date); the log bullet went to `docs/DONE.md`, not HANDOVER; "prevention"
+  repeated the check text and was rewritten with the smaller-request approach from task 228be7ef. The 146 KB size
+  is taken from the hub draft; the record states the item count (403, 2 confidential excluded).
