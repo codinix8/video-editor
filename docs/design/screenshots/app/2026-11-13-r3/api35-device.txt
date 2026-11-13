@@ -1,0 +1,6 @@
+tag=api35 sdk=35 release=15
+model=sdk_gphone64_x86_64
+Physical size: 1080x2400
+Override size: 1170x2532
+Physical density: 420
+Override density: 480
