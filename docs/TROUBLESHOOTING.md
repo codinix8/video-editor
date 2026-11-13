@@ -333,3 +333,66 @@ record before they land here; the source line keeps the hub knowledge item id.
   Decisions "Review round on PR #27"). Corrections to the hub draft: symptom was the task title; check and
   prevention repeated the cause text. The branch gotcha itself is taken from the hub draft; the repo record does not
   describe it (PR #27 head branch and commits verified with `gh pr view 27`).
+
+## 2026-11-13 – Knowledge sync run (task 228be7ef): routine sync, not an incident
+
+- **Area:** docs (project record), integration (hub tools); no app code.
+- **Symptom:** none. The hub derived an "incident" from a normal sync task; the draft's symptom was the task title
+  ("Sync docs/KNOWLEDGE.md with the knowledge hub") and cause, check and prevention were "not stated".
+- **Cause:** not applicable. The only real gotcha of that run (large `content_md`, small request) is already in
+  the entry "Knowledge sync: `hub_knowledge_sync` result too large for the tool output" above.
+- **Check:** after a sync, `git diff --stat` must show changes only inside the generated section "Aus dem
+  Wissens-Hub"; the hub result reports the direct entries it saw (here 47, all already reported, 0 new).
+- **Fix (what the run did):** replaced the generated section with `hub_knowledge_sync` `content_md` (980 items,
+  5 confidential excluded, 192 lines updated); the hand-written part stayed unchanged. PR #32.
+- **Prevention:** nothing new; follow the earlier entry (send the hand-written part plus empty `BEGIN`/`END`
+  markers, extract the result file with `node`, never edit the generated section by hand).
+- **Watch:** Projektmanager.
+- **Source:** hub task `228be7ef-7cd2-4b7b-b311-cc312a9f3172` (video-editor), knowledge item 2657. Record:
+  `docs/changes/2026-11-13-228be7ef.md` (PR #32, `49deb54`). Corrections to the hub draft: marked as a
+  non-incident and linked to the existing entry instead of inventing a cause; the fix text was cut off in the
+  draft and is completed from the fragment.
+
+## 2026-11-13 – Returned merges, round 3: the per-file exclude list in `docs/_config.yml` was a conflict hotspot
+
+- **Area:** merge, docs (website config, CI pages check).
+- **Symptom:** 6 merges/reviews of this project came back within 24 h, mostly "Conflict with main" (for example
+  PR #22, two merge rounds). (Hub draft: the symptom was the task title.)
+- **Cause:** known causes 2259 (all PRs rewrite the same record lines) and 2378 were checked first. The new cause:
+  `CLAUDE.md` and `pages-check.yml` demanded one exact exclude line per record file in `docs/_config.yml`, so 5 of
+  7 merged PRs appended at the end of the same list. Change fragments and `merge=union` do not cover a shared
+  config list.
+- **Check:** `git merge-tree` of two open PRs that each add a record file conflicts in `docs/_config.yml`; look for
+  any shared list or file that every task has to append to.
+- **Fix (task dd98d806, PR #34, `7ef520e`):** `exclude:` in `docs/_config.yml` is the single glob `"*.md"`;
+  `pages-check` builds the site and tests that no Markdown file is published, instead of grepping exact lines;
+  rule 7 in `docs/AI_NATION.md`, `CLAUDE.md` and `docs/KNOWLEDGE.md` updated.
+- **Prevention:** never require a per-task line in a shared file; if a rule makes every task touch the same line,
+  replace the rule with a glob or a per-task file. Public pages must be HTML.
+- **Watch:** Projektmanager.
+- **Source:** hub task `dd98d806-5499-461e-ad15-077e2ae79924` (video-editor), knowledge item 2659. Record:
+  `docs/changes/2026-11-13-dd98d806.md`, `docs/AI_NATION.md` rule 7. Corrections to the hub draft: symptom was the
+  task title; check and prevention repeated the cause text and are rewritten; the fix text was cut off in the draft
+  and is completed from the commit message of `7ef520e`. Related entry: "Design audit PR #22 not mergeable".
+
+## 2026-11-13 – Plan for 1.1.6 (A1): the edge-to-edge theme opt-out no longer works with targetSdk 36
+
+- **Area:** Android UI (insets), planning; no app code changed.
+- **Symptom:** on Android 15/16 (API 35/36) the app draws under the status and navigation bar (finding A1 of the
+  design audit); on API 26–34 it looks correct. (Hub draft: the symptom was the task title.)
+- **Cause:** from API 35 edge-to-edge is enforced, and with targetSdk 36 the theme item
+  `windowOptOutEdgeToEdgeEnforcement` is ignored, so an opt-out in `themes.xml` fixes nothing. On API 26–34 the
+  decor view already consumes the system-bar insets.
+- **Check:** screenshot the main view on an API 35/36 emulator and on API 34; compare the top and bottom edges.
+- **Fix (planned, not implemented):** `docs/plans/2026-11-14-bugfixes-1-1-6.md` (PR #37, `019ca84`) pads
+  `binding.root` from a `WindowInsets` listener after `setContentView` in `MainActivity.kt` without calling
+  `enableEdgeToEdge()`. This fixes API 35/36 and is a no-op on API 26–34 (the listener gets zero insets). The plan
+  also covers A19, A22 and A23 with files/lines (verified on `07b2aae`), a rejected alternative each, screenshots
+  to retake and JVM tests (`ReviewTimeTest`). Start only after the owner has tagged `v1.1.5`.
+- **Prevention:** do not rely on the theme opt-out when targeting SDK 36; handle insets in code and verify on
+  API 35/36 and one older level. Re-check the plan's line numbers before editing.
+- **Watch:** Projektmanager.
+- **Source:** hub task `d392d839-7b10-4d88-bd9f-89f2ddda30f1` (video-editor), knowledge item 2663. Corrections to
+  the hub draft: symptom was the task title; check was "not stated" and is filled in from the plan; the fix is
+  marked as planned because the fix text of the draft described only the plan document. Effect on devices is
+  taken from the plan, not yet verified in an app build.
