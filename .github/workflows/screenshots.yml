@@ -84,9 +84,10 @@ jobs:
           EMU_PID=$!
           ADB="$ANDROID_HOME/platform-tools/adb"
           "$ADB" start-server
-          # cold boot without snapshot takes a few minutes; poll up to 10 min, fail early if the emulator process dies
-          booted=0
-          for i in $(seq 1 120); do
+          # cold boot without snapshot takes a few minutes; poll against a 10-minute wall-clock deadline (each adb
+          # call is capped at 10 s), fail early if the emulator process dies
+          booted=0; t0=$SECONDS
+          while [ $((SECONDS - t0)) -lt 600 ]; do
             kill -0 "$EMU_PID" 2>/dev/null || { echo "emulator process exited"; break; }
             [ "$(timeout 10 "$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ] && { booted=1; break; }
             sleep 5
@@ -98,7 +99,7 @@ jobs:
           fi
           "$ADB" shell input keyevent 82
           for s in window_animation_scale transition_animation_scale animator_duration_scale; do "$ADB" shell settings put global $s 0; done
-          echo "emulator booted after ~$((i * 5)) s"
+          echo "emulator booted after $((SECONDS - t0)) s"
 
       - name: Screenshots on emulator (API 35)
         run: |

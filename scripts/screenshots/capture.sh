@@ -8,7 +8,8 @@
 #   e.g. bash scripts/screenshots/capture.sh api35-small 720x1280 320 en fa ar
 # Expects the debug APK at app/build/outputs/apk/debug/app-debug.apk and one booted emulator on adb.
 # Output: screenshots/<tag>-<locale>-<nn>-<view>.png (+ uiautomator .xml dumps, device facts, logcat).
-# Exit code 1 if any expected screenshot is missing (list in screenshots/<tag>-missing.txt).
+# Exit code 1 if any expected screenshot is missing or its dump does not show the expected view
+# (list in screenshots/<tag>-missing.txt).
 set -u
 TAG=$1; SIZE=$2; DENS=$3; shift 3; LOCALES="$*"
 PKG=de.codinix.babacut
@@ -78,10 +79,15 @@ for L in $LOCALES; do
 done
 adb logcat -d > "$OUT/$TAG-logcat.txt" 2>&1 || true
 
+# a PNG only proves a capture happened; the uiautomator dump taken with it must also show the expected view
+marker(){ case $1 in 01-record) echo "$PKG:id/recordButton";; 04-review) echo "$PKG:id/reviewSaveButton";; *) echo design_bottom_sheet;; esac; }
 missing=0; : > "$OUT/$TAG-missing.txt"
 for L in $LOCALES; do for V in $VIEWS; do
-  f="$OUT/$TAG-$L-$V.png"
-  if [ ! -s "$f" ]; then echo "$TAG-$L-$V" >> "$OUT/$TAG-missing.txt"; missing=$((missing+1)); fi
+  f="$OUT/$TAG-$L-$V"
+  if [ ! -s "$f.png" ]; then echo "$TAG-$L-$V (no png)" >> "$OUT/$TAG-missing.txt"; missing=$((missing+1))
+  elif ! grep -q "$(marker "$V")" "$f.xml" 2>/dev/null; then
+    echo "$TAG-$L-$V (wrong view: no $(marker "$V") in dump)" >> "$OUT/$TAG-missing.txt"; missing=$((missing+1))
+  fi
 done; done
-log "missing screenshots: $missing"; cat "$OUT/$TAG-missing.txt"
+log "missing or wrong screenshots: $missing"; cat "$OUT/$TAG-missing.txt"
 [ "$missing" -eq 0 ]
