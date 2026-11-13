@@ -66,16 +66,37 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      # The emulator is installed and started with the Android SDK tools directly (sdkmanager, avdmanager, emulator);
+      # no third-party emulator action.
+      - name: Install emulator and API 35 system image
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "emulator" "platform-tools" "system-images;android-35;google_apis;x86_64" > /dev/null
+          echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --force -n shots -k "system-images;android-35;google_apis;x86_64" -d pixel_6
+
+      - name: Start emulator and wait for boot
+        run: |
+          "$ANDROID_HOME/emulator/emulator" -avd shots -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim \
+            -camera-back emulated -camera-front emulated > "$RUNNER_TEMP/emulator.log" 2>&1 &
+          ADB="$ANDROID_HOME/platform-tools/adb"
+          timeout 120 "$ADB" wait-for-device
+          for i in $(seq 1 120); do
+            [ "$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ] && break
+            sleep 5
+          done
+          [ "$("$ADB" shell getprop sys.boot_completed | tr -d '\r')" = 1 ] || { tail -50 "$RUNNER_TEMP/emulator.log"; exit 1; }
+          "$ADB" shell input keyevent 82
+          for s in window_animation_scale transition_animation_scale animator_duration_scale; do "$ADB" shell settings put global $s 0; done
+          echo "emulator booted after ~$((i * 5)) s"
+
       - name: Screenshots on emulator (API 35)
-        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
-        with:
-          api-level: 35
-          target: google_apis
-          arch: x86_64
-          profile: pixel_6
-          disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back emulated -camera-front emulated
-          script: bash scripts/screenshots/capture.sh ${{ matrix.tag }} ${{ matrix.size }} ${{ matrix.density }} en fa ar
+        run: |
+          export PATH="$ANDROID_HOME/platform-tools:$PATH"
+          bash scripts/screenshots/capture.sh ${{ matrix.tag }} ${{ matrix.size }} ${{ matrix.density }} en fa ar
+
+      - name: Stop emulator
+        if: always()
+        run: |
+          "$ANDROID_HOME/platform-tools/adb" emu kill || true
 
       - name: Upload screenshots
         if: always()
