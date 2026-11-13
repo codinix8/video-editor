@@ -1,0 +1,10 @@
+tag=api30 sdk=30 release=11
+abi=x86_64,x86,arm64-v8a,armeabi-v7a,armeabi
+model=sdk_gphone_x86_64
+Physical size: 1080x2400
+Physical density: 420
+Physical size: 1080x2400
+Override size: 1170x2532
+Physical density: 420
+Override density: 480
+0

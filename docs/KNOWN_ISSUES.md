@@ -9,11 +9,11 @@
     order; after a reorder, the old end time maps to null.
   - `captions()`: the 300 ms minimum duration wins over the segment-end clamp, so a caption that starts < 320 ms
     before a segment end can stick out into the next segment; a word can end before it starts after clamping.
-- **Edge-to-edge overlap on Android 15/16** (design audit 2026-11, finding A1, confirmed on an API 35 emulator):
+- **Edge-to-edge overlap on Android 15/16** (design audit 2026-11, finding A1; device-specific: confirmed on API 35 and 36 emulators incl. 360×640 dp, not reproduced on API 30, task fa0e1afc):
   `targetSdk = 36` but no window-inset handling; top/bottom controls may sit under the status bar, cutout or nav bar.
   Emulator: segment bar under the status-bar clock, white status icons vanish on bright footage
   (`docs/design/screenshots/app/api35-en-10-review-text.png`). Other UI findings: `docs/design/DESIGN-AUDIT-2026-11.md`.
-- **fa/ar settings rows: label and value touch** (design audit A19, emulator screenshot
+- **fa/ar settings rows: label and value touch** (design audit A19; confirmed in fa and ar on API 30/35/36, also caption and text sheets, task fa0e1afc; screenshot
   `docs/design/screenshots/app/api35-fa-02-settings-sheet.png`): e.g. "فارسیزبان برنامه"; `SheetRows.kt:53`, `:83-85`.
   Text-level fix, `supportsRtl=false` stays. Part of proposed task `5b1362db`.
 
