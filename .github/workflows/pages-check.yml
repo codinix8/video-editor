@@ -1,5 +1,6 @@
 # Pages check: builds docs/ the way GitHub Pages does (official Jekyll action, github-pages gem)
-# and fails if a project-record file listed under `exclude:` in docs/_config.yml reaches the site.
+# and fails if any Markdown file of docs/ (project record, excluded by "*.md" in docs/_config.yml)
+# reaches the site.
 # Runs only when docs/ changes. Deliberately deploys nothing; the live site is still built by
 # GitHub Pages from main:/docs.
 name: Pages check
@@ -27,21 +28,25 @@ jobs:
           source: ./docs
           destination: ./_site
 
-      - name: Excluded record files are not in the site
+      - name: No Markdown file of docs/ is in the site
         run: |
           set -eu
           test -f _site/index.html || { echo "::error::_site/index.html missing"; exit 1; }
+          # The site is HTML only; every Markdown file under docs/ is project record and is excluded
+          # by the glob "*.md" in docs/_config.yml (no per-file list, see task dd98d806).
           fail=0
-          for f in $(sed -n 's/^  - \(.*\.md\)$/\1/p' docs/_config.yml); do
+          n=0
+          while IFS= read -r p; do
+            f="${p#docs/}"
             base="${f%.md}"
+            n=$((n+1))
             for out in "_site/$f" "_site/$base.html" "_site/$base/index.html"; do
-              if [ -e "$out" ]; then echo "::error::$out is published but $f is excluded"; fail=1; fi
+              if [ -e "$out" ]; then echo "::error::$out is published but $p is project record"; fail=1; fi
             done
-            echo "ok: $f not in site"
-          done
-          # Every Markdown file in docs/ must be excluded (record files are never public pages).
-          for p in docs/*.md; do
-            f="$(basename "$p")"
-            grep -qx "  - $f" docs/_config.yml || { echo "::error::$f is not in docs/_config.yml exclude"; fail=1; }
-          done
+          done < <(find docs -name '*.md' -type f | sort)
+          # Belt and braces: no Markdown output anywhere in the built site.
+          if find _site -name '*.md' | grep -q .; then
+            echo "::error::Markdown files in the site:"; find _site -name '*.md'; fail=1
+          fi
+          echo "checked $n Markdown files under docs/"
           exit $fail

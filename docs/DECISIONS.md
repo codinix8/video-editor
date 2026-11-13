@@ -2,6 +2,16 @@
 
 Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, README and commit history.
 
+## 2026-11-13 – Play application runbook: no bracket placeholders, no guessed deep links (task f16621ce)
+- Placeholders in `docs/PLAY_PRODUCTION_APPLICATION.md` changed from `[Z1]`/`[BESTÄTIGEN: …]` to `‹Z1›`/`‹K1: …›`; the owner answers numbered items (Z1–Z7 values, K1–K8 each with its own answer form) instead of editing brackets, and the developer fills the text in. Reason: owner steps must not contain bracketed placeholders that look unfilled (hub knowledge #1757, R-258).
+- No Play Console deep links: they need the developer-account id, which is not in the record; click paths are given instead.
+- B3 ("1,000–10,000 installs") was labelled "owner decision" without record support; it is asked once more (K8) instead of being presented as decided.
+- Owner steps only once their prerequisite exists (hub knowledge #1756): Z1–Z7 are read only after 1.1.5 is in the closed test; no decision card was created (hub knowledge #571).
+- Review round on PR #27: K4 ("streichen") is an explicit source choice (a tester feedback / b own tests / c mixed / d unknown or omit); C1 gets a source sentence only for a, b or c. K7 (A1 level) and K8 (B3 range) accept alternatives. Rule: a rejected or unknown answer is never read as confirming the alternative.
+
+## 2026-11-13 – The website stays HTML only; Markdown in docs/ is excluded by one glob (task dd98d806)
+- Every Markdown file in `docs/` is project record and excluded by `"*.md"` in `docs/_config.yml`; a new public page must be an `.html` file. Reason: a per-file exclude list is a shared append point that conflicts on every parallel PR (5 of 7 PRs merged in 28 h edited it). `pages-check.yml` now verifies the built site (no `.md` in `_site`). #area/docs #type/decision
+
 ## 2026-11-12 – Literal percent via formatted="false", full Arabic plurals (task 0eecba17)
 - `mic_hint` is read with `getString(id)` without format args, so `%%` is never collapsed and showed literally in
   tr/es/fr/ar. Decision: strings without args that contain `%` get `formatted="false"` and a single `%` (not `%%`);

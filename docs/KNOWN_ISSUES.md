@@ -16,6 +16,7 @@
 - **fa/ar settings rows: label and value touch** (design audit A19; confirmed in fa and ar on API 30/35/36, also caption and text sheets, task fa0e1afc; screenshot
   `docs/design/screenshots/app/api35-fa-02-settings-sheet.png`): e.g. "فارسیزبان برنامه"; `SheetRows.kt:53`, `:83-85`.
   Text-level fix, `supportsRtl=false` stays. Part of proposed task `5b1362db`.
+- **New design-audit findings** (part of the proposed design tasks, tasks fa0e1afc, a8ef1268; details in `docs/design/DESIGN-AUDIT-2026-11.md`): A22 white segment bar invisible on bright footage (`SegmentProgressView.kt:20-21`, with A1/A20 in `d3bf1d65`); A23 review status can show position > total ("0:13 / 0:12", `MainActivity.kt:3270-3273`); A18 (fa/ar bidi in the review status) confirmed; A20b review hint cut at the left edge at 200 % font; A4 confirmed in fr/de and at 200 % font (pill not clickable, so no lost taps); A11 confirmed at 200 % ("720p" breaks and clips); A10 confirmed; A6 measured (44/36/25 dp targets, sheet buttons 46 dp); A5/A16 confirmed from the real export dialog. A3 (drag hint) stays plausible: cannot be scripted with `input motionevent`. #area/ui #type/bug
 
 - **9 lint errors frozen in `app/lint-baseline.xml`** (2026-11-10, task 40c40718; 16→9 by task 0eecba17; the old "15" undercounted) – CI ignores them, new ones block.
   Likely real problems, each needs its own fix:
@@ -44,5 +45,5 @@ Resolved issues: [`docs/DONE.md`](DONE.md) (append-only log; do not add "Resolve
   steps, not started): `docs/MAINACTIVITY_SPLIT.md`.
 - Play production access not yet granted (rejected 2026-10-25); revenue depends on it. Re-application draft:
   `docs/PLAY_PRODUCTION_APPLICATION.md` (needs Console figures Z1–Z7 and owner confirmations); closed-track delivery
-  of 1.1.2–1.1.4 is not provable from git.
+  of 1.1.2–1.1.5 is only provable from the Console (Z7). Draft is now for 1.1.5 with an owner runbook (task f16621ce).
 - Translation tables from the old container are lost; new strings must be added to all 7 `strings.xml` by hand.

@@ -16,6 +16,7 @@ Finished items: [`docs/DONE.md`](DONE.md) (append-only log; do not add "Done" it
       PR #17 superseded). Owner tags `v1.1.5`, internal test on
       his phone (checklist: `docs/TEST_CHECKLIST_1_1_5.md`, task 6e3ee84a), then the closed test "Closed Beta" with the release notes from `docs/CLOSED_TEST_1_1_4_PLAN.md` (B).
       Which versions reached the closed track is unverified (owner: Play Console).
+- [ ] Owner decision `concept.approval` on the 1.1.6 design polish ([concept 2026-11-13](concepts/2026-11-13-design-polish-1-1-6.md), task 277c2965; planner sends the decision). Proposal: improvement 5 (screenshots in CI) right away without a version bump; 1.1.6 / versionCode 85 = insets + press feedback + long texts/fa spacing; 1.1.7 / versionCode 86 = cancellable export. Bug parts A1 and A19/A3 may start without approval (owner rule: visible bugs are fixed directly). 1.1.5 (84) stays untouched.
 - [ ] Imprint data from the owner → finish website imprint/privacy (legal).
 
 ## Next
@@ -30,7 +31,7 @@ Finished items: [`docs/DONE.md`](DONE.md) (append-only log; do not add "Done" it
 - [ ] Owner proofreads FA/AR texts; check screenshots per language for clipped buttons.
 - [ ] Clarify caption drift on very long videos.
 - [ ] Design audit 2026-11 follow-ups (task 9defaf40, `docs/design/DESIGN-AUDIT-2026-11.md`): top 5 proposed as
-      tasks (hub ids `d3bf1d65`, `6e53b97d`, `5b1362db`, `067dc3c3`, `5cf6cd1c`), waiting for the owner's release – edge-to-edge insets, pressed feedback + 48dp targets, long-translation
+      tasks (hub ids `d3bf1d65`, `6e53b97d`, `5b1362db`, `067dc3c3`, `5cf6cd1c`), waiting for the owner's release (concept with mockups 2026-11-13, see "Now"; screenshots of all main views incl. export progress done by tasks fa0e1afc, a8ef1268; only A3 drag hint still open in the audit) – edge-to-edge insets, pressed feedback + 48dp targets, long-translation
       overflow (incl. fa/ar label-value spacing, A19), cancellable export, app screenshots in CI. Website findings W1–W5 fit the website relaunch.
 
 ## Later

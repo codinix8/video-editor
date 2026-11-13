@@ -12,7 +12,8 @@ These project rules take precedence; the AI Nation section below adds to them.
 - New UI strings go into all 7 `strings.xml` (values = EN default, values-de/tr/es/fr/fa/ar).
 - No superlatives in marketing copy; no secrets in the repo or docs.
 - `docs/` is the public website (GitHub Pages, babacut.io). Project-record Markdown files there are excluded from
-  the site via `docs/_config.yml` – keep that list in sync when adding record files.
+  the site by the glob `"*.md"` in `docs/_config.yml` – do not add per-file entries there (shared-line conflicts,
+  task dd98d806); public pages must be HTML.
 
 ## AI Nation
 

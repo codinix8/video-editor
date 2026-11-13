@@ -1,22 +1,10 @@
 # GitHub Pages (Jekyll) config for babacut.io.
 # The project record (Markdown) lives in docs/ too but must not be published on the website.
+# The website is HTML only, so every Markdown file is excluded by one glob ("*.md" also matches
+# files in subfolders). Do not list single record files here: a per-file list made every PR that
+# adds a record file append to the same line and conflict with main (task dd98d806).
 exclude:
-  - AI_NATION.md
-  - HANDOVER.md
-  - ROADMAP.md
-  - DECISIONS.md
-  - KNOWLEDGE.md
-  - KNOWN_ISSUES.md
-  - DONE.md
-  - CONCEPT.md
-  - FINETUNING.md
-  - CLOSED_TEST_1_1_4_PLAN.md
-  - MAINACTIVITY_SPLIT.md
-  - PLAY_PRODUCTION_APPLICATION.md
-  - design
-  - RELEASE_NOTES_1_1_5.md
-  - TEST_CHECKLIST_1_1_5.md
-  - concepts
+  - "*.md"
   - changes
-  - TROUBLESHOOTING.md
-  - concepts/2026-11-13-design-polish-1-1-6.md
+  - concepts
+  - design

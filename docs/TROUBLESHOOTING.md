@@ -31,6 +31,42 @@ record before they land here; the source line keeps the hub knowledge item id.
   Corrections to the hub draft: the symptom was the task title only and the cause was "not stated"; both were
   filled in from `docs/DECISIONS.md`, `docs/AI_NATION.md` and the PR history (PR #1, #4).
 
+## 2026-11-12 – Returned merges, round 2: parallel PRs inserted record entries at the same line
+
+- **Area:** docs (project record), merge, review; no app code.
+- **Symptom:** after the first conflict fix (task 9167d767, PR #14), 10 of the project's merges/reviews still came
+  back within 24 h. Reasons: "Conflict with main", "protected area, merge only by the owner" and a required
+  re-review after a base merge. Docs-only PRs could not be merged without a manual conflict resolution.
+- **Cause:** the rule added by PR #14 told every PR to put its entry *at the top* of ROADMAP "Done" and
+  KNOWN_ISSUES "Resolved". Two branches that insert at the same line always conflict in git, however small the
+  entries are (verified: PR #16 head `e8e6f13` vs `main` `3fc36eb` → conflict in `KNOWN_ISSUES.md`; PR #16 vs
+  #15). `merge=union` covered only `docs/DECISIONS.md` at that time. The other two return reasons are not
+  repo-side: PRs touching protected paths (`.github/workflows/`) need the owner's merge, and a base merge after
+  approval triggers a re-review by design (hub R-130).
+- **Check:** before opening a PR, run `git fetch origin && git merge-tree --write-tree origin/main HEAD` (git ≥ 2.38;
+  exit code 1 and `CONFLICT` lines mean a conflict). Flag any record rule that makes every task write at the same
+  line. Count returned merges/reviews by reason: many "Conflict with main" returns on the same files point to a
+  systemic cause, not to single PRs.
+- **Fix (task 5d8b5cdc, PR #19, merged):** finished work and resolved issues moved into the append-only
+  `docs/DONE.md` (new bullets at the end, old ones never edited) with `merge=union` in `.gitattributes`; ROADMAP
+  keeps only Now/Next/Later and KNOWN_ISSUES only Open issues/Risks, changed in place; rule 6 "smallest record
+  diff" in `docs/AI_NATION.md`. Verified with `git merge-tree`: two branches appending to `DONE.md` gave 1 conflict
+  without the attribute, 0 with it. Since pipeline v18 each task writes its own change fragment in
+  `docs/changes/`, so tasks no longer touch shared record lines at all.
+- **Prevention:** write the record as a new fragment file (`docs/changes/`) or an append at the end of a
+  `merge=union` file; never make a rule that inserts at a fixed line. Use `merge=union` only for files whose lines
+  are never edited (not ROADMAP, KNOWN_ISSUES, KNOWLEDGE, HANDOVER – union would silently keep both versions).
+  Keep workflow changes in their own small PR so the owner-only merge does not block other work. Whether GitHub's
+  own mergeability check honours `merge=union` is unverified; the merger merges locally.
+- **Watch:** Projektmanager.
+- **Source:** hub task `5d8b5cdc-3e5a-42a4-ab9b-a51e6a1f9e9a` (video-editor), knowledge item 2378. Record:
+  `docs/DECISIONS.md` 2026-11-12 "Done log split out of ROADMAP/KNOWN_ISSUES", `docs/KNOWLEDGE.md` "Record merge
+  conflicts, round 2". Corrections to the hub draft: the incident date is 2026-11-12 (hub: 2026-11-13, the
+  derivation date); "rule #14" is the rule added by PR #14; "prevention" repeated the check text and was rewritten;
+  the owner-only merge and the re-review after a base merge are expected returns, not part of the cause; the
+  pipeline v18 change fragments and the limits of `merge=union` were added. Commit `e8e6f13` (PR #16's old head)
+  is not on `main`; the reference is taken from `docs/DECISIONS.md`.
+
 ## 2026-11-10 – CI ran no tests and lint was green only because errors were swallowed
 
 - **Area:** CI (`.github/workflows/ci.yml`), lint, unit tests; no app behaviour.
@@ -125,3 +161,175 @@ record before they land here; the source line keeps the hub knowledge item id.
 - **Watch:** Projektmanager.
 - **Source:** hub task `6f0c1893-6e11-4dd9-bc4e-05365c9ed4a0` (video-editor), knowledge item 2261. Record:
   `docs/DECISIONS.md` 2026-11-11 "Error texts from resources via UserFacingException", `docs/DONE.md`.
+
+## 2026-11-12 – Knowledge sync: `hub_knowledge_sync` result too large for the tool output
+
+- **Area:** docs (project record), integration (AI Nation hub tools); no app code.
+- **Symptom:** during the first knowledge sync (task 0fe9cac9), `hub_knowledge_sync` for `docs/KNOWLEDGE.md`
+  returned about 146 KB (403 items). The MCP client cut the response off at its output limit, so `content_md`
+  could not be copied into the file reliably from the visible tool output.
+- **Cause:** the generated section "Aus dem Wissens-Hub" holds every non-confidential hub item for the project,
+  so the payload exceeds the MCP tool output limit; the client saves the full result to a tool-result file
+  instead. The agent container has no `python3` and no `jq` for scripting the payload, only `node`.
+- **Check:** a tool result that ends with a "saved to …" / "exceeds maximum allowed tokens" notice, or a payload
+  far larger than usual. Read the saved result file, not the visible output, and compare the item count and size
+  with the hub's summary before writing anything.
+- **Fix:** parse the saved tool-result file with `node`, extract `content_md` and write it to
+  `docs/KNOWLEDGE.md` directly instead of retyping it; review `git diff --stat` (only the generated section may
+  change), then commit, add the log bullet in `docs/DONE.md` (PR #20) – or, since pipeline v18, a change
+  fragment in `docs/changes/` – and open the PR.
+- **Prevention:** keep the request small: the sync only reads entries outside the generated section, so send the
+  hand-written part plus empty `BEGIN hub-knowledge`/`END hub-knowledge` markers instead of the full file (found
+  in task 228be7ef, PR #32). Expect the response to land in a file and plan the `node` extraction from the start;
+  never edit the generated section by hand – re-run the sync.
+- **Watch:** Projektmanager.
+- **Source:** hub task `0fe9cac9-f116-4a40-8d6e-28bc0b0f8138` (video-editor), knowledge item 2391. Record:
+  `docs/DONE.md` 2026-11-12 "Knowledge sync (task 0fe9cac9)", PR #20 (commit `5ea5e0a`); follow-up sync
+  `docs/changes/2026-11-13-228be7ef.md` (PR #32). Corrections to the hub draft: the incident date is 2026-11-12
+  (hub: 2026-11-13, the derivation date); the log bullet went to `docs/DONE.md`, not HANDOVER; "prevention"
+  repeated the check text and was rewritten with the smaller-request approach from task 228be7ef. The 146 KB size
+  is taken from the hub draft; the record states the item count (403, 2 confidential excluded).
+
+## 2026-11-12 – `gh pr create` in the agent container did not find the pushed branch (strings guard task)
+
+- **Area:** AI Nation process (git, GitHub CLI in the agent container); no app code.
+- **Symptom:** in task 6e3ee84a (strings consistency test and 1.1.5 phone checklist) `gh pr create` did not pick up
+  the branch that had just been pushed with `git push -u origin <branch>`, so the PR could not be opened with the
+  plain command. (Hub draft: the symptom was the task title plus a status line about 1.1.5; the task itself had no
+  app incident – the gotcha came from its learnings.)
+- **Cause:** per the source task's learning, the upstream of the branch is not always recorded in the agent
+  container after `git push -u`, and `gh` then cannot work out the head branch. The exact trigger was not
+  recorded; this is a tooling quirk of the container, not of this repo.
+- **Check:** after the push, `git rev-parse --abbrev-ref --symbolic-full-name @{u}` must print
+  `origin/<branch>`; if it fails, or `gh pr create` asks for or rejects the head branch, the upstream is missing.
+- **Fix:** open the PR with the head branch named explicitly:
+  `gh pr create --base main --head <branch> --fill` (or with `--title`/`--body`). The task's own result was
+  unaffected: `StringsConsistencyTest` (JVM, plain-text parse of the 7 `strings.xml`) checks that every key of
+  `values/` exists in de/tr/es/fr/fa/ar and that EN/tr/es/fr/fa/ar contain none of the German 1.1.5 error words;
+  CI `build-test-lint` green, no gaps or leaks, so no string fix and no versionCode change (PR #23, merged as
+  `febce28`).
+- **Prevention:** always pass `--head <branch>` to `gh pr create` in agent runs; it costs nothing when the
+  upstream is set. If the same failure shows up in other projects, report it as a platform (runner) issue instead
+  of working around it per repo.
+- **Watch:** Projektmanager.
+- **Source:** hub task `6e3ee84a-b322-4e93-9972-264616e8b76c` (video-editor), knowledge item 2532. Record:
+  `docs/DECISIONS.md` 2026-11-12 "Strings consistency guard and 1.1.5 phone checklist", `docs/DONE.md`.
+  Corrections to the hub draft: the incident date is 2026-11-12 (hub: 2026-11-13, the derivation date); the
+  symptom was the task title and a status line, and check/prevention were "not stated" – rewritten around the
+  `gh pr create` gotcha that the draft gave as cause. The gotcha itself is taken from the hub draft; the repo
+  record does not describe it.
+
+## 2026-11-12 – Design audit PR #22 not mergeable: conflict in `docs/_config.yml`
+
+- **Area:** merge, docs (website config, project record); no app code.
+- **Symptom:** PR #22 (design audit, task 9defaf40) could not be merged: merging `origin/main` into the branch
+  produced a conflict in `docs/_config.yml`.
+- **Cause:** two parallel PRs each appended a per-file exclude entry at the same place of the `exclude:` list in
+  `docs/_config.yml` – PR #22 added `design`, PR #21 (task 9c582082) added `RELEASE_NOTES_1_1_5.md`. Two branches
+  that insert at the same line always conflict. A plain merge conflict, no app or CI failure.
+- **Check:** before handing a PR to review, run `git fetch origin && git merge-tree --write-tree origin/main HEAD`
+  (exit code 1 and `CONFLICT` lines mean a conflict) or `gh pr view <n> --json mergeable`. Treat shared lists that
+  every task appends to (here the exclude list) as conflict hotspots.
+- **Fix (task 9defaf40, rework 2):** merged `origin/main` into the PR branch and kept both sides (`design` and
+  `RELEASE_NOTES_1_1_5.md`); audit content untouched, CI green (`build-test-lint`, `pages-exclude`), PR merged as
+  `c172fe7`; logged in `docs/DONE.md`. The root cause was removed later by task dd98d806 (PR #34): the exclude list
+  is now one glob `"*.md"` plus the folders `changes`, `concepts`, `design`, and `pages-check.yml` checks the built
+  site instead of per-file lines.
+- **Prevention:** do not add per-file entries to `docs/_config.yml` (project rule in `CLAUDE.md`); new record files
+  are Markdown and already excluded by the glob. Any new list that every task appends to should get the same
+  treatment (one glob, a fragment file, or `merge=union` for append-only files).
+- **Watch:** Projektmanager.
+- **Source:** hub task `9defaf40-48b7-41cf-9336-c0f8a2c8b1ce` (video-editor), knowledge item 2533. Record:
+  `docs/DONE.md` 2026-11-12 "Design audit rework 2", `docs/DECISIONS.md` 2026-11-13 "The website stays HTML only"
+  (task dd98d806). Corrections to the hub draft: the incident date is 2026-11-12 (hub: 2026-11-13); "prevention"
+  repeated the check text and now names the glob fix from task dd98d806, which already removed the hotspot.
+
+## 2026-11-13 – Concept mockups: Playwright in the cloud runner, and a pages check that missed concept files
+
+- **Area:** tooling (Playwright in the cloud runner), docs/CI (`docs/_config.yml`, `pages-check.yml`); no app code.
+- **Symptom:** while writing the 1.1.6 design concept (task 277c2965, PR #25) two things got in the way:
+  (1) Playwright mockups could not be rendered the usual way – `npx playwright install` failed with `EACCES`, and
+  local images did not appear when the mockup HTML was loaded with `page.setContent`; (2) the new concept file
+  under `docs/concepts/` was not covered by `pages-check.yml`, so CI could not prove it stayed off babacut.io.
+  (Hub draft: the symptom was the task title; the concept itself had no incident.)
+- **Cause:** (1) the runner cannot write the Playwright browser folder, but ships a headless shell at
+  `/opt/pw-browsers/chromium_headless_shell-1243`; `setContent` renders on `about:blank`, which may not load
+  `file://` images. (2) the pages check of that time only tested exclude entries ending in `.md` and the top-level
+  `docs/*.md` files, not files in subfolders.
+- **Check:** (1) `ls /opt/pw-browsers/` shows the preinstalled shell; a mockup with blank image boxes points to the
+  `about:blank` origin. (2) today: the `pages-exclude` job prints `checked <n> Markdown files under docs/` – the count
+  must include files in subfolders.
+- **Fix:** (1) launch Chromium with `executablePath: '/opt/pw-browsers/chromium_headless_shell-1243/…'`, write the
+  mockup HTML to a file and open it with `page.goto('file://…')`. (2) PR #25 excluded the folders `concepts` and
+  `changes` and listed `concepts/2026-11-13-design-polish-1-1-6.md` by path so the check covered it. The result,
+  `docs/concepts/2026-11-13-design-polish-1-1-6.md`, presents the five audit improvements (d3bf1d65 insets,
+  6e53b97d press feedback + 48dp, 5b1362db long translations incl. fa/ar A19, 067dc3c3 cancellable export,
+  5cf6cd1c app screenshots in CI) with 11 mockups.
+- **Prevention:** (1) is in `docs/KNOWLEDGE.md` (Playwright mockups in the cloud container); the browser path can
+  differ per runner (see hub #2270: `/opt/tools/pw-browsers` unreadable – then install into an own
+  `PLAYWRIGHT_BROWSERS_PATH`). (2) is obsolete since task dd98d806 (PR #34): `docs/_config.yml` excludes every
+  Markdown file by the glob `"*.md"` and `pages-check.yml` checks every `docs/**/*.md` against the built site. Do
+  **not** list concept files by path any more (project rule in `CLAUDE.md`).
+- **Watch:** Projektmanager.
+- **Source:** hub task `277c2965-6ff5-46ed-b46b-e41668b3b709` (video-editor), knowledge item 2560. Record:
+  `docs/DONE.md` 2026-11-13 "Concept for BabaCut 1.1.6 design polish", fragment of PR #25 (`c84b3f5`).
+  Corrections to the hub draft: symptom was the task title; check and prevention repeated the pages-check text,
+  which dd98d806 has since made obsolete – prevention now names the glob. The `EACCES` detail is taken from the hub
+  draft; the repo record only describes the working path.
+
+## 2026-11-13 – App screenshots in CI: API 30 emulator timed out, a launcher ANR dialog swallowed taps
+
+- **Area:** tooling (emulator screenshot workflow in GitHub Actions), design audit; no app code.
+- **Symptom:** in the design audit round 2 (task fa0e1afc, PR #26) the screenshot runs for the comparison devices
+  failed: the API 30 job hit the 60-minute job limit after 3 locales, and on the small 360×640 dp emulator every tap
+  of run 1 went nowhere. (Hub draft: the symptom was the task title and cause/check/prevention were "not stated".)
+- **Cause:** the API 30 `google_apis` x86_64 image runs ARM translation and is about 3× slower than API 35. On the
+  small emulator a system dialog "Pixel Launcher isn't responding" covered the app. API < 33 also has no
+  `cmd locale set-app-locales`, so the per-app locale switch did not work there.
+- **Check:** look at the job duration per API level and at a screenshot of the first failing step – a system ANR
+  dialog or the wrong language shows at once. `adb shell uiautomator dump` lists `android:id/aerr_wait` when the
+  ANR dialog is open.
+- **Fix:** the capture script presses `android:id/aerr_wait` inside its dump helper, switches the system locale on
+  API < 33 (`adb root`, `persist.sys.locale`, zygote restart) and taps the last clickable `TextView` for a sheet's
+  positive action (sheet buttons are `TextView`s, locale-independent). Result: all 11 main views in en/de/fa on API
+  35 (390×844 dp) plus comparison images on API 36, API 30 and 360×640 dp in
+  `docs/design/screenshots/app/2026-11-13/`; `DESIGN-AUDIT-2026-11.md` got a finding → status → screenshot table
+  (A1 device-specific: API 35/36 incl. the small screen, not API 30; A19 confirmed in fa and ar on all devices).
+- **Prevention:** give API < 33 emulator jobs ≥ 90 minutes or fewer views; keep the ANR guard in the dump helper,
+  or avoid the dialog before installing (`pm disable-user --user 0 com.google.android.apps.nexuslauncher`,
+  `settings put global hide_error_dialogs 1`).
+  Both how-tos are in `docs/KNOWLEDGE.md` (emulator screenshots in CI). The capture workflow lives
+  only on the scratch branch `agent/fa0e1afc-app-shots`; task 5cf6cd1c (screenshots in CI) should take these
+  settings over.
+- **Watch:** Projektmanager.
+- **Source:** hub task `fa0e1afc-1e64-4faf-8fbc-290547e3a551` (video-editor), knowledge item 2563. Record: fragment of
+  PR #26 (`5b7674c`, sections Handover/Known issues/Knowledge), `docs/KNOWN_ISSUES.md` A1/A19.
+  Corrections to the hub draft: cause, check and prevention were "not stated" and are filled in from the PR #26
+  fragment; the result list is unchanged.
+
+## 2026-11-13 – Rework of PR #27: task branch existed only on the remote
+
+- **Area:** AI Nation process (git in the runner clone), docs (Play production application); no app code.
+- **Symptom:** for the rework round on PR #27 (task f16621ce, owner review at `6cce0e5`) the task branch
+  `agent/f16621ce-babacut-make-the-play-production-applica` existed on GitHub but could not be checked out as
+  `origin/<branch>` in the fresh runner clone. (Hub draft: the symptom was the task title and the cause "not
+  stated".)
+- **Cause:** per the source task's learning, the runner clone does not always fetch remote-only task branches, so
+  `origin/<branch>` is missing. The exact trigger (clone depth or refspec) was not recorded.
+- **Check:** `git ls-remote origin refs/heads/<branch>` shows the branch on the remote while
+  `git rev-parse --verify origin/<branch>` fails.
+- **Fix:** check out the PR head SHA (`gh pr view <n> --json commits`, or
+  `git fetch origin refs/pull/<n>/head`), commit the rework and push with `git push origin HEAD:refs/heads/<branch>`.
+  The rework (commit `4a4c0d7`, base merge `1739218`, PR merged as `906c822`) made K4 an explicit source choice
+  (a tester feedback / b own tests during the closed test / c mixed per change / d unknown or omit), gave C1 a
+  source sentence only for a/b/c, stopped the A3 fallback from claiming "own tests" unless K4 is b or c, and split
+  K7 (A1 level) and K8 (B3 range).
+- **Prevention:** for rework rounds start with `git fetch origin <branch>:refs/remotes/origin/<branch>` or the PR
+  head SHA instead of assuming `origin/<branch>` exists. If the same happens in other projects, report it as a
+  runner (platform) issue.
+- **Watch:** Projektmanager.
+- **Source:** hub task `f16621ce-edd3-4c9e-87cd-c87db80242e1` (video-editor), knowledge item 2564. Record:
+  `docs/DONE.md` 2026-11-13 "Play production application updated to 1.1.5", fragment of PR #27 (`906c822`,
+  Decisions "Review round on PR #27"). Corrections to the hub draft: symptom was the task title; check and
+  prevention repeated the cause text. The branch gotcha itself is taken from the hub draft; the repo record does not
+  describe it (PR #27 head branch and commits verified with `gh pr view 27`).

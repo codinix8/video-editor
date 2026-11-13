@@ -16,13 +16,17 @@ Onboarded into AI Nation on 2026-11-08 (task 4e8e8c10). The project's own rules 
 | Done log      | [`docs/DONE.md`](DONE.md) | **New (2026-11-12).** Append-only log of finished work and resolved issues (was ROADMAP "Done" + KNOWN_ISSUES "Resolved"); new bullets at the end; `merge=union`. |
 | Owner profile | [`docs/FINETUNING.md`](FINETUNING.md) | **New (2026-11-08), synced 2026-11-11.** How the owner thinks, decides and gives feedback; dated mirror of the hub fine-tuning store (project + `_cross`). |
 | Proposals     | [`docs/MAINACTIVITY_SPLIT.md`](MAINACTIVITY_SPLIT.md) | **New (2026-11-10).** Plan for splitting `MainActivity.kt` in 12 move-only steps; waiting for the owner. |
-| Play application | [`docs/PLAY_PRODUCTION_APPLICATION.md`](PLAY_PRODUCTION_APPLICATION.md) | **New (2026-11-10, revised).** German draft of the 2nd production-access request: Play Console figures Z1–Z7 + `[BESTÄTIGEN]` items the owner fills in; apply after the 1.1.4 polish. |
-| Design audit  | [`docs/design/DESIGN-AUDIT-2026-11.md`](design/DESIGN-AUDIT-2026-11.md) | **New (2026-11-12).** Ranked UI findings (app + website) against the hub design skills, screenshots, top 5 proposals. |
+| Play application | [`docs/PLAY_PRODUCTION_APPLICATION.md`](PLAY_PRODUCTION_APPLICATION.md) | **New (2026-11-10), updated 2026-11-13.** German draft of the 2nd production-access request for 1.1.5 (versionCode 84): owner runbook, Console figures Z1–Z7 and confirmations K1–K8; apply only once 1.1.5 is in the closed test. |
+| Troubleshooting | [`docs/TROUBLESHOOTING.md`](TROUBLESHOOTING.md) | **New (2026-11-13).** Incident entries (symptom, cause, check, fix, prevention) derived from hub knowledge items. |
+| Concepts      | [`docs/concepts/`](concepts/) | **New (2026-11-13).** Owner-approval concepts with mockups, e.g. `2026-11-13-design-polish-1-1-6.md`. |
+| Change fragments | [`docs/changes/`](changes/) | One file per task (pipeline v18); the documentation task folds them into the shared files and deletes them. |
+| Release/test plans | [`CLOSED_TEST_1_1_4_PLAN.md`](CLOSED_TEST_1_1_4_PLAN.md), [`RELEASE_NOTES_1_1_5.md`](RELEASE_NOTES_1_1_5.md), [`TEST_CHECKLIST_1_1_5.md`](TEST_CHECKLIST_1_1_5.md) | Tester-update plan, Play "What's new" draft in 7 languages (FA/AR await proofreading), owner test checklist for 1.1.5. |
+| Design audit  | [`docs/design/DESIGN-AUDIT-2026-11.md`](design/DESIGN-AUDIT-2026-11.md) | **New (2026-11-12).** Ranked UI findings (app + website) against the hub design skills, screenshots (rounds 1–3, 2026-11-13), top 5 proposals. |
 | Status table  | [`/README.md`](../README.md) "Stand" | Existing, German, per-step build history. |
 | Repo rules    | [`/CLAUDE.md`](../CLAUDE.md) | **New.** Project rules + AI Nation section. |
 
 `docs/` is also the public website (GitHub Pages, babacut.io). The record files above are excluded from the site
-via [`docs/_config.yml`](_config.yml).
+via [`docs/_config.yml`](_config.yml) (one glob `"*.md"`, no per-file list; new record files need no edit there).
 
 ## State summary (2026-11-08)
 
@@ -88,6 +92,10 @@ behind. Rules for every record change:
    DECISIONS entry if something was decided, and a KNOWLEDGE entry for a durable fact). Edit ROADMAP
    ("Now/Next/Later"), KNOWN_ISSUES ("Open issues", "Risks") or HANDOVER only when the task changes that state, and
    then only the lines of your own item. Every extra edit of a shared line is a future conflict.
+7. **No append-at-the-end lists in shared config.** A list that every task extends (formerly the per-file
+   `exclude:` list in `docs/_config.yml`) is the same-line conflict of rule 1 in a config file; `merge=union` only
+   covers local merges of the two log files. Replace such lists with a pattern or a directory (since
+   2026-11-13 `"*.md"`, task dd98d806). Before a PR: `git merge-tree --write-tree origin/main HEAD`.
 
 ## State and backlog (2026-11-09)
 

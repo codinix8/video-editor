@@ -112,8 +112,8 @@ Mosaik-Videos, Erkennung Ali/Baba, Vorlagen ab der 4., Emojis, Filter ab dem 4.,
   und 10 ein weiteres Update zu liefern. Antworten für den Antrag (300-Zeichen-Felder) sind im alten Chat formuliert;
   beim zweiten Antrag konkreter mit Zahlen/Zitaten. **Entwurf für den zweiten Antrag (2026-11-10):**
   `docs/PLAY_PRODUCTION_APPLICATION.md` (Antworttexte + Liste der Console-Zahlen Z1–Z7, die der Nutzer abliest). Überarbeitet nach
-  Review: Aussagen, die nur der Nutzer kennt, als `[BESTÄTIGEN]`; Antrag laut seiner Wahl erst nach 1.1.4-Feinschliff
-  (Fehlermeldungen in 7 Sprachen – im Tag `v1.1.4` noch nicht enthalten).
+  Review: Aussagen, die nur der Nutzer kennt, als `[BESTÄTIGEN]`; Antrag laut seiner Wahl erst nach dem Feinschliff.
+  **Stand 13.11.2026:** Entwurf auf 1.1.5 (Versionscode 84) umgestellt, mit Owner-Runbook (Console-Wege für Z1–Z7, Bestätigungen K1–K8; Aufgabe f16621ce). Z1–Z7 liest der Owner erst, wenn 1.1.5 im geschlossenen Test ist; nichts eingereicht.
 - Abo in der Console: `babacut_pro` aktiv, Pläne `monthly` (netto so gesetzt, dass DE 2,99 € brutto) und `annual`
   (19,99 € brutto) mit Angebot `trial7`; alter Prepaid-Plan `yearly` inaktiv. Lizenztester: das Konto des Nutzers.
 - Play App Signing aktiv; Upload-Schlüssel `babacut-upload.jks` (Alias `babacut`, gültig bis 2054) liegt beim Nutzer.
@@ -164,3 +164,4 @@ Proposal for splitting `MainActivity.kt` (2026-11-10, waiting for the owner): [d
 Design audit against the hub design skills (2026-11-12, read-only; top 5 proposed to the owner; app screenshots from an API 35 emulator, edge-to-edge overlap confirmed): [docs/design/DESIGN-AUDIT-2026-11.md](docs/design/DESIGN-AUDIT-2026-11.md).
 Team decision `project.team` requested on 2026-11-09 (see [docs/DECISIONS.md](docs/DECISIONS.md)).
 Record changes follow "Writing the record without conflicts" in [docs/AI_NATION.md](docs/AI_NATION.md) (2026-11-11). Finished work and resolved issues: [docs/DONE.md](docs/DONE.md) (append-only log, new bullets at the end; since 2026-11-12).
+Stand 2026-11-13 (Fragmente eingearbeitet, Aufgabe 5eee4bc2): Design-Audit-Screenshots Runden 2–3 fertig (nur A3 offen); Konzept für die 1.1.6-Designpflege wartet auf die Owner-Entscheidung [docs/concepts/2026-11-13-design-polish-1-1-6.md](docs/concepts/2026-11-13-design-polish-1-1-6.md); Störungen und Lösungen: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md); die Webseite bleibt reines HTML, alle `docs/*.md` sind per Glob ausgeschlossen. 1.1.5 (84) ist noch nicht getaggt.
