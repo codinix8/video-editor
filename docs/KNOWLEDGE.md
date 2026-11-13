@@ -58,14 +58,16 @@ English digest; details in [HANDOVER.md](../HANDOVER.md) §2–3 (German).
 - Web font: Vazirmatn is self-hosted (`docs/assets/fonts/`, `@font-face` at the top of `style.css`). Do not add
   external font/CSS links (Google Fonts = German warning-letter risk). Upstream woff2 files:
   `raw.githubusercontent.com/rastikerdar/vazirmatn/v33.003/fonts/webfonts/`.
-- Jekyll is active (no `.nojekyll`); Markdown in `docs/` would be published unless listed in `docs/_config.yml`.
+- Jekyll is active (no `.nojekyll`); Markdown in `docs/` would be published, so `docs/_config.yml` excludes every
+  `*.md` by one glob (since 2026-11-13, task dd98d806; before: a per-file list).
 
 ## Working with the owner
 - Read [FINETUNING.md](FINETUNING.md) before talking to the owner: plain German, no jargon, he dictates,
   "erst reden, dann bauen", a "Bitte prüfen" checklist per build, every string in all 7 languages.
 - FINETUNING.md is a dated mirror of `hub_finetuning` (last sync 2026-11-11, 63 insights). Before relying on it,
   re-run `hub_finetuning` and compare count/dates; the hub wins on conflicts.
-- Any new Markdown file in `docs/` must be added to `exclude` in `docs/_config.yml`, or it is published on babacut.io.
+- New Markdown files in `docs/` need no `_config.yml` edit: the glob `"*.md"` keeps them off babacut.io (checked by
+  `pages-check.yml`). A new public page must be HTML (task dd98d806).
 
 ## Record merge conflicts (2026-11-11, task 9167d767)
 Tags: `scope/project` `area/merge` `area/review` `type/incident` `tech/git`
