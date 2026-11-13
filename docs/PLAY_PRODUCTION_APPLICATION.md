@@ -5,7 +5,7 @@
 > aktualisiert am 2026-11-13 (Aufgabe f16621ce). Sprache: Deutsch, für den Owner.
 > Status: **Entwurf. Nichts eingereicht, nichts hochgeladen, nichts gesendet.**
 > **Z1 … Z7** = Werte, die du in der Play Console abliest (nur lesen, nichts ändern).
-> **K1 … K7** = Aussagen, die nur du kennst. Du antwortest je Aussage mit „stimmt“ oder „streichen“.
+> **K1 … K8** = Fragen, die nur du beantworten kannst (je Frage steht dabei, wie du antwortest).
 > In den Antworttexten (Abschnitt 3) stehen Z- und K-Nummern als Platzhalter; die setze **ich** ein, nicht du.
 > Grundsatz: Nichts erfinden. Eine Zahl in der Console belegt nur sich selbst, nicht, *was* Tester gemacht haben.
 
@@ -15,8 +15,8 @@
 (deine Entscheidung 2a5ce05a: erst das Update, dann der Antrag). Stand 2026-11-13: `v1.1.5` ist noch nicht
 getaggt; die Schritte davor stehen in `docs/TEST_CHECKLIST_1_1_5.md`.
 
-**Was du tust:** sieben Werte in der Play Console ablesen (Tabelle unten, nur lesen) und sieben Fragen mit
-„stimmt“ oder „streichen“ beantworten. Screenshots reichen.
+**Was du tust:** sieben Werte in der Play Console ablesen (Tabelle unten, nur lesen) und acht Fragen beantworten
+(Tabelle K1–K8, je Frage steht die Antwortform). Screenshots reichen.
 
 **Was du nicht tust:** nichts in der Console ändern, keinen Antrag absenden, nichts hochladen. Den Antrag stellst
 du erst, wenn ich die Texte mit deinen Werten fertig gemacht habe.
@@ -39,19 +39,21 @@ Klickpfad. Die Console zeigt die Menünamen je nach Spracheinstellung auf Deutsc
 
 Wird ein Wert nicht angezeigt: einfach „nicht angezeigt“ schreiben, ich passe den Text an.
 
-### K1–K7: Fragen, die nur du beantworten kannst
+### K1–K8: Fragen, die nur du beantworten kannst
 
-Antwort je Frage: „stimmt“ oder „streichen“ (bei K3 und K5 mit Zahl).
+Die Antwortform steht in der Spalte „So antwortest du“. Weißt du etwas nicht sicher, antworte „weiß nicht“; dann
+lasse ich den Satz weg.
 
-| # | Aussage | Wofür |
-|---|---|---|
-| K1 | Die Tester haben vor allem Aufnahme in Segmenten, Schnitt, Untertitel und Export benutzt (weißt du aus Feedback oder von den Anbietern). | A2 |
-| K2 | Rückmeldungen kamen zusätzlich per E-Mail an support@babacut.io. | A3 |
-| K3 | Anzahl dieser E-Mails (Zahl oder „keine“). | A3 |
-| K4 | Die Änderungen in 1.1.2 bis 1.1.5 kamen aus Rückmeldungen der Tester (stimmt) oder aus eigenen Tests während des geschlossenen Tests (streichen). | C1 |
-| K5 | Aufnahme, Schnitt, Untertitel, Export und Pro-Abo wurden auf echten Geräten geprüft – Anzahl Geräte. | C2 |
-| K6 | Die Console zeigt bei Store-Eintrag, App-Inhalten und Datensicherheit keine offenen Punkte. | C2 |
-| K7 | Zwei Auswahlfelder: A1 „Wie einfach war es, Tester zu finden?“ (Vorschlag: „Schwierig“ bzw. mittlere Stufe) und B3 „Erwartete Installationen im ersten Jahr“ (Vorschlag: 1.000–10.000). | A1, B3 |
+| # | Frage | So antwortest du | Wofür |
+|---|---|---|---|
+| K1 | Die Tester haben vor allem Aufnahme in Segmenten, Schnitt, Untertitel und Export benutzt (weißt du aus Feedback oder von den Anbietern). | „stimmt“ oder „streichen“ | A2 |
+| K2 | Rückmeldungen kamen zusätzlich per E-Mail an support@babacut.io. | „stimmt“ oder „streichen“ | A3 |
+| K3 | Wie viele dieser E-Mails kamen? | eine Zahl oder „keine“ | A3 |
+| K4 | Woher kamen die Anlässe für die Änderungen in 1.1.2 bis 1.1.5? | genau eine Wahl: **a** Rückmeldungen der Tester · **b** eigene Tests während des geschlossenen Tests · **c** beides (dann kurz: welche Änderung woher) · **d** weiß nicht / weglassen | C1 |
+| K5 | Aufnahme, Schnitt, Untertitel, Export und Pro-Abo wurden auf echten Geräten geprüft. | Anzahl Geräte, oder die Funktionen, die nicht geprüft wurden | C2 |
+| K6 | Die Console zeigt bei Store-Eintrag, App-Inhalten und Datensicherheit keine offenen Punkte. | „stimmt“ oder „streichen“ | C2 |
+| K7 | Auswahlfeld A1 „Wie einfach war es, Tester zu finden?“ Vorschlag: „Schwierig“ bzw. die mittlere Stufe. | die Stufe, die du wählst (Vorschlag oder eine andere) | A1 |
+| K8 | Auswahlfeld B3 „Erwartete Installationen im ersten Jahr“. Vorschlag: 1.000–10.000. | die Spanne, die du wählst (Vorschlag oder eine andere) | B3 |
 
 ### Schon bekannt – wirst du nicht noch einmal gefragt
 
@@ -74,7 +76,7 @@ Diese Angaben stehen in der Akte (HANDOVER §5, DECISIONS, Hub-Wissen) und werde
 - Bekannte offene Stelle: Das Impressum auf babacut.io ist noch ein Platzhalter (KNOWN_ISSUES). Das betrifft
   nicht den Antrag selbst, aber die App in Produktion.
 
-**Noch offen bleiben also genau:** Z1–Z7 und K1–K7, dazu deine Wahl, ob der Antrag auf Deutsch (Standard) oder
+**Noch offen bleiben also genau:** Z1–Z7 und K1–K8, dazu deine Wahl, ob der Antrag auf Deutsch (Standard) oder
 Englisch gestellt wird.
 
 ## 1. Ausgangslage
@@ -119,10 +121,12 @@ Belegt durch git `v1.1.4..main` (nur App-Code):
 ## 2. Was wir bewusst nicht schreiben
 
 - Keine erfundenen Zahlen oder Zitate (Google kann die Console-Daten vergleichen; falsche Angaben gefährden das Konto).
-- Keine Aussagen über Nutzung, Funktionen, E-Mails oder Bereitschaft, die nicht von dir bestätigt sind (K1–K6).
+- Keine Aussagen über Nutzung, Funktionen, E-Mails, Herkunft der Änderungen oder Bereitschaft, die nicht von dir
+  bestätigt sind (K1–K6).
 - Keine Version als „ausgeliefert“ nennen, die nur gebaut oder nur im internen Test war.
 - Keine Superlative („beste App“, „einzigartig“).
-- Nicht behaupten, Tester hätten etwas gemeldet, wenn es aus eigenen Tests kam.
+- Keine Herkunft der Änderungen nennen, die du nicht ausdrücklich gewählt hast: „streichen“ oder „weiß nicht“ bei
+  einer Frage ist keine Bestätigung des Gegenteils.
 
 ## 3. Antworttexte (Entwurf)
 
@@ -149,7 +153,8 @@ innerhalb des Testzeitraums zeigt.
 > Wichtigste Punkte: ‹2–3 echte Stichworte/Zitate aus Z4›.
 
 Wenn Z4 = 0 und keine E-Mails kamen: den Satz „Wichtigste Punkte“ streichen und ehrlich schreiben
-„Die Tester gaben kaum schriftliches Feedback; wir haben Android Vitals und eigene Tests ausgewertet.“
+„Die Tester gaben kaum schriftliches Feedback; wir haben Android Vitals ausgewertet.“ Den Zusatz „und eigene
+Tests“ nur, wenn du bei K4 **b** oder **c** gewählt hast.
 
 ### Teil B – Über die App
 
@@ -165,9 +170,9 @@ Wenn Z4 = 0 und keine E-Mails kamen: den Satz „Wichtigste Punkte“ streichen 
 
 (B1/B2 beschreiben die App selbst; das ist durch Code und Store-Eintrag belegt.)
 
-**B3. Erwartete Installationen im ersten Jahr.** (Auswahlfeld, K7)
+**B3. Erwartete Installationen im ersten Jahr.** (Auswahlfeld, K8)
 Realistisch wählen; Vorschlag: die Stufe „1.000–10.000“. Diese Stufe steht im ersten Entwurf, ist aber nicht als
-deine Entscheidung in der Akte belegt; deshalb fragt K7 noch einmal.
+deine Entscheidung in der Akte belegt; deshalb fragt K8 noch einmal.
 
 ### Teil C – Bereitschaft für die Produktion
 
@@ -179,11 +184,15 @@ Nur die Zeilen behalten, deren Version laut **Z7 im geschlossenen Test** war:
 > - (1.1.4) Keine erfundenen Untertitel mehr bei Stille; Hilfe, wenn Kamera/Mikrofon verweigert wurde; tatsächliche
 >   Dateigröße nach dem Export.
 > - (1.1.5) Fehlermeldungen und Absturzbericht in allen 7 Sprachen; „Neuerungen“-Text in 7 Sprachen.
-> ‹K4: Auslöser waren Rückmeldungen der Tester / eigene Tests während des geschlossenen Tests.›
+> ‹K4: Satz zur Herkunft, nur bei Wahl a, b oder c – siehe Hinweis.›
 
-Hinweis: Die Änderungen sind im Code belegt. Ob **Tester** oder deine eigenen Tests sie ausgelöst haben, sagt K4.
-Bei eigenen Tests: „In eigenen Tests während des geschlossenen Tests fielen … auf“. Für die Zeichengrenze kürze ich
-die Liste auf die 2–3 wichtigsten Punkte.
+Hinweis: Die Änderungen sind im Code belegt, ihre **Herkunft nicht**. Der Herkunftssatz hängt nur von K4 ab:
+- **a** → „Auslöser waren Rückmeldungen der Tester.“
+- **b** → „Die Punkte fielen in eigenen Tests während des geschlossenen Tests auf.“
+- **c** → je Zeile die Herkunft, die du genannt hast.
+- **d** oder keine Antwort → **kein** Herkunftssatz; C1 listet nur die Änderungen selbst.
+
+Für die Zeichengrenze kürze ich die Liste auf die 2–3 wichtigsten Punkte.
 
 **C2. Woran hast du erkannt, dass die App bereit für die Produktion ist?**
 > Der geschlossene Test lief ‹Z1: Datum bis Datum› mit ‹Z2› Testern. Android Vitals zeigt ‹Z5› Abstürze und ANRs
@@ -197,5 +206,5 @@ geprüften auf. Den K6-Satz nur, wenn die Console keine offenen Punkte zeigt.
 
 1. 1.1.5 taggen, intern auf deinem Handy prüfen (`docs/TEST_CHECKLIST_1_1_5.md`), dann im geschlossenen Test
    „Closed Beta“ mit dem Text aus `docs/RELEASE_NOTES_1_1_5.md` veröffentlichen.
-2. Danach: Z1–Z7 ablesen und K1–K7 beantworten (Abschnitt „Owner-Aktion“), Screenshots reichen.
+2. Danach: Z1–Z7 ablesen und K1–K8 beantworten (Abschnitt „Owner-Aktion“), Screenshots reichen.
 3. Ich setze alles ein und kürze auf die Zeichengrenze; danach stellst du den Antrag selbst.

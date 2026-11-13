@@ -8,7 +8,7 @@ Finished items: [`docs/DONE.md`](DONE.md) (append-only log; do not add "Done" it
 ## Now
 - [ ] Re-apply for Play production access from ~2026-11-09. Draft updated to 1.1.5 / versionCode 84 (2026-11-13,
       task f16621ce): `docs/PLAY_PRODUCTION_APPLICATION.md` with a German owner runbook (Console paths for Z1–Z7,
-      confirmations K1–K7, answers already known from the record). Owner reads the values only after 1.1.5 is in
+      confirmations K1–K8, answers already known from the record). Owner reads the values only after 1.1.5 is in
       the closed test "Closed Beta" (owner choice 2a5ce05a); nothing submitted.
 - [ ] Ship 1.1.5 to closed testers (owner scope "A + B + D", 2026-11-11): A = localised error texts (task 6f0c1893,
       merged), B = release notes (Play "What's new" draft in 7 languages: `docs/RELEASE_NOTES_1_1_5.md`,
