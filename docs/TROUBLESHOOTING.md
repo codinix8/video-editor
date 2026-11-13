@@ -295,8 +295,10 @@ record before they land here; the source line keeps the hub knowledge item id.
   35 (390×844 dp) plus comparison images on API 36, API 30 and 360×640 dp in
   `docs/design/screenshots/app/2026-11-13/`; `DESIGN-AUDIT-2026-11.md` got a finding → status → screenshot table
   (A1 device-specific: API 35/36 incl. the small screen, not API 30; A19 confirmed in fa and ar on all devices).
-- **Prevention:** give API < 33 emulator jobs ≥ 90 minutes or fewer views; keep the ANR guard in the dump helper.
-  Both how-tos are in the PR #26 fragment knowledge (folded into `docs/KNOWLEDGE.md`). The capture workflow lives
+- **Prevention:** give API < 33 emulator jobs ≥ 90 minutes or fewer views; keep the ANR guard in the dump helper,
+  or avoid the dialog before installing (`pm disable-user --user 0 com.google.android.apps.nexuslauncher`,
+  `settings put global hide_error_dialogs 1`).
+  Both how-tos are in `docs/KNOWLEDGE.md` (emulator screenshots in CI). The capture workflow lives
   only on the scratch branch `agent/fa0e1afc-app-shots`; task 5cf6cd1c (screenshots in CI) should take these
   settings over.
 - **Watch:** Projektmanager.
