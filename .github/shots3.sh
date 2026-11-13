@@ -53,6 +53,7 @@ record_review(){ # one ~10 s segment, then review
 } > "$OUT/$TAG-device.txt" 2>&1
 adb shell wm size $SIZE; adb shell wm density $DENS; sleep 2
 adb shell wm size >> "$OUT/$TAG-device.txt"; adb shell wm density >> "$OUT/$TAG-device.txt"
+adb shell settings put global hide_error_dialogs 1; adb shell pm disable-user --user 0 com.google.android.apps.nexuslauncher >/dev/null 2>&1 || true
 adb install -r -g app/build/outputs/apk/debug/app-debug.apk || { echo "install failed"; exit 1; }
 
 # part 1: font scale 1.0 - delete pill (A4), drag hint (A3), export progress (A5/A16)
