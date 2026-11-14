@@ -77,12 +77,30 @@ starts the cleanup (section 2) on `worker`. **After an accepted `cancel()`, the 
 `onProgress`/`onDone`/`onError` for this run** (every `main.post { listener… }` goes through a small
 `deliver { }` helper that checks `run.isCancelled`). The caller resets its UI right after `cancel()` returns true.
 
+`Exporter.Listener` gains one phase notification with an empty default body, so existing listeners compile
+unchanged:
+
+```kotlin
+interface Listener {
+    fun onProgress(percent: Int)
+    fun onSaving() {}          // new: posted once, right after run.enter(SAVING) succeeded on worker
+    fun onDone(uri: Uri)
+    fun onError(message: String)
+}
+```
+
+Both save sites (route B `onCompleted` → `worker.execute`, `Exporter.kt:216-222`; route C after
+`VideoConcat.concat`, `:152-155`) do `if (!run.enter(SAVING)) return` and then `deliver { listener.onSaving() }`
+**before** `saveToGallery(outFile)`. The notification is only a UI hint and is queued on main; **the CAS in
+`ExportRun` stays the authority**: between `enter(SAVING)` on `worker` and the queued `onSaving()` on main,
+`cancel()` already returns false, and section 3 handles that answer.
+
 | Route | Hook | Granularity |
 |-------|------|-------------|
 | A – pre-render | `renderMixWav(..., isCancelled: () -> Boolean = { false })` passes the check into `OverlayAudioRenderer.decodeFresh` (inside `while (!outputDone)`, `OverlayAudioRenderer.kt:80`) and `renderMix` (inside `while (frame < totalFrames)`, `:167`, one chunk = 100 ms of audio). On cancel they throw `java.util.concurrent.CancellationException`; their existing `finally` blocks already release codec/extractor and close files. After the pre-render, `main.post { if (run.enter(TRANSCODING)) transform(...) }` – a cancel between pre-render and Transformer start never starts the Transformer. The review player's call `Exporter.renderMixWav(this, mixes, totalMs, wav)` (`MainActivity.kt:2632`) keeps the default `{ false }`, unchanged behaviour. | ≤ 100 ms audio per check (render), one codec buffer (decode) |
 | B – Transformer | `transformer?.cancel()` on main (Media3 1.5.1 `Transformer.cancel()`, must be called on the thread the Transformer was built on = main here). `poll` already stops when `transformer == null` (`:242`). `onCompleted`/`onError` that race with the cancel are dropped by `deliver { }`; `onCompleted` additionally checks `run.enter(SAVING)` before `saveToGallery`, so a run cancelled in the last ms deletes its file instead of saving. | immediate |
 | C – fast concat | `VideoConcat.concat(files, output, onProgress, isCancelled: () -> Boolean = { false })`; `copyTrack` checks it every sample (`:159-174`; a flag read per sample is negligible next to `readSampleData`) and throws `CancellationException`. The existing `finally { muxer.stop(); muxer.release() }` (`:142-145`) runs; `stop()` may throw on a half-written file and is already caught. **The fallback `catch (e: Exception)` at `Exporter.kt:156-158` must not re-encode after a cancel:** add `catch (e: CancellationException)` before it (CancellationException is an IllegalStateException, so the generic catch would otherwise start route B). | per sample |
-| Saving | `saveToGallery` is **not** cancellable: `run.enter(SAVING)` closes the cancel window, the sheet disables the button (section 3). It copies a finished file and takes seconds. | – |
+| Saving | `saveToGallery` is **not** cancellable: `run.enter(SAVING)` closes the cancel window, `onSaving()` tells the sheet to disable the button and hide the X (section 3); a cancel request that loses the race is refused by the CAS. It copies a finished file and takes seconds. | – |
 
 `release()` becomes `cancel(); worker.shutdown()` (still single-use, still called from `onDestroy`), so leaving the
 app during an export also cleans up.
@@ -119,7 +137,7 @@ right after the cancel would lose its own fresh files; the prefix sweep is only 
 New file `app/src/main/java/de/codinix/videoeditor/ExportProgressSheet.kt` (keeps the `runExport` diff small):
 
 ```kotlin
-class ExportProgressSheet(ctx: Context, @StringRes progressRes: Int, onCancel: () -> Unit) {
+class ExportProgressSheet(ctx: Context, @StringRes progressRes: Int, onCancelRequest: () -> Unit) {
     fun setProgress(percent: Int)      // bar + "%1$d %%" text
     fun setIndeterminate()             // pre-render phase (route A) until the first Transformer progress
     fun setSaving()                    // bar 100 %, cancel button disabled
@@ -139,10 +157,28 @@ Built on `Sheet` (same dark, rounded surface with handle as every other BabaCut 
   and `minHeight = 48 dp` (PR-4, `Sheet.kt:119-126` today). To reuse it instead of copying it, PR-7b moves `btn()`
   into a `Sheet.actionButton(ctx, label, primary)` companion function (the only `Sheet.kt` change; `Sheet` keeps
   calling it). Secondary (not accent) style: cancel is the non-primary action and must not compete with the red bar.
-- `setSaving()`: button `isEnabled = false`, `alpha = 0.4f`; percentage shows 100 %. No new string.
-- Dismissal: `setCancelable(true)` + `setCanceledOnTouchOutside(false)` + `behavior.isDraggable = false`.
-  **Back key = cancel** (concept) through `setOnCancelListener { onCancel() }`; a tap outside or a swipe does
-  nothing, so a stray touch cannot stop a long export. In the saving phase Back does nothing (`setCancelable(false)`).
+- `setSaving()` (idempotent, main thread): button `isEnabled = false`, `alpha = 0.4f`; close X
+  `visibility = INVISIBLE` + `isEnabled = false` (INVISIBLE, not GONE, so the centred title does not shift);
+  percentage shows 100 %. No new string.
+- **The dialog never dismisses itself.** Only the owner dismisses it, after an accepted cancel or in
+  `onDone`/`onError`. Reason (review of PR #48): `setOnCancelListener` is a notification after the dialog has
+  already decided to close, not a veto, and the `Sheet` close X calls `dlg.cancel()` directly (`Sheet.kt:82`),
+  which `setCancelable(false)` does not stop. So all three cancel gestures go to one pre-dismiss request handler
+  `onCancelRequest: () -> Unit` (the constructor parameter):
+  - **Button:** calls `onCancelRequest()` and does not dismiss. `Sheet.btn()` dismisses after every click
+    (`Sheet.kt:125`), so the extracted `Sheet.actionButton(ctx, label, primary, dismissOnClick = true)` gets a
+    flag and the export sheet passes `false`.
+  - **Close X:** `Sheet` gets `setOnCloseRequest(l: () -> Unit)`; when set, the X calls `l()` instead of
+    `dlg.cancel()` (default unchanged for every other sheet). `Sheet` keeps the created X as `closeButton: View?` so
+    `setSaving()` can hide it.
+  - **Back (incl. predictive back on API 34+):** the dialog is `setCancelable(false)` for its whole life, so the
+    platform never cancels it on Back or outside tap. The sheet registers
+    `dlg.onBackPressedDispatcher.addCallback(object : OnBackPressedCallback(true) { override fun
+    handleOnBackPressed() = onCancelRequest() })` (`BottomSheetDialog` → `AppCompatDialog` → `ComponentDialog`;
+    appcompat 1.7.0 and activity 1.9.3 are already dependencies). Added last, it runs before Material's own
+    callback. **Back = cancel** (concept) holds; the dismissal just moves behind the CAS answer.
+  - Outside tap: nothing (not cancelable, `setCanceledOnTouchOutside(false)`); swipe: `behavior.isDraggable =
+    false`. A stray touch cannot stop a long export.
 - Motion: no custom animation. The progress bar animates with the platform animator, so with "remove animations"
   (animator duration scale 0) it jumps without motion (apple-design §14 reduced motion). The sheet slide-in is the
   existing `BottomSheetDialog` one.
@@ -153,15 +189,23 @@ Built on `Sheet` (same dark, rounded surface with handle as every other BabaCut 
 `onProgress` to `sheet.setProgress`, and adds the cancel path:
 
 ```kotlin
-onCancel = {
-    if (ex.cancel()) {                 // false = saving already started; the button is disabled then anyway
+onCancelRequest = {                    // button, close X and Back all land here, on main
+    if (ex.cancel()) {                 // the CAS in ExportRun decides, not the UI state
         sheet.dismiss(); ex.release(); exporter = null
         setControlsEnabled(true)
         restoreAfterExport()           // shared with onError: players + ticker
         Toast.makeText(this, R.string.export_cancelled, Toast.LENGTH_SHORT).show()
-    }
+    } else {
+        sheet.setSaving()              // SAVING won before onSaving() arrived: sheet stays, no Toast,
+    }                                  // no player restore, controls stay disabled
 }
+// in the Exporter.Listener: override fun onSaving() = sheet.setSaving()
 ```
+
+The `else` branch is the race the review named: `worker` entered SAVING, the `onSaving()` post is still queued, the
+user presses Back, X or the button. The answer comes from the CAS, not from the stale UI, so the sheet stays
+visible, switches to the saving look at once, and the later `onDone` closes it through the existing path (saved
+sheet + auto backup); `onError` likewise. Further requests are refused again and do nothing.
 
 No confirmation dialog for cancel: nothing is lost (apple-design §16 Agency: confirm only destructive,
 irreversible actions). The "Export cancelled" note is a short `Toast` (status feedback, §16 "four kinds of
@@ -215,6 +259,8 @@ New tests `ExportRunTest.kt`, `ExportCleanupTest.kt`:
 - cancel accepted in STARTING, PRE_RENDER, CONCAT, TRANSCODING; refused in SAVING, DONE, FAILED, CANCELLED;
 - `enter()` returns false after a cancel (pre-render → transcoding hand-off, onCompleted → saving);
 - a second `requestCancel()` returns false (idempotent; Back + button both fire);
+- after `enter(SAVING)`, `requestCancel()` returns false **and** leaves `phase == SAVING`, `isCancelled == false`
+  (the refused UI branch must not change the run); a later `enter(DONE)` still succeeds;
 - race: 1 000 iterations of `requestCancel()` and `enter(SAVING)` on two threads – exactly one wins every time;
 - `toDelete` after cancel = output + WAV + partial `ovl_pcm_`, after success = WAV only (output is deleted by the
   existing save path), never a file outside the tracked list;
@@ -229,7 +275,7 @@ device/emulator checks V1–V6.
 | PR | Content | Files | Starts | Parallel with |
 |----|---------|-------|--------|---------------|
 | **PR-7a** | Engine: `ExportRun`, `ExportCleanup`, `Exporter.cancel()`, hooks in routes A/B/C, cleanup incl. `ovl_mix_` leak and pending-row delete; no visible change | `Exporter.kt`, `VideoConcat.kt`, `OverlayAudioRenderer.kt`, new `ExportRun.kt`, new `ExportCleanup.kt`, new `ExportRunTest.kt`, new `ExportCleanupTest.kt` | after PR-6 is merged **and** the 1.1.6 store build (tag `v1.1.6`) exists | none (nothing else open on these files) |
-| **PR-7b** | UI: export sheet, cancel path, `restoreAfterExport()`, startup sweep via `ExportCleanup.isStaleTemp`, strings, versionCode for 1.1.7 | new `ExportProgressSheet.kt`, `MainActivity.kt` (`runExport`, `onError` restore, startup sweep in `onCreate`), `Sheet.kt` (extract `actionButton`, no visual change), 7 × `strings.xml`, `app/build.gradle.kts` | after PR-7a is merged | none |
+| **PR-7b** | UI: export sheet, cancel path, `restoreAfterExport()`, startup sweep via `ExportCleanup.isStaleTemp`, strings, versionCode for 1.1.7 | new `ExportProgressSheet.kt`, `MainActivity.kt` (`runExport`, `onError` restore, startup sweep in `onCreate`), `Sheet.kt` (extract `actionButton` with `dismissOnClick`, add `setOnCloseRequest` + `closeButton`; no visual change for existing sheets), 7 × `strings.xml`, `app/build.gradle.kts` | after PR-7a is merged | none |
 
 - **No overlap with the serial `MainActivity.kt` chain PR-1 → PR-3 → PR-4 → PR-5 (PR-6 does not touch the file):**
   PR-7a does not touch `MainActivity.kt` at all. PR-7b touches it, but only after PR-6 and the 1.1.6 store build,
@@ -274,8 +320,13 @@ Same device setup and naming as the audit (`api35-<lang>-NN-<name>.png`). Files 
 - **V5 – route A + C:** add an overlay video with sound → Save → cancel during "Rendering video (with overlay
   sound)…" (indeterminate bar). Pro build (route C, "Original"): cancel during the fast concat – check in logcat
   that no "Schnelles Zusammenfügen fehlgeschlagen, versuche Neukodierung" line appears (no fallback after cancel).
-- **V6 – Back key and late cancel:** Back during export = cancel (same result as V1). Tap outside / swipe down:
-  nothing happens. A full export to the end still saves, shows the existing "saved" sheet and the auto backup
+- **V6 – Back key, close X and late cancel:** Back during export = cancel (same result as V1); the close X during
+  export = cancel (same result). Tap outside / swipe down: nothing happens. **Saving race:** a local, uncommitted
+  debug patch of PR-7b adds `SystemClock.sleep(3000)` between `run.enter(SAVING)` and
+  `deliver { listener.onSaving() }`. Inside that window press Back, then the close X, then the button: the sheet
+  stays visible and switches to the saving look (button greyed, X hidden), no "Export cancelled" Toast, the review
+  player is not rebuilt (no `buildPlayer` in logcat), controls stay disabled; afterwards the normal "saved" sheet
+  and the auto backup appear and the video is in the gallery. Screenshot `api35-en-15s-export-saving.png`. A full export to the end still saves, shows the existing "saved" sheet and the auto backup
   (regression check of `onDone`); the Cancel button is greyed out in the last seconds (saving).
 - Design check (Design-Abnahme) against apple-design §1 (press feedback on touch-down), §14 (reduced motion: run V1
   with "remove animations" on), §16 (never trap the user; four kinds of feedback) and ui-cheatsheet (tabular
@@ -288,7 +339,7 @@ Same device setup and naming as the audit (`api35-<lang>-NN-<name>.png`). Files 
   WAV is also gone after a successful export.
 - Segments, overlays, captions, texts, session and drafts are unchanged after a cancel; no auto backup is written.
 - The export window is a BabaCut sheet with a determinate red bar, the 48 dp Cancel button has PR-4 press feedback,
-  Back cancels, outside tap/swipe does not.
+  Back, the close X and the button cancel only through the CAS (the sheet stays when saving won), outside tap/swipe does nothing.
 - `ExportRunTest`, `ExportCleanupTest`, `StringsConsistencyTest` and all existing tests green; CI green.
 - `versionName "1.1.7"`, `versionCode` = next free code after the last 1.1.6 tester build.
 
