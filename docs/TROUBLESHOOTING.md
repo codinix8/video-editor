@@ -396,3 +396,33 @@ record before they land here; the source line keeps the hub knowledge item id.
   the hub draft: symptom was the task title; check was "not stated" and is filled in from the plan; the fix is
   marked as planned because the fix text of the draft described only the plan document. Effect on devices is
   taken from the plan, not yet verified in an app build.
+
+## 2026-11-13 – Plan for 1.1.6 (PR-4/PR-5): press feedback, 48 dp targets, long translations
+
+- **Area:** Android UI (touch targets, press states, long text), planning; no app code changed.
+- **Symptom:** the design audit left findings without a plan after the owner approved concept items 2 and 3
+  (`plan.question` 2026-11-13T11:59, option A): no pressed state (A2), touch targets below 48 dp (A6), dimmed buttons
+  swallowing taps while recording (A7), and clipped or mis-ordered texts with long translations / large font (A3,
+  A4, A10, A11, A18, A20b). (Hub draft: the symptom was the task title, cut off.)
+- **Cause:** not a defect with one cause. Controls were built at 44/36/25 dp with plain backgrounds, and status
+  texts were laid out for short English strings (fixed sizes in dp, no width limit, no bidi isolation). The hub
+  draft said "not stated".
+- **Check:** target sizes from `uiautomator dump` bounds ÷ (density ÷ 160) (no code needed, hub knowledge #2277);
+  pressed state via `input motionevent DOWN`, ~150 ms wait, `screencap`, `UP`. For the drag hint (A3) the plan
+  proposes `DOWN`, a wait above the 450 ms long-press without moving (12 px slop), then `MOVE`/`screencap`/`UP`;
+  moving early scrubs instead of lifting the segment. **Not yet tried on a device:** `docs/KNOWLEDGE.md` still
+  records A3 as not scriptable this way, so treat the recipe as a hypothesis until PR-5 verifies it.
+- **Fix (planned, not implemented):** docs-only plan `docs/plans/2026-11-14-1-1-6-design-polish.md` (PR #42,
+  `33dd301`). PR-4: A2 pressed state, A6 48 dp via inset backgrounds (visible size unchanged), A7 locked-button
+  toast with a new string in all 7 `strings.xml`, `TouchTargetLayoutTest`. PR-5: A3, A4, A10, A11, A18 (bidi
+  isolates via `StatusText.kt` + test), A20b + hint background. Each has files, a rejected alternative and
+  acceptance screenshots. Start only after the owner has tagged `v1.1.5`; order PR-1 → PR-3 → PR-4 → PR-5 on
+  `MainActivity.kt`.
+- **Prevention:** keep every tappable view at ≥ 48 dp (inset backgrounds keep the look), give every control a pressed
+  state, use sp for text, limit status text width and test the longest translations at 200 % font in fa/ar too.
+  Re-check the plan's line numbers by code snippet before editing, because earlier PRs move them.
+- **Watch:** Projektmanager.
+- **Source:** hub task `30d90d59-58d6-4800-8af2-3ec132f70141` (video-editor), knowledge item 2820. Corrections to
+  the hub draft: symptom was a truncated task title; cause was "not stated" and is filled in from the plan; the
+  draft's check and prevention were the same scripting sentence, now split, and the scripting recipe is marked
+  unverified; the fix is marked as planned.
