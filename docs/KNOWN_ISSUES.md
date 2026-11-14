@@ -23,6 +23,8 @@
   - `MainActivity.kt:3200–3201`: `SuspiciousIndentation` – `publishMosaic(); updateTileButtons()` is indented as if
     inside the previous statement; check whether it should be in a block.
   - `MainActivity.kt:1618–1623`: Media3 `UnstableApi` used without `@OptIn` (`UnsafeOptInUsageError`, 7×).
+- Review status suffix `" · Overlay NN %"` (`MainActivity.kt:2735`) is a hard-coded English word in every language; noted by the 1.1.6 design-polish plan, not planned. #area/ui #type/bug
+- Plan status of design-audit findings (2026-11-14): A1, A19, A22, A23 have plans ([bug fixes](plans/2026-11-14-bugfixes-1-1-6.md), [A22/A23](plans/2026-11-14-a22-a23-bugfix-plan.md)); A2, A3, A4, A6, A7, A10, A11, A18, A20b have a plan in [design polish](plans/2026-11-14-1-1-6-design-polish.md); all stay open until the PRs are merged. A20 top scrim has no plan. #area/ui
 
 ## Resolved
 Resolved issues: [`docs/DONE.md`](DONE.md) (append-only log; do not add "Resolved" entries here).

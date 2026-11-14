@@ -18,6 +18,7 @@ Finished items: [`docs/DONE.md`](DONE.md) (append-only log; do not add "Done" it
       Which versions reached the closed track is unverified (owner: Play Console).
 - [ ] Owner decision `concept.approval` on the 1.1.6 design polish ([concept 2026-11-13](concepts/2026-11-13-design-polish-1-1-6.md), task 277c2965; planner sends the decision). Proposal: improvement 5 (screenshots in CI) right away without a version bump; 1.1.6 / versionCode 85 = insets + press feedback + long texts/fa spacing; 1.1.7 / versionCode 86 = cancellable export. Bug parts A1 and A19/A3 may start without approval (owner rule: visible bugs are fixed directly). 1.1.5 (84) stays untouched.
 - [ ] Imprint data from the owner → finish website imprint/privacy (legal).
+- [ ] 1.1.6 implementation plans exist (docs only, app freeze until the owner tags `v1.1.5`; `git ls-remote --tags` on 2026-11-13: no `v1.1.5`): [bug fixes](plans/2026-11-14-bugfixes-1-1-6.md), [A22/A23](plans/2026-11-14-a22-a23-bugfix-plan.md), [design polish PR-4/PR-5](plans/2026-11-14-1-1-6-design-polish.md). Order: PR-1 (A1 + version 85) and PR-2 (A19) after the tag; PR-3 (A22/A23) after PR-1; PR-4 (press feedback + 48 dp) after PR-2 and PR-3; PR-5 (long translations) after PR-4. Cancellable export (A5/A16) stays 1.1.7 / versionCode 86 and starts after PR-5 and the 1.1.6 store build. Open: top scrim (A20 rest) has no PR; versionCode 85 vs "+1 per build" (see DECISIONS 2026-11-13).
 
 ## Next
 - [ ] Owner: make `build-test-lint` a required status check for `main` (GitHub settings, see `CONTRIBUTING.md`).
