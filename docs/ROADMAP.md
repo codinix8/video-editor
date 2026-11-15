@@ -43,3 +43,6 @@ Finished items: [`docs/DONE.md`](DONE.md) (append-only log; do not add "Done" it
 - [ ] iOS port (estimated 60–70 % of the original effort).
 - [ ] Split `MainActivity.kt` (3326 lines) per `docs/MAINACTIVITY_SPLIT.md`: steps 1–5 (dead code, pure caption/gain
       math + tests, `ProjectState`, `SessionStore`, drafts) (prerequisite met 2026-11-11: CI and unit tests on `main`); steps 6–12 later.
+- [ ] 1.1.6 implementation plans (all start only after the owner's `v1.1.5` tag; checked 2026-11-14: no tag): order PR-1 → (PR-2) → PR-3 → PR-4 → PR-5 → **PR-6** (A20 top scrim; two competing plans, [full-bleed](plans/2026-11-15-a20-top-scrim.md) vs [XML scrim](plans/2026-11-15-a20-top-scrim-pr6.md), pick one first). versionCode 85 = first 1.1.6 store build (set by PR-1); later PRs do not bump. #area/release #area/ui
+- [ ] 1.1.7 = [cancellable export](plans/2026-11-15-cancellable-export-1-1-7.md): PR-7a (engine) → PR-7b (UI), strictly after PR-6 and the `v1.1.6` store build; versionCode = next free code after the last 1.1.6 upload. Follow-up candidate: cancel for the insert-time conversion dialog (`Downscaler`). #area/export #area/release
+- [ ] App-screenshot CI (`screenshots.yml`, PR #31): candidate follow-ups are more API levels, overlays/mosaic/recording state, newer action majors together with `ci.yml`. #area/ci
