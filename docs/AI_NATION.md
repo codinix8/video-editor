@@ -7,11 +7,12 @@ Onboarded into AI Nation on 2026-11-08 (task 4e8e8c10). The project's own rules 
 
 | Record part   | File | Notes |
 |---------------|------|-------|
-| Handover      | [`/HANDOVER.md`](../HANDOVER.md) | Existing, German, complete handbook (state 2026-11-03). Not renamed. |
+| Handover      | [`/HANDOVER.md`](../HANDOVER.md) | Existing, German, complete handbook; §9 holds the current state and next steps (updated 2026-11-18, budget 150 lines). Not renamed. |
 | Concept       | [`/HANDOVER.md`](../HANDOVER.md) §1 + §4 | Purpose, target group, feature scope, Pro limits. No separate CONCEPT.md needed. |
 | Roadmap       | [`docs/ROADMAP.md`](ROADMAP.md) | **New.** Next steps; history stays in the README "Stand" table. |
 | Decisions     | [`docs/DECISIONS.md`](DECISIONS.md) | **New.** Seeded with decisions found in HANDOVER/README/commits. |
-| Knowledge     | [`docs/KNOWLEDGE.md`](KNOWLEDGE.md) | **New.** Build/release facts and gotchas (English digest of HANDOVER §2–3). |
+| Knowledge     | [`docs/KNOWLEDGE.md`](KNOWLEDGE.md) | Generated extract of the hub knowledge DB (section "Aus dem Wissens-Hub", refreshed with `hub_knowledge_sync`); do not edit the section. Since 2026-11-18. |
+| Knowledge (curated) | [`docs/KNOWLEDGE_PROJECT.md`](KNOWLEDGE_PROJECT.md) | **New (2026-11-18, task 70e3e60d).** Hand-written build/release facts, code map, record rules and plan facts, moved verbatim from `KNOWLEDGE.md`; the fold task puts fragment "Knowledge" sections here. |
 | Known issues  | [`docs/KNOWN_ISSUES.md`](KNOWN_ISSUES.md) | **New.** Open bugs and risks. |
 | Done log      | [`docs/DONE.md`](DONE.md) | **New (2026-11-12).** Append-only log of finished work and resolved issues (was ROADMAP "Done" + KNOWN_ISSUES "Resolved"); new bullets at the end; `merge=union`. |
 | Owner profile | [`docs/FINETUNING.md`](FINETUNING.md) | **New (2026-11-08), synced 2026-11-11.** How the owner thinks, decides and gives feedback; dated mirror of the hub fine-tuning store (project + `_cross`). |
@@ -80,7 +81,7 @@ behind. Rules for every record change:
    "add at the top of ROADMAP 'Done' / KNOWN_ISSUES 'Resolved'": two parallel PRs then always inserted at the same
    line and conflicted, e.g. PR #16 vs #15 – task 5d8b5cdc.)
 2. **One home per volatile fact.** `versionCode`/`versionName` live in `app/build.gradle.kts` and the one line in
-   `KNOWLEDGE.md` "Build"; the CI state lives in "CI status" above. Other files link there instead of restating
+   `KNOWLEDGE_PROJECT.md` "Build"; the CI state lives in "CI status" above. Other files link there instead of restating
    numbers ("next build takes 84" was copied into six files and had to be edited in all of them on every bump).
 3. **Short-lived branches.** Merge `origin/main` right before pushing and again before asking for a re-review; do
    not stack a new task on another open PR.
@@ -90,7 +91,7 @@ behind. Rules for every record change:
 5. **After resolving a conflict, check for duplicates** (`git diff origin/main -- docs/ HANDOVER.md`): a union or
    "keep both" resolution of a rewritten line leaves both versions in the file.
 6. **Smallest record diff.** A task's record change is normally one bullet at the end of `docs/DONE.md` (plus a
-   DECISIONS entry if something was decided, and a KNOWLEDGE entry for a durable fact). Edit ROADMAP
+   DECISIONS entry if something was decided, and a KNOWLEDGE_PROJECT entry for a durable fact). Edit ROADMAP
    ("Now/Next/Later"), KNOWN_ISSUES ("Open issues", "Risks") or HANDOVER only when the task changes that state, and
    then only the lines of your own item. Every extra edit of a shared line is a future conflict.
 7. **No append-at-the-end lists in shared config.** A list that every task extends (formerly the per-file
@@ -142,8 +143,6 @@ for 14 days), an update for closed testers between test day 7 and 10, imprint da
 ### CI status
 - `build.yml`: push to `main` (not for docs-only pushes: `paths-ignore` `docs/**`, `**/*.md`) + manual → `assembleDebug`, uploads APK, creates release `build-N`; on failure pushes
   `build.log` to branch `build-logs`. **Does not run on pull requests.**
-- `build.yml`: push to `main` + manual → `assembleDebug`, uploads APK, creates release `build-N`; on failure pushes
-  `build.log` to branch `build-logs`. Does not run on pull requests.
 - `ci.yml` (task 40c40718, 2026-11-10; was `pr.yml` from tasks 0b65e2ce/b9d022fb): push to any branch except
   `build-logs` + `pull_request` to `main` + manual → `assembleDebug`, `testDebugUnitTest`, `lintDebug`, all blocking.
   Read-only permissions; no release, tag or `build-logs` push.
