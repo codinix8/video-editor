@@ -2,6 +2,9 @@
 
 Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, README and commit history.
 
+- Two PR-6 plans (d84d45a8 full-bleed, bff4da85 XML scrim) contradict each other; the fold records both and lists
+  the choice as an open question instead of picking one. #area/ui #type/decision
+
 ## 2026-11-14 – 1.1.7 cancel design, A20 top scrim, 1.1.6 versionCode rule (tasks b06437d2, bff4da85, d84d45a8)
 - **Cancellable export for 1.1.7** (plan `docs/plans/2026-11-15-cancellable-export-1-1-7.md`): cancel via a run token (`ExportRun`, one `AtomicReference<Phase>`) checked inside the loops of `OverlayAudioRenderer.decodeFresh`/`renderMix` and `VideoConcat.copyTrack`, plus `Transformer.cancel()` on main. Rejected: `Thread.interrupt()`/`shutdownNow()` (MediaCodec/MediaExtractor ignore interrupts, cleanup would be skipped) and coroutines (not used in the export path, larger rebuild). #area/export #type/decision
   - Cancel is accepted until saving to the gallery starts, then the button is disabled. Rejected: aborting the MediaStore copy (half-written `IS_PENDING` row for a gain of seconds).

@@ -1,5 +1,7 @@
 # Known issues and risks – BabaCut
 
+- Open: which PR-6 scrim plan applies (see DECISIONS 2026-11-14). #area/ui
+
 ## Open issues
 - Caption drift on very long videos (audio-check message only in the debug build) – not resolved.
 - Website imprint is a placeholder (imprint data missing) – legal risk once the app is in production.
