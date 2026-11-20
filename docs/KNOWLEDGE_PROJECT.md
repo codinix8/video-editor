@@ -157,3 +157,4 @@ Tags: `scope/project` `type/gotcha` `type/howto`
 - versionCode: bump only for uploads to Play / tester builds; merges into `main` do not bump (rule 2026-11-14). #area/release
 - The brief's fold list names a HANDOVER "log"; `HANDOVER.md` is a German handbook without a log, so the state goes into its §9 "Stand" lines and log entries into `docs/DONE.md`. A brief may name a fragment date that differs from the task date; the repo convention (`docs/changes/README.md`) wins. #area/docs
 
+- `hub_knowledge_sync` returns JSON with `patch` (unified diff) plus `base_sha256`/`result_sha256`; the runner has no python3/jq, so extract the patch with `node` and `git apply` it; the result hash matched (task 70e3e60d). #area/docs
