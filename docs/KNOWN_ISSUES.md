@@ -1,6 +1,7 @@
 # Known issues and risks – BabaCut
 
 ## Open issues
+- **Generated hub extract exceeds the line budget** (2026-11-18, task 70e3e60d; still open 2026-11-20): `docs/KNOWLEDGE.md` is 213 lines vs. budget 120; the generated section "Aus dem Wissens-Hub" alone is ~207 lines and repeats items (e.g. "Alles eigenständig erledigen" three times). Only the hub generator can cap or dedupe it (`hub_knowledge_sync` on 2026-11-20 returned a patch that swaps items but does not shrink it). Open question for the hub/architect: does the doc check count the generated section against the budget? Location: `docs/KNOWLEDGE.md:8-212`. #area/docs
 - Caption drift on very long videos (audio-check message only in the debug build) – not resolved.
 - Website imprint is a placeholder (imprint data missing) – legal risk once the app is in production.
 - DKIM for babacut.io not configured; babacut.net redirect possibly missing.

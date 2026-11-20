@@ -2,6 +2,10 @@
 
 Newest first. Entries before 2026-11-08 are reconstructed from HANDOVER.md, README and commit history.
 
+## 2026-11-18 – KNOWLEDGE.md is only the hub-generated extract; curated knowledge in KNOWLEDGE_PROJECT.md (task 70e3e60d)
+- **`docs/KNOWLEDGE.md` is now only the hub-generated extract; curated project knowledge lives in `docs/KNOWLEDGE_PROJECT.md`.** Reason: the doc check gives KNOWLEDGE.md a 120-line budget and says it becomes the generated hub extract; the 153 hand-written lines were moved verbatim (nothing deleted), so no project fact depends on the hub having adopted it. Fragment "Knowledge" sections are folded into KNOWLEDGE_PROJECT.md from now on. #area/docs #type/decision
+
+
 ## 2026-11-14 – 1.1.7 cancel design, A20 top scrim, 1.1.6 versionCode rule (tasks b06437d2, bff4da85, d84d45a8)
 - **Cancellable export for 1.1.7** (plan `docs/plans/2026-11-15-cancellable-export-1-1-7.md`): cancel via a run token (`ExportRun`, one `AtomicReference<Phase>`) checked inside the loops of `OverlayAudioRenderer.decodeFresh`/`renderMix` and `VideoConcat.copyTrack`, plus `Transformer.cancel()` on main. Rejected: `Thread.interrupt()`/`shutdownNow()` (MediaCodec/MediaExtractor ignore interrupts, cleanup would be skipped) and coroutines (not used in the export path, larger rebuild). #area/export #type/decision
   - Cancel is accepted until saving to the gallery starts, then the button is disabled. Rejected: aborting the MediaStore copy (half-written `IS_PENDING` row for a gain of seconds).
