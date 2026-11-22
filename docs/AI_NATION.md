@@ -8,6 +8,7 @@ Onboarded into AI Nation on 2026-11-08 (task 4e8e8c10). The project's own rules 
 | Record part   | File | Notes |
 |---------------|------|-------|
 | Handover      | [`/HANDOVER.md`](../HANDOVER.md) | Existing, German, complete handbook; §9 holds the current state and next steps (updated 2026-11-18, budget 150 lines). Not renamed. |
+| Handover (hub) | [`docs/HANDOVER.md`](HANDOVER.md) + [`docs/handover/`](handover/) | **Filled 2026-11-22 (task d04f27db).** English current state and next steps; the log is in monthly files (`handover/2026-11.md`), written by the hub's doc maintenance. |
 | Concept       | [`/HANDOVER.md`](../HANDOVER.md) §1 + §4 | Purpose, target group, feature scope, Pro limits. No separate CONCEPT.md needed. |
 | Roadmap       | [`docs/ROADMAP.md`](ROADMAP.md) | **New.** Next steps; history stays in the README "Stand" table. |
 | Decisions     | [`docs/DECISIONS.md`](DECISIONS.md) | **New.** Seeded with decisions found in HANDOVER/README/commits. |
