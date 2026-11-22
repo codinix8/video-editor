@@ -141,8 +141,8 @@ Agent rules: [CLAUDE.md](CLAUDE.md). Record map, conflict-free record rules and 
 owner profile ([docs/FINETUNING.md](docs/FINETUNING.md)), troubleshooting, concepts, plans and the design audit live in `docs/`.
 Die Webseite bleibt reines HTML, alle `docs/*.md` sind per Glob ausgeschlossen.
 
-**Aktueller Stand (2026-11-20, Aufgabe 96146653):**
-- `v1.1.5` (84) ist noch nicht getaggt (`git ls-remote --tags origin` am 20.11. unverändert geprüft am 18.11.: neuester Tag `v1.1.4`); App-Änderungen bleiben bis dahin gesperrt.
+**Aktueller Stand (2026-11-22, Aufgabe d04f27db):**
+- `v1.1.5` (84) ist noch nicht getaggt (`git ls-remote --tags origin` am 22.11. erneut geprüft: neuester Tag `v1.1.4`); App-Änderungen bleiben bis dahin gesperrt.
 - 1.1.6 ist fertig geplant ([docs/plans/](docs/plans/)): PR-1 → (PR-2) → PR-3 → PR-4 → PR-5 → PR-6 (oberer Scrim, A20); ein Versionscode je Play-Upload (85 = erster 1.1.6-Store-Build). Danach 1.1.7 = Export abbrechbar (PR-7a/7b).
 - **Offene Frage:** zwei PR-6-Pläne ([Vollbild](docs/plans/2026-11-15-a20-top-scrim.md), [XML-Scrim](docs/plans/2026-11-15-a20-top-scrim-pr6.md)); der Planer muss einen wählen (docs/DECISIONS.md).
 - Offen beim Owner: `MainActivity.kt`-Aufteilung ([Vorschlag](docs/MAINACTIVITY_SPLIT.md)), Impressumsdaten, `build-test-lint` als Pflichtprüfung.
