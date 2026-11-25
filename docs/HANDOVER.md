@@ -4,7 +4,7 @@ Full handbook (German): [`/HANDOVER.md`](../HANDOVER.md); §9 there holds the sa
 
 ## Current state
 
-_As of 2026-11-22 (task d04f27db). `git ls-remote --tags origin` was re-checked on this date._
+_As of 2026-11-25 (task 203a2b18; first written 2026-11-22, d04f27db). `git ls-remote --tags origin` and `app/build.gradle.kts` were re-checked on 2026-11-25: still v1.1.4 as newest tag, versionCode 84; no `app/` change since 2026-11-13, only hub doc-maintenance commits on main since 2026-11-22._
 
 - BabaCut: Android editor for 9:16 videos ("edit while recording"). `app/build.gradle.kts` holds versionCode 84 / versionName 1.1.5.
 - The newest tag on the remote is still `v1.1.4` (82). `v1.1.5` is not tagged, so `app/` stays frozen. The owner decided on
